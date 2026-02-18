@@ -1,9 +1,14 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
 import { BlurView } from "expo-blur";
+import Constants from "expo-constants";
 import { ImageBackground } from "expo-image";
 import { router } from "expo-router";
-import { useState } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -13,10 +18,41 @@ import {
   View,
 } from "react-native";
 
+WebBrowser.maybeCompleteAuthSession();
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Google SSO setup
+  const redirectUri = AuthSession.makeRedirectUri({
+    native: "com.cdl.coopmobile:/oauth2redirect/google",
+  });
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: Constants.expoConfig?.extra?.expoClientId,
+    androidClientId: Constants.expoConfig?.extra?.androidClientId,
+    webClientId: Constants.expoConfig?.extra?.webClientId,
+    redirectUri,
+    scopes: ["profile", "email"],
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const token = response.authentication?.accessToken;
+
+      if (token) {
+        Alert.alert("SSO Success", "You are logged in with Google!");
+        router.replace("./home");
+      }
+    }
+
+    if (response?.type === "error") {
+      setErrorMsg(response.error?.message || "Google login failed");
+    }
+  }, [response]);
 
   const handleLogin = () => {
     if (email && password) {
@@ -34,7 +70,7 @@ export default function Login() {
       <ImageBackground
         source={require("@/assets/images/loginbg.png")}
         style={styles.backgroundImage}
-        resizeMode="cover"
+        contentFit="cover"
       />
       {/* HEADER */}
       <View style={styles.header}>
@@ -99,11 +135,32 @@ export default function Login() {
           <View style={styles.line} />
         </View>
 
+        {/* SSO BUTTON */}
+        <TouchableOpacity
+          style={styles.ssoButton}
+          onPress={() => promptAsync()}
+          disabled={!request}
+        >
+          <FontAwesome
+            name="google"
+            size={18}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.ssoButtonText}>Sign in with Google</Text>
+        </TouchableOpacity>
+
         {/* APPLY */}
         <Text style={styles.applyText}>
           Not a member yet?{" "}
           <Text style={styles.linkGreen}>Apply for Membership</Text>
         </Text>
+
+        {errorMsg && (
+          <Text style={{ color: "red", marginTop: 20 }}>
+            Google SSO Error: {errorMsg}
+          </Text>
+        )}
       </BlurView>
     </KeyboardAvoidingView>
   );
@@ -213,6 +270,22 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: "#ccc",
+  },
+
+  ssoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ea4335",
+    padding: 14,
+    borderRadius: 12,
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  ssoButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+    marginLeft: 8,
   },
 
   demoBtn: {
