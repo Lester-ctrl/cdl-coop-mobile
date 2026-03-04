@@ -18,8 +18,13 @@ git clone <your-repo-url>
 cd <your-repo-folder>
 
 npm install
+
+if needed dependencies install this
+
 npm install expo-auth-session
 npm install @react-native-google-signin/google-signin
 npx install expo-constants
+
+then start
 
 npx expo start
