@@ -28,9 +28,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="payslip"
+        name="transactions"
         options={{
-          title: "Payslip",
+          title: "Transactions",
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={28} name="notes" color={color} />
           ),

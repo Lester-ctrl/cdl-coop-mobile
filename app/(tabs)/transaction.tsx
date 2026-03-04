@@ -2,11 +2,11 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { StyleSheet, View } from "react-native";
 
-export default function PayslipScreen() {
+export default function TransactionScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.header}>
-        Payslip
+        Transactions
       </ThemedText>
       <ThemedView style={styles.card}>
         <ThemedText type="defaultSemiBold" style={styles.name}>

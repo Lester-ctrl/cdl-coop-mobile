@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const actions = [
   { label: "Manage\nAccounts", icon: "wallet-outline" },
@@ -21,18 +22,38 @@ const actions = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handlelogout = () => {
+    setShowMenu(false);
+    router.replace("/");
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => console.log("Profile pressed")}>
+          <TouchableOpacity
+            onPress={() => setShowMenu(!showMenu)}
+            style={styles.avatar}
+          >
             <Image
               source={require("@/assets/images/profile-logo.png")}
-              style={styles.avatar}
+              style={{ width: 42, height: 42, borderRadius: 21 }}
               contentFit="cover"
             />
           </TouchableOpacity>
+
+          {showMenu && (
+            <View style={styles.dropdown}>
+              <TouchableOpacity onPress={handlelogout} style={styles.menuItem}>
+                <Ionicons name="log-out-outline" size={18} color="#0c2d83" />
+                <Text style={styles.menuText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <Text style={styles.greeting}>Good day,</Text>
           <Text style={styles.name}>John Doe</Text>
@@ -64,7 +85,7 @@ export default function HomeScreen() {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -150,5 +171,26 @@ const styles = StyleSheet.create({
   cardImage: {
     height: 140,
     width: "100%",
+  },
+
+  dropdown: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    elevation: 5,
+    zIndex: 10,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuText: {
+    marginLeft: 12,
+    color: "#0c2d83",
+    fontWeight: "600",
   },
 });

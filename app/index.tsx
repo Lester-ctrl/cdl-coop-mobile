@@ -28,7 +28,7 @@ export default function Login() {
 
   // Google SSO setup
   const redirectUri = AuthSession.makeRedirectUri({
-    native: "com.cdl.coopmobile:/oauth2redirect/google",
+    scheme: "com.cdl.coopmobile",
   });
 
   const [request, response, promptAsync] = Google.useAuthRequest({
