@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  Modal,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Dimensions,
+    Modal,
+    Pressable,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -31,24 +31,24 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 1, label: 'Home',                icon: 'home-outline',               route: '/member/home'            },
+  { id: 1, label: 'Home',                icon: 'home-outline',               route: '/guest/home'            },
   {
     id: 2,
     label: 'Products & Services',
     icon: 'grid-outline',
     subItems: [
-      { label: 'Loan Products',        route: '/member/loan-products',        icon: 'cash-outline'        },
-      { label: 'Savings & Deposits',   route: '/member/savings-and-deposits', icon: 'wallet-outline'      },
+      { label: 'Loan Products',        route: '/guest/loan-products',        icon: 'cash-outline'        },
+      { label: 'Savings & Deposits',   route: '/guest/savings-and-deposits', icon: 'wallet-outline'      },
     ],
   },
-  { id: 3, label: 'Membership',          icon: 'card-outline',               route: '/member/membership'      },
-  { id: 4, label: "What's New",          icon: 'newspaper-outline',          route: '/member/whats-new'       },
-  { id: 5, label: 'About Us',            icon: 'information-circle-outline', route: '/member/about-us'        },
-  { id: 6, label: 'Contact Us',          icon: 'location-outline',           route: '/member/contact-us'      },
-  { id: 7, label: 'Loan Calculator',     icon: 'calculator-outline',         route: '/member/loan-calculator' },
+  { id: 3, label: 'Membership',          icon: 'card-outline',               route: '/guest/membership'      },
+  { id: 4, label: "What's New",          icon: 'newspaper-outline',          route: '/guest/whats-new'       },
+  { id: 5, label: 'About Us',            icon: 'information-circle-outline', route: '/guest/about-us'        },
+  { id: 6, label: 'Contact Us',          icon: 'location-outline',           route: '/guest/contact-us'      },
+  { id: 7, label: 'Loan Calculator',     icon: 'calculator-outline',         route: '/guest/loan-calculator' },
 ];
 
-export default function MemberNavbar() {
+export default function GuestNavbar() {
   const [isOpen, setIsOpen]         = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const pathname = usePathname();
