@@ -55,11 +55,11 @@ export default function Login() {
   }, [response]);
 
   const handleLogin = () => {
-    if (email && password) {
-      router.replace("./(tabs)");
-    } else {
-      alert("Enter email & password");
-    }
+    // if (email && password) {
+    router.replace("./home");
+    // } else {
+    //   alert("Enter email & password");
+    // }
   };
 
   return (
