@@ -25,6 +25,9 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [role, setRole] = useState<
+    "member" | "account-officer" | "loan-officer" | null
+  >(null);
 
   // Google SSO setup
   const redirectUri = AuthSession.makeRedirectUri({
@@ -45,7 +48,8 @@ export default function Login() {
 
       if (token) {
         Alert.alert("SSO Success", "You are logged in with Google!");
-        router.replace("./home");
+        // Redirect based on role
+        handleRoleRedirect("member");
       }
     }
 
@@ -54,12 +58,33 @@ export default function Login() {
     }
   }, [response]);
 
+  const handleRoleRedirect = (
+    userRole: "member" | "account-officer" | "loan-officer",
+  ) => {
+    switch (userRole) {
+      case "account-officer":
+        router.replace("./account-officer");
+        break;
+      case "loan-officer":
+        router.replace("./loan-officer");
+        break;
+      case "member":
+      default:
+        router.replace("./member");
+        break;
+    }
+  };
+
   const handleLogin = () => {
-    // if (email && password) {
-    router.replace("./home");
-    // } else {
-    //   alert("Enter email & password");
-    // }
+    // Determine role based on email or add role selection UI
+    // For now, defaulting to member
+    const userRole: "member" | "account-officer" | "loan-officer" = "member";
+
+    if (email && password) {
+      handleRoleRedirect(userRole);
+    } else {
+      Alert.alert("Error", "Please enter email and password");
+    }
   };
 
   return (
@@ -150,6 +175,69 @@ export default function Login() {
           <Text style={styles.ssoButtonText}>Sign in with Google</Text>
         </TouchableOpacity>
 
+        {/* ROLE SELECTION (Optional for testing) */}
+        <View style={styles.roleContainer}>
+          <Text style={styles.roleLabel}>Or login as:</Text>
+          <View style={styles.roleButtonsRow}>
+            <TouchableOpacity
+              style={[styles.roleBtn, role === "member" && styles.roleActive]}
+              onPress={() => {
+                setRole("member");
+                handleRoleRedirect("member");
+              }}
+            >
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  role === "member" && styles.roleBtnTextActive,
+                ]}
+              >
+                Member
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                role === "account-officer" && styles.roleActive,
+              ]}
+              onPress={() => {
+                setRole("account-officer");
+                handleRoleRedirect("account-officer");
+              }}
+            >
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  role === "account-officer" && styles.roleBtnTextActive,
+                ]}
+              >
+                Account Officer
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                role === "loan-officer" && styles.roleActive,
+              ]}
+              onPress={() => {
+                setRole("loan-officer");
+                handleRoleRedirect("loan-officer");
+              }}
+            >
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  role === "loan-officer" && styles.roleBtnTextActive,
+                ]}
+              >
+                Loan Officer
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* APPLY */}
         <Text style={styles.applyText}>
           Not a member yet?{" "}
@@ -194,7 +282,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "rgba(255, 255, 255, 0.5)  ",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 20,
     padding: 20,
     elevation: 4,
@@ -288,11 +376,43 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  demoBtn: {
-    backgroundColor: "#eee",
-    padding: 14,
-    borderRadius: 12,
+  roleContainer: {
+    marginVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.1)",
+    paddingTop: 15,
+  },
+  roleLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  roleButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  roleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#1c3faa",
+    backgroundColor: "transparent",
     alignItems: "center",
+  },
+  roleActive: {
+    backgroundColor: "#1c3faa",
+  },
+  roleBtnText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#1c3faa",
+  },
+  roleBtnTextActive: {
+    color: "#fff",
   },
 
   applyText: {
