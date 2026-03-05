@@ -1,21 +1,24 @@
 import { HapticTab } from "@/components/haptic-tab";
-import MemberNavbar from "@/components/navigations/memberNavbar"; // <-- add this
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Octicons from "@expo/vector-icons/Octicons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { StyleSheet, View } from "react-native";
+
+import GuestNavbar from "@/components/navigations/guestNavbar"; // adjust path if needed
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <>
-      {/* Global Navbar */}
-      <MemberNavbar />
+    <View style={styles.container}>
+      
+      {/* GLOBAL NAVBAR */}
+      <GuestNavbar />
 
-      {/* Tabs */}
+      {/* TABS */}
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
@@ -44,6 +47,13 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-    </>
+
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

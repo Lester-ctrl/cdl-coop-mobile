@@ -11,7 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
+} from 'react-native';
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.78;
