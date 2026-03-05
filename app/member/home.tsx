@@ -1,3 +1,4 @@
+import MemberNavbar from "@/components/navigations/memberNavbar";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -10,7 +11,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
 const actions = [
   { label: "Manage\nAccounts", icon: "wallet-outline" },
   { label: "Wallet", icon: "card-outline" },
@@ -33,6 +33,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaProvider style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <MemberNavbar />
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
