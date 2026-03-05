@@ -25,11 +25,6 @@ export default {
       predictiveBackGestureEnabled: false,
     },
 
-    web: {
-      output: "static",
-      favicon: "./assets/images/favicon.png",
-    },
-
     plugins: [
       "expo-router",
       [

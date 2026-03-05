@@ -25,7 +25,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
 
-  const handlelogout = () => {
+  const handleLogout = () => {
     setShowMenu(false);
     router.replace("/");
   };
@@ -57,7 +57,7 @@ export default function HomeScreen() {
 
           {showMenu && (
             <View style={styles.dropdown}>
-              <TouchableOpacity onPress={handlelogout} style={styles.menuItem}>
+              <TouchableOpacity onPress={handleLogout} style={styles.menuItem}>
                 <Ionicons name="log-out" size={20} color="#ef4444" />
                 <Text style={styles.menuText}>Logout</Text>
               </TouchableOpacity>
@@ -236,10 +236,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
   statIcon: {
     width: 48,
@@ -285,10 +281,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 14,
     borderRadius: 14,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: "#e2e8f0",
@@ -328,10 +320,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
@@ -395,11 +383,7 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: "#fff",
     borderRadius: 12,
-    elevation: 6,
     zIndex: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },

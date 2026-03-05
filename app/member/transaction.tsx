@@ -1,10 +1,9 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   FlatList,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -76,15 +75,11 @@ export default function TransactionScreen() {
                 { backgroundColor: getLoanTypeColor(item.loanType) },
               ]}
             >
-              <ThemedText style={styles.avatarText}>
-                {item.name.charAt(0)}
-              </ThemedText>
+              <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
             </View>
             <View style={styles.userDetails}>
-              <ThemedText style={styles.userName}>{item.name}</ThemedText>
-              <ThemedText style={styles.userId}>
-                ID: {item.employeeId}
-              </ThemedText>
+              <Text style={styles.userName}>{item.name}</Text>
+              <Text style={styles.userId}>ID: {item.employeeId}</Text>
             </View>
           </View>
           <View
@@ -94,18 +89,18 @@ export default function TransactionScreen() {
             ]}
           >
             <MaterialIcons
-              name={getStatusIcon(item.status)}
+              name={getStatusIcon(item.status) as any}
               size={16}
               color={getStatusColor(item.status)}
             />
-            <ThemedText
+            <Text
               style={[
                 styles.statusText,
                 { color: getStatusColor(item.status) },
               ]}
             >
               {item.status}
-            </ThemedText>
+            </Text>
           </View>
         </View>
 
@@ -116,48 +111,44 @@ export default function TransactionScreen() {
             { backgroundColor: `${getLoanTypeColor(item.loanType)}15` },
           ]}
         >
-          <ThemedText
+          <Text
             style={[
               styles.loanTypeText,
               { color: getLoanTypeColor(item.loanType) },
             ]}
           >
             {item.loanType}
-          </ThemedText>
+          </Text>
         </View>
 
         {/* Main Balance Display */}
         <View style={styles.balanceContainer}>
           <View style={styles.balanceItem}>
-            <ThemedText style={styles.balanceLabel}>
-              Remaining Balance
-            </ThemedText>
-            <ThemedText style={styles.balanceAmount}>
+            <Text style={styles.balanceLabel}>Remaining Balance</Text>
+            <Text style={styles.balanceAmount}>
               ₱{item.remainingBalance.toLocaleString()}
-            </ThemedText>
+            </Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.balanceItem}>
-            <ThemedText style={styles.balanceLabel}>Monthly Payment</ThemedText>
-            <ThemedText style={[styles.balanceAmount, { fontSize: 16 }]}>
+            <Text style={styles.balanceLabel}>Monthly Payment</Text>
+            <Text style={[styles.balanceAmount, { fontSize: 16 }]}>
               ₱{item.monthlyPayment.toLocaleString()}
-            </ThemedText>
+            </Text>
           </View>
         </View>
 
         {/* Details Grid */}
         <View style={styles.detailsGrid}>
           <View style={styles.detailItem}>
-            <ThemedText style={styles.detailLabel}>Principal</ThemedText>
-            <ThemedText style={styles.detailValue}>
+            <Text style={styles.detailLabel}>Principal</Text>
+            <Text style={styles.detailValue}>
               ₱{item.principal.toLocaleString()}
-            </ThemedText>
+            </Text>
           </View>
           <View style={styles.detailItem}>
-            <ThemedText style={styles.detailLabel}>Interest Rate</ThemedText>
-            <ThemedText style={styles.detailValue}>
-              {item.interestRate}%
-            </ThemedText>
+            <Text style={styles.detailLabel}>Interest Rate</Text>
+            <Text style={styles.detailValue}>{item.interestRate}%</Text>
           </View>
         </View>
 
@@ -165,13 +156,11 @@ export default function TransactionScreen() {
         {item.status === "Active" && (
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <ThemedText style={styles.progressLabel}>
-                Loan Progress
-              </ThemedText>
-              <ThemedText style={styles.progressPercent}>
+              <Text style={styles.progressLabel}>Loan Progress</Text>
+              <Text style={styles.progressPercent}>
                 {Math.round((1 - item.remainingBalance / item.principal) * 100)}
                 %
-              </ThemedText>
+              </Text>
             </View>
             <View style={styles.progressBar}>
               <View
@@ -191,13 +180,11 @@ export default function TransactionScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerSection}>
-        <ThemedText style={styles.title}>Loan Transactions</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {filteredData.length} loan
-        </ThemedText>
+        <Text style={styles.title}>Loan Transactions</Text>
+        <Text style={styles.subtitle}>{filteredData.length} loan</Text>
       </View>
 
       {/* Search Bar */}
@@ -228,11 +215,11 @@ export default function TransactionScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialIcons name="search-off" size={48} color="#d1d5db" />
-            <ThemedText style={styles.emptyText}>No loans found</ThemedText>
+            <Text style={styles.emptyText}>No loans found</Text>
           </View>
         }
       />
-    </ThemedView>
+    </View>
   );
 }
 
@@ -287,10 +274,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
   cardHeader: {
     flexDirection: "row",
