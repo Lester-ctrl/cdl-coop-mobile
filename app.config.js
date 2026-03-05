@@ -37,6 +37,7 @@ export default {
           dark: { backgroundColor: "#000000" },
         },
       ],
+      "expo-font"
     ],
 
     experiments: {
