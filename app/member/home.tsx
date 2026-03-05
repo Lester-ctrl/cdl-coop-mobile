@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
 const actions = [
   { label: "Manage\nAccounts", icon: "wallet-outline" },
   { label: "Wallet", icon: "card-outline" },
@@ -35,6 +34,7 @@ export default function HomeScreen() {
     <SafeAreaProvider style={styles.container}>
       <MemberNavbar/>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <MemberNavbar />
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
