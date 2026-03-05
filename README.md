@@ -19,7 +19,7 @@ cd <your-repo-folder>
 
 npm install
 
-if needed dependencies install this
+if dependencies needed install this
 
 npm install expo-auth-session
 npm install @react-native-google-signin/google-signin
