@@ -1,4 +1,3 @@
-import MemberNavbar from "@/components/navigations/memberNavbar";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -32,9 +31,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaProvider style={styles.container}>
-      <MemberNavbar/>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <MemberNavbar />
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
