@@ -31,7 +31,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 1, label: 'Home',                icon: 'home-outline',               route: '/guest/home'            },
+  { id: 1, label: 'Home',                icon: 'home-outline',               route: '/'            },
   {
     id: 2,
     label: 'Products & Services',
