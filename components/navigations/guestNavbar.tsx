@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    Modal,
-    Pressable,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Modal,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -41,7 +41,15 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Savings & Deposits',   route: '/guest/savings-and-deposits', icon: 'wallet-outline'      },
     ],
   },
-  { id: 3, label: 'Membership',          icon: 'card-outline',               route: '/guest/membership'      },
+  { id: 3, label: 'Membership', 
+    icon: 'card-outline',
+    subItems: [
+      {label: 'Regular Membership', route: '/guest/regular-membership', icon: 'man-outline'},
+      {label: 'How to join', route: '/guest/how-to-join', icon: 'help-circle-outline'},
+      {label: 'Classifications & Benefits', route: '/guest/classification-and-benefits', icon: 'bag-outline'},
+      {label: 'Apple Now', route: '/guest/apply-now', icon: 'create-outline'}      
+    ],
+  },
   { id: 4, label: "What's New",          icon: 'newspaper-outline',          route: '/guest/whats-new'       },
   { id: 5, label: 'About Us',            icon: 'information-circle-outline', route: '/guest/about-us'        },
   { id: 6, label: 'Contact Us',          icon: 'location-outline',           route: '/guest/contact-us'      },
