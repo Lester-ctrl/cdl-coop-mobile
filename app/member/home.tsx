@@ -32,9 +32,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaProvider style={styles.container}>
-      <MemberNavbar/>
+      <MemberNavbar />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <MemberNavbar />
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerTop}>

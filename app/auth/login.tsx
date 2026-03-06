@@ -8,16 +8,16 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -65,14 +65,14 @@ export default function Login() {
   ) => {
     switch (userRole) {
       case "account-officer":
-        router.replace("./account-officer");
+        router.replace("../account-officer");
         break;
       case "loan-officer":
-        router.replace("./loan-officer");
+        router.replace("../loan-officer");
         break;
       case "member":
       default:
-        router.replace("./member");
+        router.replace("../member");
         break;
     }
   };

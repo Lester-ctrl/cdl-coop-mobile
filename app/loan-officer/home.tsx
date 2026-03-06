@@ -1,4 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   ScrollView,
@@ -12,23 +13,23 @@ const stats = [
   {
     label: "Active Loans",
     value: "12",
-    icon: "cash-outline",
-    color: "#1c3faa",
-    bg: "#dbeafe",
+    icon: "card-outline",
+    bg: "#EEF3FB",
+    color: "#2563C7",
   },
   {
     label: "Partial Payments",
     value: "₱8,000",
     icon: "wallet-outline",
-    color: "#16a34a",
-    bg: "#dcfce7",
+    bg: "#DCFCE7",
+    color: "#16A34A",
   },
   {
     label: "Pending Apps",
     value: "5",
     icon: "document-text-outline",
-    color: "#f59e42",
-    bg: "#fef9c3",
+    bg: "#FEF9C3",
+    color: "#F59E42",
   },
 ];
 
@@ -52,13 +53,18 @@ export default function LoanOfficerDashboard() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.greeting}>Welcome, Loan Officer 👋</Text>
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.subtitle}>
           Manage loans, payments, and member accounts efficiently.
         </Text>
-      </View>
+      </LinearGradient>
 
       {/* STATS */}
       <View style={styles.statsRow}>
@@ -67,31 +73,24 @@ export default function LoanOfficerDashboard() {
             key={idx}
             style={[styles.statCard, { backgroundColor: stat.bg }]}
           >
-            <Ionicons
-              name={stat.icon as any}
-              size={28}
-              color={stat.color}
-              style={styles.statIcon}
-            />
+            <Ionicons name={stat.icon as any} size={22} color={stat.color} />
             <Text style={styles.statValue}>{stat.value}</Text>
             <Text style={styles.statLabel}>{stat.label}</Text>
           </View>
         ))}
       </View>
 
-      {/* ACTIONS */}
+      {/* QUICK ACTIONS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
+
         <View style={styles.grid}>
           {actions.map((action, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.gridItem}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity key={idx} style={styles.gridItem}>
               <View style={styles.iconBox}>
-                <Ionicons name={action.icon as any} size={24} color="#1c3faa" />
+                <Ionicons name={action.icon as any} size={22} color="#284B9B" />
               </View>
+
               <Text style={styles.gridText}>{action.label}</Text>
             </TouchableOpacity>
           ))}
@@ -101,54 +100,62 @@ export default function LoanOfficerDashboard() {
       {/* MAIN SECTIONS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Main Sections</Text>
+
         <View style={styles.grid}>
           {sections.map((section, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.gridItem}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity key={idx} style={styles.gridItem}>
               <View style={styles.iconBox}>
                 <Ionicons
                   name={section.icon as any}
-                  size={24}
-                  color="#1c3faa"
+                  size={22}
+                  color="#284B9B"
                 />
               </View>
+
               <Text style={styles.gridText}>{section.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* NEWS & EVENTS */}
+      {/* NEWS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>News, Events & Promos</Text>
+
+        {/* CARD 1 */}
         <View style={styles.newsCard}>
           <View style={styles.newsBadge}>
             <Text style={styles.newsBadgeText}>UPDATE</Text>
           </View>
+
           <Text style={styles.newsTitle}>New Loan Products Available</Text>
+
           <Text style={styles.newsDesc}>
             Check out our latest loan offerings with competitive rates.
           </Text>
+
           <TouchableOpacity style={styles.newsBtn}>
             <Text style={styles.newsBtnText}>Learn More</Text>
             <MaterialIcons name="arrow-forward" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
+
+        {/* CARD 2 */}
         <View style={styles.newsCard}>
-          <View style={[styles.newsBadge, { backgroundColor: "#fecaca" }]}>
-            <Text style={[styles.newsBadgeText, { color: "#991b1b" }]}>
+          <View style={[styles.newsBadge, { backgroundColor: "#FEE2E2" }]}>
+            <Text style={[styles.newsBadgeText, { color: "#B91C1C" }]}>
               ALERT
             </Text>
           </View>
+
           <Text style={styles.newsTitle}>Payment Reminder</Text>
+
           <Text style={styles.newsDesc}>
             Your monthly payment is due on the 15th of this month.
           </Text>
+
           <TouchableOpacity
-            style={[styles.newsBtn, { backgroundColor: "#ef4444" }]}
+            style={[styles.newsBtn, { backgroundColor: "#EF4444" }]}
           >
             <Text style={styles.newsBtnText}>Pay Now</Text>
             <MaterialIcons name="arrow-forward" size={16} color="#fff" />
@@ -160,109 +167,178 @@ export default function LoanOfficerDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#f8fafc", flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+
   header: {
     paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 18,
-    backgroundColor: "#1c3faa",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 18,
+    paddingTop: 44,
+    paddingBottom: 70,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
   },
-  greeting: { color: "#93c5fd", fontSize: 14, fontWeight: "500" },
-  title: { color: "#fff", fontSize: 28, fontWeight: "800", marginTop: 2 },
-  subtitle: { color: "#e0e7ff", fontSize: 14, fontWeight: "500", marginTop: 8 },
+
+  greeting: {
+    color: "#BFDBFE",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 32,
+    fontWeight: "900",
+    marginTop: 4,
+  },
+
+  subtitle: {
+    color: "#E0E7FF",
+    fontSize: 14,
+    marginTop: 6,
+  },
+
   statsRow: {
     flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginTop: -40,
+    marginBottom: 30,
   },
+
   statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
+    width: 120,
+    paddingVertical: 16,
+    borderRadius: 20,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
-  statIcon: { marginBottom: 8 },
-  statValue: { fontSize: 18, fontWeight: "800", color: "#1e293b" },
+
+  statValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 6,
+    color: "#1E293B",
+  },
+
   statLabel: {
-    fontSize: 12,
-    color: "#64748b",
-    fontWeight: "600",
-    marginTop: 2,
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 3,
+    textAlign: "center",
   },
-  section: { paddingHorizontal: 20, marginBottom: 28 },
+
+  section: {
+    paddingHorizontal: 20,
+    marginBottom: 28,
+  },
+
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1e293b",
-    marginBottom: 16,
+    color: "#1E293B",
+    marginBottom: 18,
   },
+
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: "16",
   },
-  gridItem: { width: "30%", alignItems: "center", marginBottom: 20 },
+
+  gridItem: {
+    width: "30%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+
   iconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 8,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#E2E8F0",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
+
   gridText: {
-    textAlign: "center",
     fontSize: 12,
+    textAlign: "center",
     color: "#475569",
     fontWeight: "600",
   },
+
   newsCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 12,
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
+
   newsBadge: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: "#DBEAFE",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
     alignSelf: "flex-start",
-    marginBottom: 8,
+    marginBottom: 10,
   },
+
   newsBadgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#0c4a6e",
-    letterSpacing: 0.5,
+    color: "#1E40AF",
   },
+
   newsTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#1e293b",
+    color: "#1E293B",
     marginBottom: 6,
   },
+
   newsDesc: {
     fontSize: 13,
-    color: "#64748b",
+    color: "#64748B",
+    marginBottom: 14,
     lineHeight: 18,
-    marginBottom: 12,
   },
+
   newsBtn: {
-    backgroundColor: "#1c3faa",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    backgroundColor: "#284B9B",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-start",
   },
-  newsBtnText: { color: "#fff", fontWeight: "700", fontSize: 12 },
+
+  newsBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
 });
