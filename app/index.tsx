@@ -9,9 +9,19 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const FEATURES: { icon: keyof typeof Ionicons.glyphMap; title: string; desc: string }[] = [
+const FEATURES: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  desc: string;
+}[] = [
   {
     icon: "shield-checkmark",
     title: "Secure & Trusted",
@@ -108,7 +118,7 @@ export default function IndexScreen() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <GuestNavbar/>
+      <GuestNavbar />
       {/* Blue Hero Section */}
       <View style={styles.hero}>
         <View style={styles.badge}>
@@ -164,7 +174,8 @@ export default function IndexScreen() {
       <View style={styles.whySection}>
         <Text style={styles.whyTitle}>Why Choose Us</Text>
         <Text style={styles.whySubtitle}>
-          We're more than a financial institution —{"\n"}we're a community dedicated to your success.
+          We're more than a financial institution —{"\n"}we're a community
+          dedicated to your success.
         </Text>
 
         {FEATURES.map((feature, index) => (
@@ -184,7 +195,8 @@ export default function IndexScreen() {
       <View style={styles.servicesSection}>
         <Text style={styles.servicesTitle}>Our Services</Text>
         <Text style={styles.servicesSubtitle}>
-          Comprehensive financial solutions designed{"\n"}to meet your every need.
+          Comprehensive financial solutions designed{"\n"}to meet your every
+          need.
         </Text>
 
         <View style={styles.servicesGrid}>
@@ -195,8 +207,17 @@ export default function IndexScreen() {
               onPress={() => router.push(service.route as any)}
               activeOpacity={0.8}
             >
-              <View style={[styles.serviceIconBox, { backgroundColor: service.iconBg }]}>
-                <Ionicons name={service.icon} size={22} color={service.iconColor} />
+              <View
+                style={[
+                  styles.serviceIconBox,
+                  { backgroundColor: service.iconBg },
+                ]}
+              >
+                <Ionicons
+                  name={service.icon}
+                  size={22}
+                  color={service.iconColor}
+                />
               </View>
               <Text style={styles.serviceTitle}>{service.title}</Text>
               <Text style={styles.serviceDesc}>{service.desc}</Text>
@@ -211,7 +232,8 @@ export default function IndexScreen() {
         <View style={styles.ctaCard}>
           <Text style={styles.ctaTitle}>Ready to Get Started?</Text>
           <Text style={styles.ctaSubtitle}>
-            Join our community today and experience the benefits of cooperative banking.
+            Join our community today and experience the benefits of cooperative
+            banking.
           </Text>
 
           <TouchableOpacity
@@ -228,7 +250,7 @@ export default function IndexScreen() {
         </View>
       </View>
 
-      <GuestFooter/>
+      <GuestFooter />
     </ScrollView>
   );
 }

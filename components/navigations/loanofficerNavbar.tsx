@@ -295,7 +295,13 @@ export default function LoanOfficerNavbar() {
             {/* Logout at bottom */}
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.75}
+                onPress={() => {
+                  router.replace("/auth/login");
+                }}
+              >
                 <Ionicons
                   name="log-out-outline"
                   size={20}
