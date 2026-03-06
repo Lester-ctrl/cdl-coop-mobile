@@ -50,10 +50,9 @@ const NAV_ITEMS: NavItem[] = [
       {label: 'Apple Now', route: '/guest/apply-now', icon: 'create-outline'}      
     ],
   },
-  { id: 4, label: "What's New",          icon: 'newspaper-outline',          route: '/guest/whats-new'       },
-  { id: 5, label: 'About Us',            icon: 'information-circle-outline', route: '/guest/about-us'        },
-  { id: 6, label: 'Contact Us',          icon: 'location-outline',           route: '/guest/contact-us'      },
-  { id: 7, label: 'Loan Calculator',     icon: 'calculator-outline',         route: '/guest/loan-calculator' },
+  { id: 4, label: 'About Us',            icon: 'information-circle-outline', route: '/guest/about-us'        },
+  { id: 5, label: 'Contact Us',          icon: 'location-outline',           route: '/guest/contact-us'      },
+  { id: 6, label: 'Loan Calculator',     icon: 'calculator-outline',         route: '/guest/loan-calculator' },
 ];
 
 export default function GuestNavbar() {
@@ -214,8 +213,8 @@ export default function GuestNavbar() {
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
               <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
-                <Ionicons name="log-out-outline" size={20} color={MUTED} style={styles.menuIcon} />
-                <Text style={[styles.menuLabel, styles.logoutLabel]}>Logout</Text>
+                <Ionicons name="log-in-outline" size={20} color={MUTED} style={styles.menuIcon} />
+                <Text style={[styles.menuLabel, styles.logoutLabel]}>Login</Text>
               </TouchableOpacity>
             </View>
 
