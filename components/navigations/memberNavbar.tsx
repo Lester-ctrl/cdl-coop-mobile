@@ -1,9 +1,11 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Image,
   Modal,
   Pressable,
   SafeAreaView,
@@ -53,28 +55,26 @@ const NAV_ITEMS: NavItem[] = [
     id: 3,
     label: "Membership",
     icon: "card-outline",
-    route: "/member/membership",
+    subItems: [
+      { label: "Regular Membership",          route: "/member/regular-membership",          icon: "man-outline"            },
+      { label: "How to Join",                 route: "/member/how-to-join",                 icon: "help-circle-outline"    },
+      { label: "Classifications & Benefits",  route: "/member/classification-and-benefits", icon: "bag-outline"            },
+    ],
   },
   {
     id: 4,
-    label: "What's New",
-    icon: "newspaper-outline",
-    route: "/member/whats-new",
-  },
-  {
-    id: 5,
     label: "About Us",
     icon: "information-circle-outline",
     route: "/member/about-us",
   },
   {
-    id: 6,
+    id: 5,
     label: "Contact Us",
     icon: "location-outline",
     route: "/member/contact-us",
   },
   {
-    id: 7,
+    id: 6,
     label: "Loan Calculator",
     icon: "calculator-outline",
     route: "/member/loan-calculator",
@@ -82,9 +82,16 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function MemberNavbar() {
+  const { clearSession, session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const pathname = usePathname();
+
+  const fullName = session?.profile
+    ? `${session.profile.first_name} ${session.profile.middle_name ?? ''} ${session.profile.last_name}`.replace(/\s+/g, ' ').trim()
+    : session?.user?.username ?? 'Member';
+
+  const avatarUrl = session?.user?.avatar ?? null;
 
   const activeItem =
     NAV_ITEMS.find(
@@ -144,6 +151,14 @@ export default function MemberNavbar() {
     router.push(route as any);
   };
 
+  const handleLogout = async () => {
+    closeMenu();
+    setTimeout(async () => {
+      await clearSession();
+      router.replace('/');
+    }, 250);
+  };
+
   return (
     <>
       {/* ── Top Navbar ── */}
@@ -162,7 +177,7 @@ export default function MemberNavbar() {
         </View>
       </SafeAreaView>
 
-      {/* ── Drawer inside Modal so it floats above all page content ── */}
+      {/* ── Drawer ── */}
       <Modal
         visible={isOpen}
         transparent
@@ -180,7 +195,8 @@ export default function MemberNavbar() {
           style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         >
           <SafeAreaView style={{ flex: 1 }}>
-            {/* Drawer Header */}
+
+            {/* ── Drawer Header with close button ── */}
             <View style={styles.drawerHeader}>
               <View style={styles.drawerLogoRow}>
                 <View style={styles.drawerLogoBox}>
@@ -199,7 +215,31 @@ export default function MemberNavbar() {
 
             <View style={styles.divider} />
 
-            {/* Menu Items */}
+            {/* ── Profile Section ── */}
+            <TouchableOpacity
+              style={styles.profileSection}
+              activeOpacity={0.75}
+              onPress={() => {
+                closeMenu();
+                setTimeout(() => router.push('/shared/profile'), 250);
+              }}
+            >
+              <View style={styles.avatarWrapper}>
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarFallback}>
+                    <Ionicons name="person" size={28} color={BLUE} />
+                  </View>
+                )}
+              </View>
+              <Text style={styles.profileName}>{fullName}</Text>
+              <Ionicons name="chevron-forward" size={18} color={MUTED} style={{ marginLeft: "auto" }} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* ── Menu Items ── */}
             <View style={styles.menuList}>
               {NAV_ITEMS.map((item) => {
                 const active = item.id === activeItem;
@@ -239,7 +279,7 @@ export default function MemberNavbar() {
                       )}
                     </TouchableOpacity>
 
-                    {/* Sub-items dropdown */}
+                    {/* Sub-items */}
                     {hasChildren && expanded && (
                       <View style={styles.subList}>
                         {item.subItems!.map((sub) => {
@@ -284,10 +324,14 @@ export default function MemberNavbar() {
               })}
             </View>
 
-            {/* Logout at bottom */}
+            {/* ── Logout ── */}
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.75}
+                onPress={handleLogout}
+              >
                 <Ionicons
                   name="log-out-outline"
                   size={20}
@@ -299,6 +343,7 @@ export default function MemberNavbar() {
                 </Text>
               </TouchableOpacity>
             </View>
+
           </SafeAreaView>
         </Animated.View>
       </Modal>
@@ -309,7 +354,6 @@ export default function MemberNavbar() {
 const BLUE = "#2563C7";
 const ACTIVE_BG = "#EEF3FB";
 const ACTIVE_TEXT = "#2563C7";
-const BG = "#F5F6FA";
 const CARD = "#FFFFFF";
 const BORDER = "#E8EAF0";
 const TEXT = "#1C1C2E";
@@ -397,6 +441,45 @@ const styles = StyleSheet.create({
     backgroundColor: BORDER,
     marginHorizontal: 18,
     marginBottom: 8,
+  },
+
+  /* ── Profile Section ── */
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 14,
+  },
+  avatarWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    overflow: "hidden",
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: BORDER,
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  avatarFallback: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT,
+    flexShrink: 1,
   },
 
   /* ── Menu ── */

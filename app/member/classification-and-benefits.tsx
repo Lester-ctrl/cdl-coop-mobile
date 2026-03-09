@@ -1,15 +1,13 @@
-import GuestFooter from "@/components/footer/guestFooter";
 import {
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
-    useFonts,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const BLUE = "#2952CC";
 const BLUE_DARK = "#1a3aab";
@@ -119,30 +117,6 @@ export default function ClassificationAndBenefits() {
           </View>
         ))}
       </View>
-
-      {/* ── Ready to Upgrade CTA ── */}
-      <View style={styles.ctaWrapper}>
-        <LinearGradient
-          colors={[BLUE, BLUE_DARK]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.ctaCard}
-        >
-          <Text style={styles.ctaTitle}>Ready to Upgrade?</Text>
-          <Text style={styles.ctaSubtitle}>
-            Increase your share capital contribution to unlock higher benefits
-            and better rates.
-          </Text>
-          <TouchableOpacity
-            style={styles.ctaButton}
-            activeOpacity={0.85}
-            onPress={() => router.push("/guest/apply-now" as any)}
-          >
-            <Text style={styles.ctaButtonText}>Apply Now  →</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-      <GuestFooter/>
     </ScrollView>
   );
 }
