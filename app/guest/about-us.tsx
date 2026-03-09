@@ -1,3 +1,9 @@
+import {
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    useFonts,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ComponentProps } from "react";
@@ -71,6 +77,13 @@ const BoardOfDirectors = [
 ];
 
 export default function AboutUs() {
+    const [fontsLoaded] = useFonts({
+        Poppins_400Regular,
+        Poppins_600SemiBold,
+        Poppins_700Bold,
+      });
+    
+      if (!fontsLoaded) return null;
     return (
         <>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>

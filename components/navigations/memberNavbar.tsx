@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -82,6 +83,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function MemberNavbar() {
+  const { clearSession } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const pathname = usePathname();
@@ -142,6 +144,11 @@ export default function MemberNavbar() {
   const handleSubSelect = (route: string) => {
     closeMenu();
     router.push(route as any);
+  };
+
+  const handleLogout = async () => {
+    await clearSession();
+    router.replace('/');  // back to index.tsx
   };
 
   return (
@@ -284,10 +291,13 @@ export default function MemberNavbar() {
               })}
             </View>
 
-            {/* Logout at bottom */}
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.75}
+                onPress={handleLogout}  // ← was missing
+              >
                 <Ionicons
                   name="log-out-outline"
                   size={20}

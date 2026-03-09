@@ -1,21 +1,28 @@
 import { HapticTab } from "@/components/haptic-tab";
-import MemberNavbar from "@/components/navigations/memberNavbar"; // <-- add this
+import MemberNavbar from "@/components/navigations/memberNavbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Octicons from "@expo/vector-icons/Octicons";
-import { Tabs } from "expo-router";
-import React from "react";
+import { Tabs, router } from "expo-router";
+import React, { useEffect } from "react";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { session, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && (!session || session.role_name !== 'Member')) {
+      router.replace('/auth/login');
+    }
+  }, [session, isLoading]);
+
+  if (isLoading || !session) return null;
 
   return (
     <>
-      {/* Global Navbar */}
       <MemberNavbar />
-
-      {/* Tabs */}
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
