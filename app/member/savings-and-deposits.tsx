@@ -258,26 +258,6 @@ export default function SavingsAndDeposits() {
             * Rates are subject to change. Contact us for the most current rates.
           </Text>
         </View>
-
-        {/* ── CTA Section ── */}
-        <View style={styles.ctaWrapper}>
-          <LinearGradient
-            colors={["#1A56DB", "#3B82F6"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaCard}
-          >
-            <Text style={styles.ctaTitle}>Start Saving Today</Text>
-            <Text style={styles.ctaDesc}>
-              Open a savings account and take the first step towards financial
-              security. Our team is here to help you choose the right product.
-            </Text>
-            <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85}>
-              <Text style={styles.ctaBtnText}>Become a Member →</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
-
       </ScrollView>
     </>
   );
