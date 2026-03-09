@@ -1,12 +1,13 @@
+import MemberNavbar from "@/components/navigations/memberNavbar";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function LoanProducts() {
@@ -15,6 +16,8 @@ export default function LoanProducts() {
 
   return (
     <>
+      <MemberNavbar />
+
       <ScrollView style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
@@ -46,7 +49,7 @@ export default function LoanProducts() {
 
           <View style={styles.feature}>
             <Text style={styles.check}>✓</Text>
-            <Text>Up to ₱50,000</Text>
+            <Text>Up to $50,000</Text>
           </View>
 
           <View style={styles.feature}>
@@ -86,7 +89,7 @@ export default function LoanProducts() {
 
           <View style={styles.feature}>
             <Text style={styles.check}>✓</Text>
-            <Text>Up to ₱500,000</Text>
+            <Text>Up to $500,000</Text>
           </View>
 
           <View style={styles.feature}>
@@ -126,7 +129,7 @@ export default function LoanProducts() {
 
           <View style={styles.feature}>
             <Text style={styles.check}>✓</Text>
-            <Text>Up to ₱200,000</Text>
+            <Text>Up to $200,000</Text>
           </View>
 
           <View style={styles.feature}>
