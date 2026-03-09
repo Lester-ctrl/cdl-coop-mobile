@@ -61,13 +61,13 @@ const NAV_ITEMS: NavItem[] = [
     id: 3,
     label: "Payments & Collections",
     icon: "card-outline",
-    route: "/loan-officer/loans",
+    route: "/loan-officer/paymentsandcollections",
   },
   {
     id: 4,
     label: "Reports & Statements",
     icon: "document-text-outline",
-    route: "/loan-officer/reports",
+    route: "/loan-officer/reportandstatements",
   },
   {
     id: 5,
@@ -79,13 +79,13 @@ const NAV_ITEMS: NavItem[] = [
     id: 6,
     label: "News & Events",
     icon: "megaphone-outline",
-    route: "/loan-officer/news",
+    route: "/loan-officer/newsandevents",
   },
   {
     id: 7,
     label: "Profile",
     icon: "person-outline",
-    route: "/loan-officer/profile",
+    route: "/loan-officer/profile/profiles",
   },
 ];
 

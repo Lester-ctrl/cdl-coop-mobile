@@ -2,12 +2,12 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function LoanOfficerProfile() {
@@ -95,7 +95,10 @@ export default function LoanOfficerProfile() {
       </View>
 
       {/* EDIT BUTTON */}
-      <TouchableOpacity style={styles.editButton}>
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={() => router.push("../profile/editprofile")}
+      >
         <FontAwesome6 name="pen" size={14} color="#fff" />
         <Text style={styles.editText}>Edit Profile</Text>
       </TouchableOpacity>
