@@ -74,6 +74,18 @@ const NAV_ITEMS: NavItem[] = [
     label: "Products & Services",
     icon: "grid-outline",
     route: "/loan-officer/products",
+    subItems: [
+      {
+        label: "Loan Products",
+        route: "/loan-officer/products/loan-products",
+        icon: "briefcase-outline",
+      },
+      {
+        label: "Savings Products",
+        route: "/loan-officer/products/savings-products",
+        icon: "wallet-outline",
+      },
+    ],
   },
   {
     id: 6,
