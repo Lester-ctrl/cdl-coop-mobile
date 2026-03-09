@@ -137,13 +137,13 @@ export default function IndexScreen() {
 
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => router.push("/auth/login")}
+          onPress={() => router.push("/guest/apply-now")}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryButtonText}>Become a Member →</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85} onPress={()=>router.push("/guest/loan-products")}>
           <Text style={styles.secondaryButtonText}>Explore Services</Text>
         </TouchableOpacity>
       </View>
@@ -238,7 +238,7 @@ export default function IndexScreen() {
 
           <TouchableOpacity
             style={styles.ctaPrimary}
-            onPress={() => router.push("/auth/login")}
+            onPress={() => router.push("/guest/apply-now")}
             activeOpacity={0.85}
           >
             <Text style={styles.ctaPrimaryText}>Apply for Membership →</Text>

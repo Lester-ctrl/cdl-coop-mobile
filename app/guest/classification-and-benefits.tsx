@@ -1,384 +1,299 @@
+import GuestFooter from "@/components/footer/guestFooter";
+import {
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    useFonts,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { useRouter } from "expo-router";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+const BLUE = "#2952CC";
+const BLUE_DARK = "#1a3aab";
+const BLUE_LIGHT = "#EEF2FF";
+
+const TIERS = [
+  {
+    key: "bronze",
+    label: "Bronze Member",
+    range: "Share Capital: ₱500 – ₱2,500",
+    icon: "star" as const,
+    iconColor: "#D97706",
+    iconBg: "#FEF3C7",
+    features: [
+      "All regular member benefits",
+      "Standard loan limits",
+      "Basic financial counseling",
+      "Access to all savings products",
+    ],
+  },
+  {
+    key: "silver",
+    label: "Silver Member",
+    range: "Share Capital: ₱2,501 – ₱10,000",
+    icon: "gift" as const,
+    iconColor: "#6B7280",
+    iconBg: "#F3F4F6",
+    features: [
+      "All Bronze benefits",
+      "Increased loan limits (20% higher)",
+      "Priority customer service",
+      "Preferential interest rates",
+    ],
+  },
+  {
+    key: "gold",
+    label: "Gold Member",
+    range: "Share Capital: ₱10,001 and above",
+    icon: "medal" as const,
+    iconColor: "#B45309",
+    iconBg: "#FEF9C3",
+    features: [
+      "All Silver benefits",
+      "Maximum loan limits (40% higher)",
+      "VIP customer service",
+      "Quarterly financial planning sessions",
+      "Exclusive investment opportunities",
+    ],
+  },
+];
 
 export default function ClassificationAndBenefits() {
+  const router = useRouter();
+
+  const [fontsLoaded] = useFonts({
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
-    <ScrollView>
-      <View>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Membership Classification</Text>
-          <Text style={styles.headerSubtitle}>
-            Unlock greater bebefits as you grow your share capital investment.
+    <ScrollView
+      style={styles.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Hero ── */}
+      <View style={styles.hero}>
+        <View style={styles.heroBadge}>
+          <Text style={styles.heroBadgeText}>MEMBER BENEFITS</Text>
+        </View>
+        <Text style={styles.heroTitle}>Membership{"\n"}Classifications</Text>
+        <Text style={styles.heroSubtitle}>
+          Unlock greater benefits as you grow your share capital investment.
+        </Text>
+      </View>
+
+      {/* ── Tier Cards ── */}
+      <View style={styles.cardsWrapper}>
+        {TIERS.map((tier) => (
+          <View key={tier.key} style={styles.card}>
+            {/* Top Row */}
+            <View style={styles.cardTopRow}>
+              <View style={[styles.iconBox, { backgroundColor: tier.iconBg }]}>
+                <Ionicons name={tier.icon} size={22} color={tier.iconColor} />
+              </View>
+              <View style={styles.cardTitleBlock}>
+                <Text style={styles.cardTitle}>{tier.label}</Text>
+                <Text style={styles.cardRange}>{tier.range}</Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.cardDivider} />
+
+            {/* Features */}
+            {tier.features.map((feature, fi) => (
+              <View key={fi} style={styles.featureRow}>
+                <View style={styles.checkCircle}>
+                  <Ionicons name="checkmark" size={11} color="#fff" />
+                </View>
+                <Text style={styles.featureText}>{feature}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+
+      {/* ── Ready to Upgrade CTA ── */}
+      <View style={styles.ctaWrapper}>
+        <LinearGradient
+          colors={[BLUE, BLUE_DARK]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.ctaCard}
+        >
+          <Text style={styles.ctaTitle}>Ready to Upgrade?</Text>
+          <Text style={styles.ctaSubtitle}>
+            Increase your share capital contribution to unlock higher benefits
+            and better rates.
           </Text>
-        </View>
-
-        {/* Bronze Member*/}
-        <View style={styles.card}>
-          <View style={styles.topRow}>
-            <View style={styles.iconBox}>
-              <Ionicons name="star" size={20} color="#eb9411" />
-            </View>
-
-            <View>
-              <Text style={styles.cardTitle}>Bronze Member</Text>
-              <Text style={styles.cardDescription}>
-                Share Capital:$500-$2,500
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>All regular member benefits</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Standard Loan limits</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Basic financial counseling</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Access to all savings products</Text>
-          </View>
-        </View>
-
-        {/* Silver Member*/}
-        <View style={styles.card}>
-          <View style={styles.topRow}>
-            <View style={[styles.iconBox, styles.silver]}>
-              <Ionicons name="gift" size={20} color="#797774" />
-            </View>
-
-            <View>
-              <Text style={styles.cardTitle}>Silver Member</Text>
-              <Text style={styles.cardDescription}>
-                Share Capital:$2,501-$10,000
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>All Broze benefits</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Increase loan limits (20% high )</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Priority customer service</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Preferential interest rates</Text>
-          </View>
-        </View>
-
-        {/* Gold Member*/}
-        <View style={styles.card}>
-          <View style={styles.topRow}>
-            <View style={[styles.iconBox, styles.silver, styles.gold]}>
-              <Ionicons name="medal-outline" size={20} color="#af5f09" />
-            </View>
-
-            <View>
-              <Text style={styles.cardTitle}>Gold Member</Text>
-              <Text style={styles.cardDescription}>
-                Share Capital:$10,501 and above
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>All Silver benefits</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Maximum loan limits (40% high )</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>VIP customer service</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Quarterly financial planning sessions</Text>
-          </View>
-
-          <View style={styles.feature}>
-            <Text style={styles.check}>✓</Text>
-            <Text>Exclusive investment opportunities</Text>
-          </View>
-        </View>
+          <TouchableOpacity
+            style={styles.ctaButton}
+            activeOpacity={0.85}
+            onPress={() => router.push("/guest/apply-now" as any)}
+          >
+            <Text style={styles.ctaButtonText}>Apply Now  →</Text>
+          </TouchableOpacity>
+        </LinearGradient>
       </View>
-
-      {/* ready to apply */}
-      <LinearGradient colors={["#2f5fd0", "#1a46a7"]} style={styles.applyCard}>
-        <Text style={styles.applyTitle}>Ready to Upgrade?</Text>
-        <Text style={styles.applyText}>
-          increase your share capital contribution to unlock higher benefits and
-          better rates
-        </Text>
-
-        <TouchableOpacity style={styles.applyButton}>
-          <Text style={styles.applyButtonText}>Apply Now →</Text>
-        </TouchableOpacity>
-      </LinearGradient>
-
-      {/* Community */}
-      <View style={styles.container}>
-        <View style={styles.row}>
-          {/* Left Section */}
-          <View style={styles.left}>
-            <View style={styles.logoRow}>
-              <Ionicons name="business" size={18} color="#fff" />
-              <Text style={styles.title}>Community Cooperative</Text>
-            </View>
-
-            <Text style={styles.subtitle}>
-              Empowering our community through financial cooperation and mutual
-              support.
-            </Text>
-          </View>
-
-          {/* Links Section */}
-          <View style={styles.linksContainer}>
-            <View style={styles.linksColumn}>
-              <Text style={styles.sectionTitle}>QUICK LINKS</Text>
-              <Text style={styles.link}>About Us</Text>
-              <Text style={styles.link}>Membership</Text>
-              <Text style={styles.link}>Products</Text>
-              <Text style={styles.link}>Loan Calculator</Text>
-            </View>
-
-            <View style={styles.linksColumn}>
-              <Text style={styles.sectionTitle}>GET IN TOUCH</Text>
-              <View style={styles.contactRow}>
-                <Ionicons name="mail" size={14} color="#fff" />
-                <Text style={styles.link}>info@comm-coop.com</Text>
-              </View>
-              <View style={styles.contactRow}>
-                <Ionicons name="call" size={14} color="#fff" />
-                <Text style={styles.link}>(123) 456-7890</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.footerBottom}>
-          © 2026 COMMUNITY COOPERATI VE. ALL RIGHTS RESERVED.
-        </Text>
-      </View>
+      <GuestFooter/>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
-  },
-  header: {
-    backgroundColor: "#1a46a7",
-    padding: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerTitle: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 30,
-  },
-  headerSubtitle: {
-    color: "#dbeafe",
-    fontSize: 14,
+    backgroundColor: "#F3F4F6",
   },
 
-  //   Broze Member
-  card: {
-    backgroundColor: "#fff",
-    margin: 20,
-    marginTop: -10,
+  /* ── Hero ── */
+  hero: {
+    backgroundColor: BLUE,
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 48,
+  },
+  heroBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.45)",
     borderRadius: 20,
-    padding: 30,
-    elevation: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginBottom: 18,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginBottom: 15,
-    paddingLeft: 10,
-    gap: 12,
-  },
-  iconBox: {
-    backgroundColor: "#edbe6cb0",
-    padding: 15,
-    borderRadius: 12,
-  },
-  iconText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#c5d513",
-  },
-  silver: {
-    backgroundColor: "#7a7a8434",
-  },
-  gold: {
-    backgroundColor: "#c693064c",
-  },
-  aprBadge: {
-    backgroundColor: "#dbeafe",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  aprText: {
-    color: "#2563eb",
-    fontWeight: "600",
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  cardDescription: {
-    color: "#6b7280",
-    marginBottom: 15,
-  },
-  feature: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  check: {
-    color: "#2563eb",
-    marginRight: 10,
-    fontWeight: "bold",
-
-    backgroundColor: "#174dc2",
-    borderRadius: 12,
-    width: 18,
-    height: 18,
-    textAlign: "center",
-    lineHeight: 18,
-    color: "white",
-  },
-
-  applyCard: {
-    margin: 20,
-    borderRadius: 25,
-    padding: 25,
-  },
-
-  applyTitle: {
+  heroBadgeText: {
     color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 10,
+    fontFamily: "Poppins_600SemiBold",
+    letterSpacing: 1.2,
   },
-
-  applyText: {
-    color: "#dbeafe",
-    marginBottom: 20,
-  },
-
-  applyButton: {
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    borderRadius: 15,
-    alignItems: "center",
-  },
-
-  applyButtonText: {
-    color: "#1a46a7",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  // community
-  container: {
-    backgroundColor: "#1f3c88",
-    padding: 24,
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 24,
-  },
-  left: {
-    flex: 1.2,
-    minWidth: 220,
-  },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  heroTitle: {
+    color: "#fff",
+    fontSize: 34,
+    fontFamily: "Poppins_800ExtraBold",
+    lineHeight: 44,
     marginBottom: 12,
   },
-  title: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 14,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 22,
   },
-  subtitle: {
-    color: "#d6e4ff",
-    fontSize: 13,
-    lineHeight: 18,
+
+  /* ── Cards ── */
+  cardsWrapper: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    gap: 16,
   },
-  linksContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 32,
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  linksColumn: {
-    minWidth: 160,
-  },
-  sectionTitle: {
-    color: "white",
-    fontSize: 13,
-    letterSpacing: 1,
-    marginBottom: 14,
-    fontWeight: "600",
-  },
-  link: {
-    color: "#d6e4ff",
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  contactRow: {
+  cardTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
+    gap: 14,
+    marginBottom: 16,
   },
-  footerBottom: {
-    color: "#d6e4ff",
-    fontSize: 11,
-    marginTop: 28,
-    textAlign: "center",
-    letterSpacing: 0.5,
+  iconBox: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  cardTitleBlock: {
+    flex: 1,
+  },
+  cardTitle: {
+    color: "#111827",
+    fontSize: 18,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: 2,
+  },
+  cardRange: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontFamily: "Poppins_500Medium",
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginBottom: 14,
+  },
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 10,
+  },
+  checkCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: BLUE,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  featureText: {
+    color: "#374151",
+    fontSize: 13,
+    fontFamily: "Poppins_500Medium",
+    flex: 1,
+    lineHeight: 20,
+  },
+
+  /* ── CTA ── */
+  ctaWrapper: {
+    marginBottom: 30,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+  ctaCard: {
+    borderRadius: 24,
+    padding: 28,
+  },
+  ctaTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontFamily: "Poppins_800ExtraBold",
+    marginBottom: 10,
+  },
+  ctaSubtitle: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 13,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  ctaButton: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  ctaButtonText: {
+    color: BLUE_DARK,
+    fontSize: 15,
+    fontFamily: "Poppins_700Bold",
   },
 });
