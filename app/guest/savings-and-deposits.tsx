@@ -6,6 +6,7 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -147,6 +148,8 @@ const RATES: RateRow[] = [
 ];
 
 export default function SavingsAndDeposits() {
+  const router = useRouter();
+
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
@@ -272,7 +275,7 @@ export default function SavingsAndDeposits() {
               Open a savings account and take the first step towards financial
               security. Our team is here to help you choose the right product.
             </Text>
-            <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85}>
+            <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85} onPress={()=> router.push('/guest/apply-now')}>
               <Text style={styles.ctaBtnText}>Become a Member →</Text>
             </TouchableOpacity>
           </LinearGradient>
