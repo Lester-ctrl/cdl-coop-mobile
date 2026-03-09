@@ -82,7 +82,7 @@ const NAV_ITEMS: NavItem[] = [
       },
       {
         label: "Savings Products",
-        route: "/loan-officer/products/savings-products",
+        route: "/loan-officer/productandservices/savings-products",
         icon: "wallet-outline",
       },
     ],
