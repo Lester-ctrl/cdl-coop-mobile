@@ -1,9 +1,11 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Image,
   Modal,
   Pressable,
   SafeAreaView,
@@ -81,18 +83,21 @@ const NAV_ITEMS: NavItem[] = [
     icon: "megaphone-outline",
     route: "/loan-officer/newsandevents",
   },
-  {
-    id: 7,
-    label: "Profile",
-    icon: "person-outline",
-    route: "/loan-officer/profile/profiles",
-  },
 ];
 
 export default function LoanOfficerNavbar() {
+  const { clearSession, session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const pathname = usePathname();
+
+  const fullName = session?.profile
+    ? `${session.profile.first_name} ${session.profile.middle_name ?? ""} ${session.profile.last_name}`
+        .replace(/\s+/g, " ")
+        .trim()
+    : session?.user?.username ?? "Loan Officer";
+
+  const avatarUrl = session?.user?.avatar ?? null;
 
   const activeItem =
     NAV_ITEMS.find(
@@ -152,9 +157,17 @@ export default function LoanOfficerNavbar() {
     router.push(route as any);
   };
 
+  const handleLogout = async () => {
+    closeMenu();
+    setTimeout(async () => {
+      await clearSession();
+      router.replace("/");
+    }, 250);
+  };
+
   return (
     <>
-      {/* Top Navbar */}
+      {/* ── Top Navbar ── */}
       <SafeAreaView style={styles.root}>
         <View style={styles.navbar}>
           <View style={styles.logoBox}>
@@ -170,7 +183,7 @@ export default function LoanOfficerNavbar() {
         </View>
       </SafeAreaView>
 
-      {/* Drawer inside Modal */}
+      {/* ── Drawer ── */}
       <Modal
         visible={isOpen}
         transparent
@@ -188,13 +201,14 @@ export default function LoanOfficerNavbar() {
           style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         >
           <SafeAreaView style={{ flex: 1 }}>
-            {/* Drawer Header */}
+
+            {/* ── Drawer Header ── */}
             <View style={styles.drawerHeader}>
               <View style={styles.drawerLogoRow}>
                 <View style={styles.drawerLogoBox}>
                   <Ionicons name="business-outline" size={20} color={BLUE} />
                 </View>
-                <Text style={styles.drawerBrand}>Loan Officer</Text>
+                <Text style={styles.drawerBrand}>Community Co-op</Text>
               </View>
               <TouchableOpacity
                 onPress={closeMenu}
@@ -207,7 +221,31 @@ export default function LoanOfficerNavbar() {
 
             <View style={styles.divider} />
 
-            {/* Menu Items */}
+            {/* ── Profile Section ── */}
+            <TouchableOpacity
+              style={styles.profileSection}
+              activeOpacity={0.75}
+              onPress={() => {
+                closeMenu();
+                setTimeout(() => router.push("/shared/profile"), 250);
+              }}
+            >
+              <View style={styles.avatarWrapper}>
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarFallback}>
+                    <Ionicons name="person" size={28} color={BLUE} />
+                  </View>
+                )}
+              </View>
+              <Text style={styles.profileName}>{fullName}</Text>
+              <Ionicons name="chevron-forward" size={18} color={MUTED} style={{ marginLeft: "auto" }} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* ── Menu Items ── */}
             <View style={styles.menuList}>
               {NAV_ITEMS.map((item) => {
                 const active = item.id === activeItem;
@@ -292,15 +330,13 @@ export default function LoanOfficerNavbar() {
               })}
             </View>
 
-            {/* Logout at bottom */}
+            {/* ── Logout ── */}
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
               <TouchableOpacity
                 style={styles.menuItem}
                 activeOpacity={0.75}
-                onPress={() => {
-                  router.replace("/auth/login");
-                }}
+                onPress={handleLogout}
               >
                 <Ionicons
                   name="log-out-outline"
@@ -313,6 +349,7 @@ export default function LoanOfficerNavbar() {
                 </Text>
               </TouchableOpacity>
             </View>
+
           </SafeAreaView>
         </Animated.View>
       </Modal>
@@ -405,6 +442,47 @@ const styles = StyleSheet.create({
     marginHorizontal: 18,
     marginBottom: 8,
   },
+
+  /* ── Profile Section ── */
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 14,
+  },
+  avatarWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    overflow: "hidden",
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: BORDER,
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  avatarFallback: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT,
+    flexShrink: 1,
+  },
+
+  /* ── Menu ── */
   menuList: { flex: 1, paddingTop: 4 },
   menuItem: {
     flexDirection: "row",
@@ -419,6 +497,8 @@ const styles = StyleSheet.create({
   menuIcon: { width: 30 },
   menuLabel: { fontSize: 14, fontWeight: "500", color: MUTED, flex: 1 },
   menuLabelActive: { color: ACTIVE_TEXT, fontWeight: "600" },
+
+  /* ── Sub-items ── */
   subList: { marginLeft: 26, marginBottom: 4 },
   subItem: {
     flexDirection: "row",
@@ -442,6 +522,8 @@ const styles = StyleSheet.create({
   subIcon: { marginRight: 8 },
   subLabel: { fontSize: 13, fontWeight: "500", color: MUTED, flex: 1 },
   subLabelActive: { color: ACTIVE_TEXT, fontWeight: "600" },
+
+  /* ── Footer ── */
   drawerFooter: { paddingBottom: 24 },
   logoutLabel: { color: TEXT, fontWeight: "500" },
 });
