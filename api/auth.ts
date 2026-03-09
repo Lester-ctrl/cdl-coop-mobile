@@ -5,7 +5,7 @@ export async function login(email: string, password: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({ email, password }),
   });
@@ -14,7 +14,7 @@ export async function login(email: string, password: string) {
 
   if (!response.ok) {
     // throws the Laravel error message (e.g. "Invalid email!")
-    throw new Error(json.error || json.message || 'Login failed');
+    throw new Error(json.error || json.message || "Login failed");
   }
 
   return json; // { message, data: { user, profile, role_name } }
