@@ -77,7 +77,7 @@ const NAV_ITEMS: NavItem[] = [
     subItems: [
       {
         label: "Loan Products",
-        route: "/loan-officer/products/loan-products",
+        route: "/loan-officer/productandservices/loan-products",
         icon: "briefcase-outline",
       },
       {

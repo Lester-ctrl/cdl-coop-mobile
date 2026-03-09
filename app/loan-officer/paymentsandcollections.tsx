@@ -52,7 +52,7 @@ export default function PaymentsAndCollections() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
-        colors={["#1e3a8a", "#2563eb", "#3b82f6"]}
+        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -130,9 +130,11 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    padding: 28,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 44,
+    paddingBottom: 70,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
     marginBottom: 20,
   },
 
