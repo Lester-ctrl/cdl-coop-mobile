@@ -210,13 +210,17 @@ export default function GuestNavbar() {
             </View>
 
             {/* Logout at bottom */}
-            <View style={styles.drawerFooter}>
-              <View style={styles.divider} />
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
-                <Ionicons name="log-in-outline" size={20} color={MUTED} style={styles.menuIcon} />
-                <Text style={[styles.menuLabel, styles.logoutLabel]}>Login</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={styles.menuItem} 
+              activeOpacity={0.75} 
+              onPress={() => {
+                closeMenu();
+                setTimeout(() => router.push('/auth/login'), 250); // wait for drawer to close
+              }}
+            >
+              <Ionicons name="log-in-outline" size={20} color={MUTED} style={styles.menuIcon} />
+              <Text style={[styles.menuLabel, styles.logoutLabel]}>Login</Text>
+            </TouchableOpacity>
 
           </SafeAreaView>
         </Animated.View>

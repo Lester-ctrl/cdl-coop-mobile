@@ -1,535 +1,307 @@
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import * as AuthSession from "expo-auth-session";
-import * as Google from "expo-auth-session/providers/google";
-import { BlurView } from "expo-blur";
-import Constants from "expo-constants";
-import { ImageBackground } from "expo-image";
-import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { login } from "@/api/auth";
+import GuestNavbar from "@/components/navigations/guestNavbar";
+import { useAuth } from "@/context/AuthContext";
 import {
-  Alert,
-  Dimensions,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
-WebBrowser.maybeCompleteAuthSession();
-
-const { width } = Dimensions.get("window");
-const isTablet = width >= 768;
-const isSmallPhone = width < 375;
+const BLUE = "#2952CC";
+const BLUE_MID = "#2563C7";
+const BLUE_LIGHT_BG = "#EEF2FF";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [role, setRole] = useState<
-    "member" | "account-officer" | "loan-officer" | null
-  >(null);
+   const { saveSession } = useAuth();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: "com.cdl.coopmobile",
-  });
+    const [fontsLoaded] = useFonts({
+        Poppins_400Regular,
+        Poppins_600SemiBold,
+        Poppins_700Bold,
+      });
+    
+      if (!fontsLoaded) return null;
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: Constants.expoConfig?.extra?.expoClientId,
-    androidClientId: Constants.expoConfig?.extra?.androidClientId,
-    webClientId: Constants.expoConfig?.extra?.webClientId,
-    redirectUri,
-    scopes: ["profile", "email"],
-  });
+    const handleLogin = async () => {
+      try {
+        if (!email.trim() || !password.trim()) {
+          console.log("Please enter both email and password.");
+          return;
+        }
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const token = response.authentication?.accessToken;
-      if (token) {
-        Alert.alert("SSO Success", "You are logged in with Google!");
-        handleRoleRedirect("member");
+        const result = await login(email, password);
+        await saveSession(result.data);
+
+        // Redirect based on role
+        const role = result.data.role_name;
+        console.log(result.data.role_name);
+
+        switch (role) {
+          case 'Member':
+            router.replace('/member/home');
+            break;
+          case 'Loan Officer':
+            router.replace('/loan-officer/home');
+            break;
+          case 'Account Officer':
+            router.replace('/account-officer/home');
+            break;
+          default:
+            console.log('Unknown role:', role);
+            break;
+        }
+
+      } catch (error: any) {
+        console.log("Login failed:", error.message);
       }
-    }
-    if (response?.type === "error") {
-      setErrorMsg(response.error?.message || "Google login failed");
-    }
-  }, [response]);
+    };
 
-  const handleRoleRedirect = (
-    userRole: "member" | "account-officer" | "loan-officer",
-  ) => {
-    switch (userRole) {
-      case "account-officer":
-        router.replace("../account-officer");
-        break;
-      case "loan-officer":
-        router.replace("../loan-officer");
-        break;
-      case "member":
-      default:
-        router.replace("../member");
-        break;
-    }
-  };
-
-  const handleLogin = () => {
-    if (email && password) {
-      handleRoleRedirect("member");
-    } else {
-      Alert.alert("Error", "Please enter email and password");
-    }
-  };
-
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ImageBackground
-        source={require("@/assets/images/loginbg.webp")}
-        style={styles.backgroundImage}
-        contentFit="cover"
-      />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <FontAwesome name="group" size={isTablet ? 32 : 24} color="white" />
-          <Text style={styles.brand}>
-            {isTablet
-              ? "Community\nCo-op Something"
-              : "Community Co-op\nSomething"}
-          </Text>
-          <Text style={styles.tag}>Together we thrive</Text>
-        </View>
-      </ScrollView>
-
-      <View style={styles.fixedCardWrapper} pointerEvents="box-none">
-        <BlurView
-          intensity={isSmallPhone ? 80 : isTablet ? 50 : 60} // higher blur for mobile
-          style={styles.card}
+    return (
+        <KeyboardAvoidingView
+            style={styles.root}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <TouchableOpacity
-            style={{ position: "absolute", top: 18, left: 18, zIndex: 2 }}
-            onPress={() => router.replace("/")}
+          <GuestNavbar/>
+          {/* Blue header */}
+          <LinearGradient
+              colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.header}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={styles.cardTitle}>Member Login</Text>
-
-            {/* EMAIL */}
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrap}>
-              <FontAwesome
-                name="envelope-o"
-                size={isSmallPhone ? 14 : 16}
-                color="#888"
-              />
-              <TextInput
-                placeholder="email@example.com"
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            {/* PASSWORD */}
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrap}>
-              <FontAwesome
-                name="lock"
-                size={isSmallPhone ? 14 : 16}
-                color="#888"
-              />
-              <TextInput
-                placeholder="Enter your password"
-                secureTextEntry
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            {/* OPTIONS */}
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={styles.remember}
-                onPress={() => setRemember(!remember)}
-              >
-                <View style={[styles.checkbox, remember && styles.checked]} />
-                <Text style={styles.checkboxText}>Remember me</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Text style={styles.linkGreen}>Forgot password?</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* LOGIN BUTTON */}
-            <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-              <Text style={styles.loginText}>Log In</Text>
-            </TouchableOpacity>
-
-            {/* DIVIDER */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <View style={styles.dividerTextWrapper}>
-                <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.logoWrapper}>
+                  <View style={styles.logoBg}>
+                      <Ionicons name="business" size={30} color={BLUE_MID} />
+                  </View>
               </View>
-              <View style={styles.dividerLine} />
-            </View>
+              <Text style={styles.appName}>Community Cooperative</Text>
+          </LinearGradient>
 
-            {/* SSO BUTTON */}
-            <TouchableOpacity
-              style={styles.ssoButton}
-              onPress={() => promptAsync()}
-              disabled={!request}
-            >
-              <FontAwesome
-                name="google"
-                size={isSmallPhone ? 16 : 18}
-                color="#fff"
-              />
-              <Text style={styles.ssoButtonText}>Sign in with Google</Text>
-            </TouchableOpacity>
+          {/* White card body */}
+          <View style={styles.body}>
+              <Text style={styles.welcomeTitle}>Welcome Back</Text>
 
-            {/* ROLE SELECTION */}
-            <View style={styles.roleContainer}>
-              <Text style={styles.roleLabel}>Or login as:</Text>
-              <View
-                style={[
-                  styles.roleButtonsRow,
-                  isSmallPhone && styles.roleButtonsColumn,
-                ]}
-              >
-                <TouchableOpacity
-                  style={[
-                    styles.roleBtn,
-                    role === "member" && styles.roleActive,
-                  ]}
-                  onPress={() => {
-                    setRole("member");
-                    handleRoleRedirect("member");
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.roleBtnText,
-                      role === "member" && styles.roleBtnTextActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Member
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.roleBtn,
-                    role === "account-officer" && styles.roleActive,
-                  ]}
-                  onPress={() => {
-                    setRole("account-officer");
-                    handleRoleRedirect("account-officer");
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.roleBtnText,
-                      role === "account-officer" && styles.roleBtnTextActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {isSmallPhone ? "Acc. Officer" : "Account Officer"}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.roleBtn,
-                    role === "loan-officer" && styles.roleActive,
-                  ]}
-                  onPress={() => {
-                    setRole("loan-officer");
-                    handleRoleRedirect("loan-officer");
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.roleBtnText,
-                      role === "loan-officer" && styles.roleBtnTextActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {isSmallPhone ? "Loan Off." : "Loan Officer"}
-                  </Text>
-                </TouchableOpacity>
+              {/* Email input */}
+              <View style={styles.inputWrapper}>
+                  <Ionicons
+                      name="person-outline"
+                      size={20}
+                      color="#9CA3AF"
+                      style={styles.inputIcon}
+                  />
+                  <TextInput
+                      style={styles.input}
+                      placeholder="Email Address"
+                      placeholderTextColor="#9CA3AF"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                  />
               </View>
-            </View>
 
-            {/* APPLY */}
-            <Text style={styles.applyText}>
-              Not a member yet?{" "}
-              <Text style={styles.linkGreen}>Apply for Membership</Text>
-            </Text>
+              {/* Password input */}
+              <View style={styles.inputWrapper}>
+                  <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color="#9CA3AF"
+                      style={styles.inputIcon}
+                  />
+                  <TextInput
+                      style={styles.input}
+                      placeholder="Password"
+                      placeholderTextColor="#9CA3AF"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                  />
+                  <Pressable
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      style={styles.eyeIcon}
+                      hitSlop={8}
+                  >
+                      <Ionicons
+                          name={showPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color="#9CA3AF"
+                      />
+                  </Pressable>
+              </View>
 
-            {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
-          </ScrollView>
-        </BlurView>
-      </View>
-    </KeyboardAvoidingView>
-  );
+              {/* Login button */}
+              <Pressable
+                  onPress={handleLogin}
+                  style={({ pressed }) => [
+                      styles.loginBtn,
+                      pressed && styles.loginBtnPressed,
+                  ]}
+              >
+                  <LinearGradient
+                      colors={["#1A56DB", "#3B82F6"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.loginBtnGradient}
+                  >
+                      <Text style={styles.loginBtnText}>Login</Text>
+                  </LinearGradient>
+              </Pressable>
+
+              {/* Register link */}
+              <View style={styles.registerRow}>
+                  <Text style={styles.registerText}>Not a member yet? </Text>
+                  <Pressable hitSlop={6} onPress={()=>router.push('/guest/apply-now')}>
+                      <Text style={styles.registerLink}>Apply now</Text>
+                  </Pressable>
+              </View>
+          </View>
+      </KeyboardAvoidingView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1c3faa",
-  },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: isTablet ? 40 : isSmallPhone ? 12 : 20,
-    paddingVertical: isTablet ? 30 : 20,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: isTablet ? 40 : 20,
-  },
-  brand: {
-    textAlign: "center",
-    fontSize: isTablet ? 36 : isSmallPhone ? 22 : 28,
-    fontWeight: "700",
-    color: "#fff",
-    marginTop: 12,
-    lineHeight: isTablet ? 44 : isSmallPhone ? 30 : 38,
-  },
-  tag: {
-    color: "#dff7ec",
-    marginTop: isSmallPhone ? 6 : 8,
-    fontSize: isSmallPhone ? 12 : 14,
-  },
-
-  card: {
-    backgroundColor: "rgba(255, 255, 255, 0.85)", // slightly more transparent
-    borderRadius: isTablet ? 24 : 20,
-    padding: isTablet ? 40 : isSmallPhone ? 16 : 20,
-    width: "100%",
-    maxWidth: 500,
-    alignSelf: "center",
-  },
-
-  cardTablet: {
-    maxWidth: 500,
-    alignSelf: "center",
-    width: "100%",
-  },
-
-  cardTitle: {
-    fontSize: isTablet ? 28 : isSmallPhone ? 18 : 22,
-    fontWeight: "700",
-    marginBottom: isTablet ? 25 : isSmallPhone ? 12 : 15,
-    textAlign: "center",
-    color: "#1f2937",
-  },
-
-  label: {
-    marginTop: isSmallPhone ? 8 : 10,
-    marginBottom: isSmallPhone ? 4 : 5,
-    fontWeight: "600",
-    fontSize: isSmallPhone ? 12 : 14,
-    color: "#374151",
-  },
-
-  inputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f1f3f5",
-    borderRadius: isTablet ? 14 : 12,
-    paddingHorizontal: isSmallPhone ? 10 : 12,
-    marginBottom: isSmallPhone ? 8 : 10,
-    minHeight: isSmallPhone ? 44 : isTablet ? 52 : 48, // use minHeight
-  },
-  input: {
-    flex: 1,
-    paddingHorizontal: isSmallPhone ? 8 : 12,
-    fontSize: isSmallPhone ? 13 : 14,
-    color: "#1f2937",
-  },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: isSmallPhone ? 8 : 10,
-    flexWrap: "wrap",
-  },
-
-  remember: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkbox: {
-    width: isSmallPhone ? 14 : 16,
-    height: isSmallPhone ? 14 : 16,
-    borderWidth: 1,
-    borderColor: "#555",
-    borderRadius: 2,
-  },
-  checked: {
-    backgroundColor: "#1c3faa",
-  },
-  checkboxText: {
-    marginLeft: 8,
-    fontSize: isSmallPhone ? 12 : 13,
-    color: "#374151",
-  },
-
-  loginBtn: {
-    backgroundColor: "#1c3faa",
-    padding: isSmallPhone ? 12 : isTablet ? 16 : 14,
-    borderRadius: isTablet ? 14 : 12,
-    alignItems: "center",
-    marginTop: isSmallPhone ? 8 : 10,
-    minHeight: isSmallPhone ? 44 : isTablet ? 52 : 48, // use minHeight
-    justifyContent: "center",
-  },
-  loginText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: isSmallPhone ? 14 : isTablet ? 16 : 15,
-  },
-
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: isSmallPhone ? 12 : 15,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ccc",
-  },
-  dividerTextWrapper: {
-    marginHorizontal: 10,
-  },
-  dividerText: {
-    fontSize: isSmallPhone ? 12 : 13,
-    color: "#6b7280",
-    fontWeight: "600",
-  },
-
-  ssoButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ea4335",
-    padding: isSmallPhone ? 12 : isTablet ? 16 : 14,
-    borderRadius: isTablet ? 14 : 12,
-    justifyContent: "center",
-    marginBottom: isSmallPhone ? 12 : 10,
-    minHeight: isSmallPhone ? 44 : isTablet ? 52 : 48, // use minHeight
-  },
-  ssoButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: isSmallPhone ? 13 : isTablet ? 16 : 15,
-    marginLeft: 8,
-  },
-
-  roleContainer: {
-    marginVertical: isSmallPhone ? 12 : 15,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
-    paddingTop: isSmallPhone ? 12 : 15,
-  },
-  roleLabel: {
-    fontSize: isSmallPhone ? 11 : 12,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: isSmallPhone ? 8 : 10,
-    textAlign: "center",
-  },
-  roleButtonsRow: {
-    flexDirection: "row",
-    gap: isSmallPhone ? 6 : 8,
-  },
-  roleButtonsColumn: {
-    flexDirection: "column",
-    gap: 8,
-  },
-  roleBtn: {
-    flex: 1,
-    paddingVertical: isSmallPhone ? 8 : 10,
-    paddingHorizontal: isSmallPhone ? 6 : 8,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#1c3faa",
-    backgroundColor: "transparent",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: isSmallPhone ? 40 : 44,
-  },
-  roleActive: {
-    backgroundColor: "#1c3faa",
-  },
-  roleBtnText: {
-    fontSize: isSmallPhone ? 10 : 11,
-    fontWeight: "600",
-    color: "#1c3faa",
-  },
-  roleBtnTextActive: {
-    color: "#fff",
-  },
-
-  applyText: {
-    textAlign: "center",
-    marginTop: isSmallPhone ? 12 : 15,
-    fontSize: isSmallPhone ? 12 : 13,
-    color: "#6b7280",
-  },
-
-  linkGreen: {
-    color: "#1c3faa",
-    fontWeight: "600",
-  },
-
-  errorText: {
-    color: "#ef4444",
-    marginTop: 12,
-    textAlign: "center",
-    fontSize: isSmallPhone ? 12 : 13,
-  },
-
-  fixedCardWrapper: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: isTablet ? 40 : isSmallPhone ? 19 : 30,
-    paddingVertical: isTablet ? 30 : 20,
-    zIndex: 10,
-    // Add backgroundColor if you want to dim the background
-    // backgroundColor: "rgba(28, 63, 170, 0.2)",
-  },
+    root: {
+        flex: 1,
+        backgroundColor: "#F5F6FA",
+    },
+    header: {
+        paddingTop: 64,
+        paddingBottom: 48,
+        alignItems: "center",
+        gap: 14,
+    },
+    logoWrapper: {
+        width: 68,
+        height: 68,
+        borderRadius: 34,
+        backgroundColor: "rgba(255,255,255,0.95)",
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 6,
+    },
+    logoBg: {
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    appName: {
+        color: "#FFFFFF",
+        fontSize: 20,
+        fontFamily: "Poppins_700Bold",
+        letterSpacing: 0.2,
+    },
+    body: {
+        flex: 1,
+        backgroundColor: "#FFFFFF",
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        marginTop: -24,
+        paddingHorizontal: 28,
+        paddingTop: 40,
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 20,
+        shadowOffset: { width: 0, height: -4 },
+        elevation: 8,
+    },
+    welcomeTitle: {
+        fontSize: 26,
+        fontFamily: "Poppins_700Bold",
+        color: "#111827",
+        textAlign: "center",
+        marginBottom: 32,
+    },
+    inputWrapper: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F9FAFB",
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        paddingHorizontal: 14,
+        marginBottom: 16,
+        height: 54,
+    },
+    inputIcon: {
+        marginRight: 10,
+    },
+    input: {
+        flex: 1,
+        fontSize: 15,
+        fontFamily: "Poppins_400Regular",
+        color: "#111827",
+        height: "100%",
+    },
+    eyeIcon: {
+        padding: 4,
+    },
+    loginBtn: {
+        borderRadius: 14,
+        overflow: "hidden",
+        marginTop: 8,
+        marginBottom: 24,
+        shadowColor: BLUE,
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 6,
+    },
+    loginBtnPressed: {
+        opacity: 0.88,
+    },
+    loginBtnGradient: {
+        height: 54,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 14,
+    },
+    loginBtnText: {
+        color: "#FFFFFF",
+        fontSize: 17,
+        fontFamily: "Poppins_700Bold",
+        letterSpacing: 0.3,
+    },
+    registerRow: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "absolute",
+        bottom: 48,
+        alignSelf: "center",
+        left: 0,
+        right: 0,
+    },
+    registerText: {
+        fontSize: 14,
+        fontFamily: "Poppins_400Regular",
+        color: "#6B7280",
+    },
+    registerLink: {
+        fontSize: 14,
+        fontFamily: "Poppins_600SemiBold",
+        color: BLUE,
+    },
 });
