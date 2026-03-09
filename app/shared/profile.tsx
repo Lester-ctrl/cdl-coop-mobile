@@ -1,18 +1,35 @@
 import { useAuth } from "@/context/AuthContext";
+import {
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function ProfilePage() {
   const { session } = useAuth();
+
+  const [fontsLoaded] = useFonts({
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
+  if (!fontsLoaded) return null;
 
   const profile = session?.profile;
   const user = session?.user;
@@ -26,78 +43,136 @@ export default function ProfilePage() {
 
   const avatarUrl = user?.avatar ?? null;
 
-  const fields = [
-    { label: "First Name",     value: profile?.first_name    ?? "—", icon: "person-outline"         },
-    { label: "Middle Name",    value: profile?.middle_name   ?? "—", icon: "person-outline"         },
-    { label: "Last Name",      value: profile?.last_name     ?? "—", icon: "person-outline"         },
-    { label: "Email",          value: profile?.email         ?? "—", icon: "mail-outline"           },
-    { label: "Mobile Number",  value: profile?.mobile_number ?? "—", icon: "call-outline"           },
-    { label: "Birthdate",      value: profile?.birthdate     ?? "—", icon: "calendar-outline"       },
-    { label: "Sex",            value: profile?.sex           ?? "—", icon: "transgender-outline"    },
-    { label: "Address",        value: profile?.address       ?? "—", icon: "location-outline"       },
-    { label: "Username",       value: user?.username         ?? "—", icon: "at-outline"             },
-    { label: "Coop ID",        value: user?.coop_id          ?? "—", icon: "id-card-outline"        },
-    { label: "Role",           value: roleName,                       icon: "shield-checkmark-outline"},
-  ];
-
   return (
     <SafeAreaView style={styles.root}>
-      {/* ── Header ── */}
-      <View style={styles.header}>
+
+      {/* ── Blue Header ── */}
+      <LinearGradient
+        colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={22} color={BLUE} />
+          <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 36 }} />
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* ── Avatar + Name ── */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarFallback}>
-                <Ionicons name="person" size={40} color={BLUE} />
-              </View>
-            )}
-          </View>
-          <Text style={styles.fullName}>{fullName}</Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>{roleName}</Text>
-          </View>
-        </View>
-
-        {/* ── Info Fields ── */}
-        <View style={styles.card}>
-          {fields.map((field, index) => (
-            <View key={field.label}>
-              <View style={styles.fieldRow}>
-                <View style={styles.fieldIconBox}>
-                  <Ionicons name={field.icon as any} size={18} color={BLUE} />
-                </View>
-                <View style={styles.fieldText}>
-                  <Text style={styles.fieldLabel}>{field.label}</Text>
-                  <Text style={styles.fieldValue}>{field.value}</Text>
-                </View>
-              </View>
-              {index < fields.length - 1 && <View style={styles.fieldDivider} />}
+        {/* Avatar */}
+        <View style={styles.avatarWrapper}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Ionicons name="person" size={44} color={BLUE} />
             </View>
-          ))}
+          )}
         </View>
+      </LinearGradient>
+
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Personal Details ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBox}>
+              <Ionicons name="person-outline" size={22} color={BLUE} />
+            </View>
+            <Text style={styles.sectionTitle}>Personal Details</Text>
+          </View>
+
+          <View style={styles.card}>
+            <FieldRow label="First Name"   value={profile?.first_name   ?? "—"} icon="person-outline"   />
+            <Divider />
+            <FieldRow label="Middle Name"  value={profile?.middle_name  ?? "—"} icon="person-outline"   />
+            <Divider />
+            <FieldRow label="Last Name"    value={profile?.last_name    ?? "—"} icon="person-outline"   />
+            <Divider />
+            <FieldRow label="Birthdate"    value={profile?.birthdate    ?? "—"} icon="calendar-outline" />
+            <Divider />
+            <FieldRow label="Sex"          value={profile?.sex          ?? "—"} icon="body-outline"     />
+          </View>
+        </View>
+
+        {/* ── Contact Information ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBox}>
+              <Ionicons name="call-outline" size={22} color={BLUE} />
+            </View>
+            <Text style={styles.sectionTitle}>Contact Information</Text>
+          </View>
+
+          <View style={styles.card}>
+            <FieldRow label="Email Address"       value={profile?.email         ?? "—"} icon="mail-outline"  />
+            <Divider />
+            <FieldRow label="Mobile Number"       value={profile?.mobile_number ?? "—"} icon="call-outline"  />
+            <Divider />
+            <FieldRow label="Residential Address" value={profile?.address       ?? "—"} icon="home-outline"  />
+          </View>
+        </View>
+
+        {/* ── Account Details ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBox}>
+              <Ionicons name="shield-checkmark-outline" size={22} color={BLUE} />
+            </View>
+            <Text style={styles.sectionTitle}>Account Details</Text>
+          </View>
+
+          <View style={styles.card}>
+            <FieldRow label="Username" value={user?.username ?? "—"} icon="at-outline"                />
+            <Divider />
+            <FieldRow label="Coop ID"  value={user?.coop_id  ?? "—"} icon="id-card-outline"           />
+            <Divider />
+            <FieldRow label="Role"     value={roleName}               icon="shield-checkmark-outline"  />
+          </View>
+        </View>
+
+        {/* ── Edit Profile Button ── */}
+        <TouchableOpacity style={styles.editBtn} activeOpacity={0.85}>
+          <Ionicons name="pencil-outline" size={18} color="#fff" />
+          <Text style={styles.editBtnText}>Edit Profile</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const BLUE       = "#2563C7";
-const ACTIVE_BG  = "#EEF3FB";
-const CARD       = "#FFFFFF";
-const BG         = "#F5F6FA";
-const BORDER     = "#E8EAF0";
-const TEXT       = "#1C1C2E";
-const MUTED      = "#8890A4";
+/* ── Reusable Field Row ── */
+function FieldRow({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: string;
+}) {
+  return (
+    <View style={styles.fieldRow}>
+      <Ionicons name={icon as any} size={18} color={BLUE} style={styles.fieldIcon} />
+      <View style={styles.fieldText}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        <Text style={styles.fieldValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function Divider() {
+  return <View style={styles.fieldDivider} />;
+}
+
+const BLUE      = "#2563C7";
+const ACTIVE_BG = "#EEF3FB";
+const CARD      = "#FFFFFF";
+const BG        = "#F5F6FA";
+const BORDER    = "#E8EAF0";
+const TEXT      = "#1C1C2E";
+const MUTED     = "#8890A4";
 
 const styles = StyleSheet.create({
   root: {
@@ -107,63 +182,55 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    paddingTop: 16,
+    paddingBottom: 52,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: CARD,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    alignItems: "center",
+    borderBottomLeftRadius: 42,
+    borderBottomRightRadius: 42,
   },
   backBtn: {
-    width: 36,
-    height: 36,
+    alignSelf: "flex-start",
+    width: 34,
+    height: 34,
     borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT,
-  },
-
-  scroll: {
-    paddingBottom: 40,
-  },
-
-  /* ── Avatar Section ── */
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 32,
-    gap: 10,
+    marginBottom: 16,
   },
   avatarWrapper: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     overflow: "hidden",
     borderWidth: 3,
-    borderColor: BLUE,
+    borderColor: "#fff",
     backgroundColor: ACTIVE_BG,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
   avatarImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
   },
   avatarFallback: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: ACTIVE_BG,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#EEF3FB",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  /* ── Name Section ── */
+  nameSection: {
+    alignItems: "center",
+    marginTop: -44,
+    paddingTop: 52,
+    paddingBottom: 20,
+    gap: 8,
   },
   fullName: {
     fontSize: 20,
@@ -180,55 +247,109 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   roleBadgeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     color: BLUE,
   },
 
-  /* ── Info Card ── */
-  card: {
+  scroll: {
+    paddingBottom: 40,
+  },
+
+  /* ── Section ── */
+  section: {
+    marginTop: 40,
     marginHorizontal: 16,
+    marginBottom: 20,
+    paddingHorizontal: 30
+  },
+  sectionHeader: {
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins_600SemiBold",
+    color: TEXT,
+  },
+
+  /* ── Card ── */
+  card: {
     backgroundColor: CARD,
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    elevation: 2,
   },
+
+  /* ── Field Row ── */
   fieldRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 14,
-    gap: 14,
+    gap: 12,
   },
-  fieldIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
-    alignItems: "center",
-    justifyContent: "center",
+  fieldIcon: {
+    marginTop: 2,
   },
   fieldText: {
     flex: 1,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: MUTED,
     fontWeight: "500",
-    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 3,
   },
   fieldValue: {
     fontSize: 15,
     color: TEXT,
-    fontWeight: "600",
+    fontWeight: "500",
+    lineHeight: 22,
   },
   fieldDivider: {
     height: 1,
     backgroundColor: BORDER,
-    marginLeft: 50,
+    marginLeft: 30,
+  },
+
+  /* ── Edit Button ── */
+  editBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: BLUE,
+    shadowColor: BLUE,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  editBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
