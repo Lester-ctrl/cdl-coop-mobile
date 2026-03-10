@@ -34,8 +34,9 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 1, label: "Home", icon: "home-outline", route: "/member/home" },
+  { id:2, label: "Apply Loan", icon: "document-text-outline", route: "/member/apply-loan"},
   {
-    id: 2,
+    id: 3,
     label: "Products & Services",
     icon: "grid-outline",
     subItems: [
@@ -52,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Membership",
     icon: "card-outline",
     subItems: [
@@ -62,19 +63,19 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     label: "About Us",
     icon: "information-circle-outline",
     route: "/member/about-us",
   },
   {
-    id: 5,
+    id: 6,
     label: "Contact Us",
     icon: "location-outline",
     route: "/member/contact-us",
   },
   {
-    id: 6,
+    id: 7,
     label: "Loan Calculator",
     icon: "calculator-outline",
     route: "/member/loan-calculator",
