@@ -2,13 +2,13 @@ import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function ProfilePage() {
@@ -22,36 +22,67 @@ export default function ProfilePage() {
     ? `${profile.first_name} ${profile.middle_name ?? ""} ${profile.last_name}`
         .replace(/\s+/g, " ")
         .trim()
-    : user?.username ?? "User";
+    : (user?.username ?? "User");
 
   const avatarUrl = user?.avatar ?? null;
 
   const fields = [
-    { label: "First Name",     value: profile?.first_name    ?? "—", icon: "person-outline"         },
-    { label: "Middle Name",    value: profile?.middle_name   ?? "—", icon: "person-outline"         },
-    { label: "Last Name",      value: profile?.last_name     ?? "—", icon: "person-outline"         },
-    { label: "Email",          value: profile?.email         ?? "—", icon: "mail-outline"           },
-    { label: "Mobile Number",  value: profile?.mobile_number ?? "—", icon: "call-outline"           },
-    { label: "Birthdate",      value: profile?.birthdate     ?? "—", icon: "calendar-outline"       },
-    { label: "Sex",            value: profile?.sex           ?? "—", icon: "transgender-outline"    },
-    { label: "Address",        value: profile?.address       ?? "—", icon: "location-outline"       },
-    { label: "Username",       value: user?.username         ?? "—", icon: "at-outline"             },
-    { label: "Coop ID",        value: user?.coop_id          ?? "—", icon: "id-card-outline"        },
-    { label: "Role",           value: roleName,                       icon: "shield-checkmark-outline"},
+    {
+      label: "First Name",
+      value: profile?.first_name ?? "—",
+      icon: "person-outline",
+    },
+    {
+      label: "Middle Name",
+      value: profile?.middle_name ?? "—",
+      icon: "person-outline",
+    },
+    {
+      label: "Last Name",
+      value: profile?.last_name ?? "—",
+      icon: "person-outline",
+    },
+    { label: "Email", value: profile?.email ?? "—", icon: "mail-outline" },
+    {
+      label: "Mobile Number",
+      value: profile?.mobile_number ?? "—",
+      icon: "call-outline",
+    },
+    {
+      label: "Birthdate",
+      value: profile?.birthdate ?? "—",
+      icon: "calendar-outline",
+    },
+    { label: "Sex", value: profile?.sex ?? "—", icon: "transgender-outline" },
+    {
+      label: "Address",
+      value: profile?.address ?? "—",
+      icon: "location-outline",
+    },
+    { label: "Username", value: user?.username ?? "—", icon: "at-outline" },
+    { label: "Coop ID", value: user?.coop_id ?? "—", icon: "id-card-outline" },
+    { label: "Role", value: roleName, icon: "shield-checkmark-outline" },
   ];
 
   return (
     <SafeAreaView style={styles.root}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
           <Ionicons name="chevron-back" size={22} color={BLUE} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Profile</Text>
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
         {/* ── Avatar + Name ── */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
@@ -82,22 +113,58 @@ export default function ProfilePage() {
                   <Text style={styles.fieldValue}>{field.value}</Text>
                 </View>
               </View>
-              {index < fields.length - 1 && <View style={styles.fieldDivider} />}
+              {index < fields.length - 1 && (
+                <View style={styles.fieldDivider} />
+              )}
             </View>
           ))}
         </View>
+
+        {/* ── Edit Profile Button ── */}
+        {roleName === "Loan Officer" && (
+          <TouchableOpacity
+            disabled={!profile}
+            style={{
+              margin: 16,
+              backgroundColor: profile ? "#2563eb" : "#a5b4fc",
+              padding: 12,
+              borderRadius: 8,
+            }}
+            onPress={() => {
+              if (!profile) return;
+              router.push({
+                pathname: "/loan-officer/profile/editprofile",
+                params: {
+                  profileId: profile.profile_id,
+                  firstName: profile.first_name,
+                  middleName: profile.middle_name,
+                  lastName: profile.last_name,
+                  email: profile.email,
+                  mobile: profile.mobile_number,
+                  address: profile.address,
+                  birthdate: profile.birthdate,
+                  sex: profile.sex,
+                },
+              });
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
+              Edit Profile
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const BLUE       = "#2563C7";
-const ACTIVE_BG  = "#EEF3FB";
-const CARD       = "#FFFFFF";
-const BG         = "#F5F6FA";
-const BORDER     = "#E8EAF0";
-const TEXT       = "#1C1C2E";
-const MUTED      = "#8890A4";
+const BLUE = "#2563C7";
+const ACTIVE_BG = "#EEF3FB";
+const CARD = "#FFFFFF";
+const BG = "#F5F6FA";
+const BORDER = "#E8EAF0";
+const TEXT = "#1C1C2E";
+const MUTED = "#8890A4";
 
 const styles = StyleSheet.create({
   root: {
