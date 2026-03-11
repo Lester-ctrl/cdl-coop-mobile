@@ -1,5 +1,13 @@
 import { useAuth } from "@/context/AuthContext";
+import {
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   Image,
@@ -13,6 +21,15 @@ import {
 
 export default function ProfilePage() {
   const { session } = useAuth();
+
+  const [fontsLoaded] = useFonts({
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
+  if (!fontsLoaded) return null;
 
   const profile = session?.profile;
   const user = session?.user;
@@ -75,9 +92,6 @@ export default function ProfilePage() {
         >
           <Ionicons name="chevron-back" size={22} color={BLUE} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 36 }} />
-      </View>
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -117,7 +131,7 @@ export default function ProfilePage() {
                 <View style={styles.fieldDivider} />
               )}
             </View>
-          ))}
+          )}
         </View>
 
         {/* ── Edit Profile Button ── */}
@@ -174,63 +188,55 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    paddingTop: 16,
+    paddingBottom: 52,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: CARD,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    alignItems: "center",
+    borderBottomLeftRadius: 42,
+    borderBottomRightRadius: 42,
   },
   backBtn: {
-    width: 36,
-    height: 36,
+    alignSelf: "flex-start",
+    width: 34,
+    height: 34,
     borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT,
-  },
-
-  scroll: {
-    paddingBottom: 40,
-  },
-
-  /* ── Avatar Section ── */
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 32,
-    gap: 10,
+    marginBottom: 16,
   },
   avatarWrapper: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     overflow: "hidden",
     borderWidth: 3,
-    borderColor: BLUE,
+    borderColor: "#fff",
     backgroundColor: ACTIVE_BG,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
   avatarImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
   },
   avatarFallback: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: ACTIVE_BG,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#EEF3FB",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  /* ── Name Section ── */
+  nameSection: {
+    alignItems: "center",
+    marginTop: -44,
+    paddingTop: 52,
+    paddingBottom: 20,
+    gap: 8,
   },
   fullName: {
     fontSize: 20,
@@ -247,55 +253,109 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   roleBadgeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     color: BLUE,
   },
 
-  /* ── Info Card ── */
-  card: {
+  scroll: {
+    paddingBottom: 40,
+  },
+
+  /* ── Section ── */
+  section: {
+    marginTop: 40,
     marginHorizontal: 16,
+    marginBottom: 20,
+    paddingHorizontal: 30
+  },
+  sectionHeader: {
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: ACTIVE_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins_600SemiBold",
+    color: TEXT,
+  },
+
+  /* ── Card ── */
+  card: {
     backgroundColor: CARD,
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    elevation: 2,
   },
+
+  /* ── Field Row ── */
   fieldRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 14,
-    gap: 14,
+    gap: 12,
   },
-  fieldIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
-    alignItems: "center",
-    justifyContent: "center",
+  fieldIcon: {
+    marginTop: 2,
   },
   fieldText: {
     flex: 1,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: MUTED,
     fontWeight: "500",
-    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 3,
   },
   fieldValue: {
     fontSize: 15,
     color: TEXT,
-    fontWeight: "600",
+    fontWeight: "500",
+    lineHeight: 22,
   },
   fieldDivider: {
     height: 1,
     backgroundColor: BORDER,
-    marginLeft: 50,
+    marginLeft: 30,
+  },
+
+  /* ── Edit Button ── */
+  editBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: BLUE,
+    shadowColor: BLUE,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  editBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
