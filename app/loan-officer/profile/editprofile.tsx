@@ -1,6 +1,7 @@
+import { editProfile } from "@/api/EditLOProfile";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   Image,
@@ -13,14 +14,45 @@ import {
 } from "react-native";
 
 export default function EditProfile() {
-  const [firstName, setFirstName] = useState("John");
-  const [middleName, setMiddleName] = useState("Quincy");
-  const [lastName, setLastName] = useState("Doe");
-  const [email, setEmail] = useState("john.doe@example.com");
-  const [mobile, setMobile] = useState("+63 912 345 6789");
-  const [address, setAddress] = useState(
-    "123 Main Street\nBarangay San Lorenzo\nMakati City, Metro Manila\nPhilippines 1223",
-  );
+  const params = useLocalSearchParams();
+  const [profileId] = useState(params.profileId || "");
+  const [firstName, setFirstName] = useState(params.firstName || "");
+  const [middleName, setMiddleName] = useState(params.middleName || "");
+  const [lastName, setLastName] = useState(params.lastName || "");
+  const [email, setEmail] = useState(params.email || "");
+  const [mobile, setMobile] = useState(params.mobile || "");
+  const [address, setAddress] = useState(params.address || "");
+  const [birthdate, setBirthdate] = useState(params.birthdate || "");
+  const [sex, setSex] = useState(params.sex || "");
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!profileId) {
+      // Show an error or warning to the user
+      alert("Profile ID is missing. Cannot update profile.");
+      return;
+    }
+    setLoading(true);
+    const data = {
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      email,
+      mobile_number: mobile,
+      address,
+      birthdate,
+      sex,
+      // Add other fields as needed
+    };
+    try {
+      const result = await editProfile(profileId, data);
+      // Handle success (show message, navigate, etc.)
+    } catch (error) {
+      // Handle error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -130,7 +162,7 @@ export default function EditProfile() {
       </View>
 
       {/* SAVE BUTTON */}
-      <TouchableOpacity style={styles.saveButton}>
+      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <FontAwesome6 name="floppy-disk" size={16} color="#fff" />
         <Text style={styles.saveText}>Save Changes</Text>
       </TouchableOpacity>
