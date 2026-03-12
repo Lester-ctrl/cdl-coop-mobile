@@ -63,20 +63,20 @@ const ACCORDIONS = [
   {
     title: "For All Members",
     items: [
-        "Active membership for at least 6 months", 
-        "Valid government-issued ID", 
-        "Proof of income (payslip, ITR, etc.)",
-        "Good credit standing",
-        "Completed loan application form"
+      "Active membership for at least 6 months",
+      "Valid government-issued ID",
+      "Proof of income (payslip, ITR, etc.)",
+      "Good credit standing",
+      "Completed loan application form",
     ],
   },
   {
     title: "Additional Documents",
     items: [
-        "Latest bank statements (3 months)", 
-        "Proof of billing address",
-        "Co-maker information (if required)",
-        "Collateral documents (for secured loans)"
+      "Latest bank statements (3 months)",
+      "Proof of billing address",
+      "Co-maker information (if required)",
+      "Collateral documents (for secured loans)",
     ],
   },
 ];
