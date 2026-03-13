@@ -26,6 +26,16 @@ export default function ProfilePage() {
 
   const avatarUrl = user?.avatar ?? null;
 
+  // Determine the edit path based on role
+  let editProfilePath = "";
+  if (roleName === "Loan Officer") {
+    editProfilePath = "/loan-officer/profile/editprofile";
+  } else if (roleName === "Account Officer") {
+    editProfilePath = "/account-officer/profile/editprofile";
+  } else if (roleName === "Member") {
+    editProfilePath = "/member/profile/editprofile"; // optional
+  }
+
   const fields = [
     {
       label: "First Name",
@@ -66,7 +76,7 @@ export default function ProfilePage() {
 
   return (
     <SafeAreaView style={styles.root}>
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -83,7 +93,7 @@ export default function ProfilePage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Avatar + Name ── */}
+        {/* Avatar + Name */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
             {avatarUrl ? (
@@ -100,7 +110,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        {/* ── Info Fields ── */}
+        {/* Info Fields */}
         <View style={styles.card}>
           {fields.map((field, index) => (
             <View key={field.label}>
@@ -120,44 +130,44 @@ export default function ProfilePage() {
           ))}
         </View>
 
-        {/* ── Edit Profile Button ── */}
-        {roleName === "Loan Officer" && (
-          <TouchableOpacity
-            disabled={!profile}
-            style={{
-              margin: 16,
-              backgroundColor: profile ? "#2563eb" : "#a5b4fc",
-              padding: 12,
-              borderRadius: 8,
-            }}
-            onPress={() => {
-              if (!profile) return;
-              router.push({
-                pathname: "/loan-officer/profile/editprofile",
-                params: {
-                  profileId: profile.profile_id,
-                  firstName: profile.first_name,
-                  middleName: profile.middle_name,
-                  lastName: profile.last_name,
-                  email: profile.email,
-                  mobile: profile.mobile_number,
-                  address: profile.address,
-                  birthdate: profile.birthdate,
-                  sex: profile.sex,
-                },
-              });
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>
-              Edit Profile
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* Edit Profile Button */}
+        {(roleName === "Loan Officer" || roleName === "Account Officer") &&
+          profile && (
+            <TouchableOpacity
+              style={{
+                margin: 16,
+                backgroundColor: "#2563eb",
+                padding: 12,
+                borderRadius: 8,
+              }}
+              onPress={() => {
+                router.push({
+                  pathname: editProfilePath,
+                  params: {
+                    profileId: profile.profile_id,
+                    firstName: profile.first_name,
+                    middleName: profile.middle_name,
+                    lastName: profile.last_name,
+                    email: profile.email,
+                    mobile: profile.mobile_number,
+                    address: profile.address,
+                    birthdate: profile.birthdate,
+                    sex: profile.sex,
+                  },
+                });
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700" }}>
+                Edit Profile
+              </Text>
+            </TouchableOpacity>
+          )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// Styles & Colors
 const BLUE = "#2563C7";
 const ACTIVE_BG = "#EEF3FB";
 const CARD = "#FFFFFF";
@@ -167,12 +177,7 @@ const TEXT = "#1C1C2E";
 const MUTED = "#8890A4";
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-
-  /* ── Header ── */
+  root: { flex: 1, backgroundColor: BG },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -191,22 +196,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT,
-  },
-
-  scroll: {
-    paddingBottom: 40,
-  },
-
-  /* ── Avatar Section ── */
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 32,
-    gap: 10,
-  },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: TEXT },
+  scroll: { paddingBottom: 40 },
+  avatarSection: { alignItems: "center", paddingVertical: 32, gap: 10 },
   avatarWrapper: {
     width: 90,
     height: 90,
@@ -219,11 +211,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 4,
   },
-  avatarImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-  },
+  avatarImage: { width: 90, height: 90, borderRadius: 45 },
   avatarFallback: {
     width: 90,
     height: 90,
@@ -246,13 +234,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#BFDBFE",
   },
-  roleBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: BLUE,
-  },
-
-  /* ── Info Card ── */
+  roleBadgeText: { fontSize: 13, fontWeight: "600", color: BLUE },
   card: {
     marginHorizontal: 16,
     backgroundColor: CARD,
@@ -261,41 +243,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  fieldRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    gap: 14,
-  },
-  fieldIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fieldText: {
-    flex: 1,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    color: MUTED,
-    fontWeight: "500",
-    marginBottom: 2,
-  },
-  fieldValue: {
-    fontSize: 15,
-    color: TEXT,
-    fontWeight: "600",
-  },
-  fieldDivider: {
-    height: 1,
-    backgroundColor: BORDER,
-    marginLeft: 50,
-  },
-});
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 3,
+    },
+    fieldRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 14,
+      gap: 14,
+    },
+    fieldIconBox: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: ACTIVE_BG,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    fieldText: { flex: 1 },
+    fieldLabel: {
+      fontSize: 12,
+      color: MUTED,
+      fontWeight: "500",
+      marginBottom: 2,
+    },
+    fieldValue: { fontSize: 15, color: TEXT, fontWeight: "600" },
+    fieldDivider: { height: 1, backgroundColor: BORDER, marginLeft: 50 },
+  });

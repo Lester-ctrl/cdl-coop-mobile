@@ -2,15 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Modal,
-    Pressable,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Modal,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -30,6 +30,7 @@ type NavItem = {
   subItems?: SubItem[];
 };
 
+// ── Account Officer Menu ──
 const NAV_ITEMS: NavItem[] = [
   {
     id: 1,
@@ -150,7 +151,7 @@ export default function GuestNavbar() {
         </View>
       </SafeAreaView>
 
-      {/* ── Drawer inside Modal so it floats above all page content ── */}
+      {/* ── Drawer Modal ── */}
       <Modal
         visible={isOpen}
         transparent
@@ -158,17 +159,15 @@ export default function GuestNavbar() {
         onRequestClose={closeMenu}
         statusBarTranslucent
       >
-        {/* Dim overlay */}
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} />
         </Animated.View>
 
-        {/* Drawer panel */}
         <Animated.View
           style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         >
           <SafeAreaView style={{ flex: 1 }}>
-            {/* Drawer Header */}
+            {/* Header */}
             <View style={styles.drawerHeader}>
               <View style={styles.drawerLogoRow}>
                 <View style={styles.drawerLogoBox}>
@@ -184,6 +183,27 @@ export default function GuestNavbar() {
                 <Ionicons name="close" size={16} color={MUTED} />
               </TouchableOpacity>
             </View>
+
+            <View style={styles.divider} />
+
+            {/* Profile */}
+            <TouchableOpacity
+              style={styles.profileContainer}
+              activeOpacity={0.8}
+              onPress={() => {
+                closeMenu();
+                router.push("/shared/profile");
+              }}
+            >
+              <View style={styles.profileAvatar}>
+                <Ionicons name="person" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.profileName}>Account Officer</Text>
+                <Text style={styles.profileEmail}>View Profile</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={MUTED} />
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
@@ -227,7 +247,6 @@ export default function GuestNavbar() {
                       )}
                     </TouchableOpacity>
 
-                    {/* Sub-items dropdown */}
                     {hasChildren && expanded && (
                       <View style={styles.subList}>
                         {item.subItems!.map((sub) => {
@@ -272,10 +291,14 @@ export default function GuestNavbar() {
               })}
             </View>
 
-            {/* Logout at bottom */}
+            {/* Footer */}
             <View style={styles.drawerFooter}>
               <View style={styles.divider} />
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.75}
+                onPress={() => router.push("./index")}
+              >
                 <Ionicons
                   name="log-in-outline"
                   size={20}
@@ -283,7 +306,7 @@ export default function GuestNavbar() {
                   style={styles.menuIcon}
                 />
                 <Text style={[styles.menuLabel, styles.logoutLabel]}>
-                  Login
+                  Log Out
                 </Text>
               </TouchableOpacity>
             </View>
@@ -294,6 +317,7 @@ export default function GuestNavbar() {
   );
 }
 
+// ── Colors & Styles ──
 const BLUE = "#2563C7";
 const ACTIVE_BG = "#EEF3FB";
 const ACTIVE_TEXT = "#2563C7";
@@ -305,8 +329,6 @@ const MUTED = "#8890A4";
 
 const styles = StyleSheet.create({
   root: { backgroundColor: CARD },
-
-  /* ── Navbar ── */
   navbar: {
     height: 56,
     flexDirection: "row",
@@ -329,8 +351,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-end",
   },
-
-  /* ── Overlay ── */
   overlay: {
     position: "absolute",
     top: 0,
@@ -339,8 +359,6 @@ const styles = StyleSheet.create({
     height,
     backgroundColor: "rgba(0,0,0,0.35)",
   },
-
-  /* ── Drawer ── */
   drawer: {
     position: "absolute",
     top: 0,
@@ -386,8 +404,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 18,
     marginBottom: 8,
   },
-
-  /* ── Menu ── */
   menuList: { flex: 1, paddingTop: 4 },
   menuItem: {
     flexDirection: "row",
@@ -402,8 +418,6 @@ const styles = StyleSheet.create({
   menuIcon: { width: 30 },
   menuLabel: { fontSize: 14, fontWeight: "500", color: MUTED, flex: 1 },
   menuLabelActive: { color: ACTIVE_TEXT, fontWeight: "600" },
-
-  /* ── Sub-items ── */
   subList: { marginLeft: 26, marginBottom: 4 },
   subItem: {
     flexDirection: "row",
@@ -413,7 +427,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 12,
     marginVertical: 1,
-    backgroundColor: "#F5F6FA",
+    backgroundColor: BG,
   },
   subItemActive: { backgroundColor: ACTIVE_BG },
   subItemLine: {
@@ -427,8 +441,23 @@ const styles = StyleSheet.create({
   subIcon: { marginRight: 8 },
   subLabel: { fontSize: 13, fontWeight: "500", color: MUTED, flex: 1 },
   subLabelActive: { color: ACTIVE_TEXT, fontWeight: "600" },
-
-  /* ── Footer ── */
   drawerFooter: { paddingBottom: 24 },
   logoutLabel: { color: TEXT, fontWeight: "500" },
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  profileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: BLUE,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  profileName: { fontSize: 14, fontWeight: "600", color: TEXT },
+  profileEmail: { fontSize: 12, color: MUTED, marginTop: 2 },
 });
