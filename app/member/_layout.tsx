@@ -1,10 +1,8 @@
 import { HapticTab } from "@/components/haptic-tab";
-import MemberNavbar from "@/components/navigations/memberNavbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import Octicons from "@expo/vector-icons/Octicons";
 import { Tabs, router } from "expo-router";
 import React, { useEffect } from "react";
 
@@ -14,7 +12,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (!isLoading && (!session || session.role_name !== 'Member')) {
-      router.replace('/auth/login');
+      router.replace('../');
     }
   }, [session, isLoading]);
 
@@ -22,7 +20,6 @@ export default function TabLayout() {
 
   return (
     <>
-      <MemberNavbar />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
@@ -37,16 +34,6 @@ export default function TabLayout() {
             title: "Home",
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="house.fill" color={color} />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="transaction"
-          options={{
-            title: "Transactions",
-            tabBarIcon: ({ color }) => (
-              <Octicons name="credit-card" size={24} color={color} />
             ),
           }}
         />
