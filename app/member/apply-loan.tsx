@@ -1,5 +1,7 @@
+import { SendLoanApplication } from "@/api/loan-application";
 import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
@@ -10,7 +12,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 
 const BLUE = "#2952CC";
@@ -18,8 +20,10 @@ const BLUE_LIGHT = "#EEF2FF";
 const GREEN = "#22C55E";
 const RED = "#EF4444";
 const RED_LIGHT = "#FEF2F2";
+const ORANGE = "#F59E0B";
+const ORANGE_LIGHT = "#FFFBEB";
 
-const API_ENDPOINT = "https://your-api-endpoint.com/loans/apply"; // 🔁 Replace with your actual endpoint
+const COLLATERAL_THRESHOLD = 15000;
 
 type LoanType = {
     label: string;
@@ -33,7 +37,7 @@ type LoanType = {
 const LOAN_TYPES: LoanType[] = [
     {
         label: "E-Cash Loan",
-        value: "ecash",
+        value: "E-Cash Loan",
         maxInterest: 3,
         maxTermMonths: 24,
         maxAmount: null,
@@ -41,7 +45,7 @@ const LOAN_TYPES: LoanType[] = [
     },
     {
         label: "Guaranteed Loan",
-        value: "guaranteed",
+        value: "Guaranteed Loan",
         maxInterest: 2,
         maxTermMonths: 24,
         maxAmount: null,
@@ -49,12 +53,19 @@ const LOAN_TYPES: LoanType[] = [
     },
     {
         label: "Instant/Emergency Loan",
-        value: "emergency",
+        value: "Instant/Emergency Loan",
         maxInterest: null,
         maxTermMonths: 3,
         maxAmount: 15000,
         hint: "Max ₱15,000 · Max 3 months term",
     },
+];
+
+const COLLATERAL_TYPES = [
+    { label: "Land Title", value: "Land Title" },
+    { label: "Vehicle OR/CR", value: "Vehicle OR/CR" },
+    { label: "Appliance", value: "Appliance" },
+    { label: "Guarantor", value: "Guarantor" },
 ];
 
 type ValidationHintProps = {
@@ -83,19 +94,26 @@ export default function ApplyLoan() {
     const { session } = useAuth();
     const [amountRequested, setAmountRequested] = useState<string>("");
     const [term, setTerm] = useState<string>("");
-    const [remarks, setRemarks] = useState<string>("");
     const [showDropdown, setShowDropdown] = useState<boolean>(false);
     const [selectedLoanType, setSelectedLoanType] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showSuccess, setShowSuccess] = useState<boolean>(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-    const profile = session?.profile;
+    // Collateral state
+    const [selectedCollateralType, setSelectedCollateralType] = useState<string | null>(null);
+    const [showCollateralDropdown, setShowCollateralDropdown] = useState<boolean>(false);
+    const [collateralDocumentName, setCollateralDocumentName] = useState<string | null>(null);
+    const [collateralDocumentUri, setCollateralDocumentUri] = useState<string | null>(null);
 
+    const profile = session?.profile;
     const loanConfig = LOAN_TYPES.find((l) => l.value === selectedLoanType) ?? null;
 
-    const amountNum = parseFloat(amountRequested);
+    const amountNum = parseFloat(amountRequested) || 0;
     const termNum = parseInt(term);
+
+    // Show collateral section when amount > 15,000
+    const requiresCollateral = amountNum > COLLATERAL_THRESHOLD && amountRequested !== "";
 
     const amountError =
         loanConfig?.maxAmount && amountRequested && amountNum > loanConfig.maxAmount
@@ -113,15 +131,47 @@ export default function ApplyLoan() {
         setAmountRequested("");
         setTerm("");
         setFieldErrors({});
+        setSelectedCollateralType(null);
+        setCollateralDocumentName(null);
+        setCollateralDocumentUri(null);
+    };
+
+    const handleSelectCollateralType = (value: string) => {
+        setSelectedCollateralType(value);
+        setShowCollateralDropdown(false);
+        setFieldErrors((prev) => ({ ...prev, collateralType: "" }));
+    };
+
+    const handlePickDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: "*/*",
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const file = result.assets[0];
+                setCollateralDocumentName(file.name);
+                setCollateralDocumentUri(file.uri);
+                setFieldErrors((prev) => ({ ...prev, collateralDocument: "" }));
+            }
+        } catch (error) {
+            setFieldErrors((prev) => ({
+                ...prev,
+                collateralDocument: "Failed to pick document. Please try again.",
+            }));
+        }
     };
 
     const resetForm = () => {
         setSelectedLoanType(null);
         setAmountRequested("");
         setTerm("");
-        setRemarks("");
         setFieldErrors({});
         setShowSuccess(false);
+        setSelectedCollateralType(null);
+        setCollateralDocumentName(null);
     };
 
     const validateFields = (): boolean => {
@@ -131,6 +181,13 @@ export default function ApplyLoan() {
         else if (amountError) errors.amount = amountError;
         if (!term.trim()) errors.term = "Term is required.";
         else if (termError) errors.term = termError;
+
+        // Collateral validations
+        if (requiresCollateral) {
+            if (!selectedCollateralType) errors.collateralType = "Please select a collateral type.";
+            if (!collateralDocumentName) errors.collateralDocument = "Please upload a collateral document.";
+        }
+
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -146,14 +203,16 @@ export default function ApplyLoan() {
                 amountRequested: parseFloat(amountRequested),
                 termMonths: parseInt(term),
                 interestRate: loanConfig?.maxInterest ?? null,
-                remarks: remarks.trim(),
+                ...(requiresCollateral && {
+                    collateral: {
+                        type: selectedCollateralType,
+                        documentName: collateralDocumentName,
+                        documentUri: collateralDocumentUri,
+                    },
+                }),
             };
-            const response = await fetch(API_ENDPOINT, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const result = await SendLoanApplication(payload);
             setShowSuccess(true);
         } catch (error) {
             setFieldErrors({ submit: "Submission failed. Please try again." });
@@ -204,6 +263,7 @@ export default function ApplyLoan() {
                 </LinearGradient>
 
                 <View style={styles.cardsWrapper}>
+                    {/* ── Loan Details Card ── */}
                     <View style={styles.card}>
                         <View style={styles.cardTopRow}>
                             <View style={styles.iconBox}>
@@ -283,7 +343,15 @@ export default function ApplyLoan() {
                                 placeholder={loanConfig?.maxAmount ? `Max ₱${loanConfig.maxAmount.toLocaleString()}` : "0.00"}
                                 placeholderTextColor="#9CA3AF"
                                 value={amountRequested}
-                                onChangeText={(text: string) => setAmountRequested(text.replace(/[^0-9.]/g, ""))}
+                                onChangeText={(text: string) => {
+                                    setAmountRequested(text.replace(/[^0-9.]/g, ""));
+                                    // Reset collateral if amount drops back to or below threshold
+                                    const num = parseFloat(text);
+                                    if (num <= COLLATERAL_THRESHOLD) {
+                                        setSelectedCollateralType(null);
+                                        setCollateralDocumentName(null);
+                                    }
+                                }}
                                 keyboardType="decimal-pad"
                                 editable={!!loanConfig}
                             />
@@ -292,7 +360,7 @@ export default function ApplyLoan() {
                             )}
                         </View>
                         {(amountError || fieldErrors.amount) && (
-                            <ValidationHint message={amountError ?? fieldErrors.amount} type="error" />
+                            <ValidationHint message={(amountError ?? fieldErrors.amount) as string} type="error" />
                         )}
 
                         {selectedLoanType === "guaranteed" && (
@@ -300,10 +368,6 @@ export default function ApplyLoan() {
                                 message="Max loanable = Share Capital × 2. Confirm your share capital with your branch."
                                 type="info"
                             />
-                        )}
-
-                        {selectedLoanType === "ecash" && amountRequested && !amountError && (
-                            <ValidationHint message="Large loan amounts may require collateral." type="info" />
                         )}
 
                         {/* Term */}
@@ -333,10 +397,10 @@ export default function ApplyLoan() {
                             )}
                         </View>
                         {(termError || fieldErrors.term) && (
-                            <ValidationHint message={termError ?? fieldErrors.term} type="error" />
+                            <ValidationHint message={(termError ?? fieldErrors.term) as string} type="error" />
                         )}
 
-                        {/* Interest Rate — fixed/read-only, hidden for Emergency loan */}
+                        {/* Interest Rate */}
                         {selectedLoanType !== "emergency" && (
                             <>
                                 <Text style={[styles.fieldLabel, { marginTop: 4 }]}>Interest Rate (%)</Text>
@@ -352,21 +416,6 @@ export default function ApplyLoan() {
                                 </View>
                             </>
                         )}
-
-                        {/* Remarks */}
-                        <Text style={[styles.fieldLabel, { marginTop: 4 }]}>Remarks</Text>
-                        <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                            <Ionicons name="chatbox-ellipses-outline" size={20} color="#9CA3AF" style={styles.textAreaIcon} />
-                            <TextInput
-                                multiline
-                                style={[styles.input, styles.textArea]}
-                                placeholder="Enter any additional notes or remarks..."
-                                placeholderTextColor="#9CA3AF"
-                                value={remarks}
-                                onChangeText={(text: string) => setRemarks(text)}
-                                textAlignVertical="top"
-                            />
-                        </View>
 
                         {/* Submit API error */}
                         {fieldErrors.submit && <ValidationHint message={fieldErrors.submit} type="error" />}
@@ -394,8 +443,135 @@ export default function ApplyLoan() {
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>
-
                     </View>
+
+                    {/* ── Collateral Card (shown only when amount > ₱15,000) ── */}
+                    {requiresCollateral && (
+                        <View style={[styles.card, styles.collateralCard]}>
+                            {/* Card Header */}
+                            <View style={styles.cardTopRow}>
+                                <View style={[styles.iconBox, styles.collateralIconBox]}>
+                                    <Ionicons name="shield-checkmark-outline" size={22} color={ORANGE} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.cardTitle}>Loan Collateral</Text>
+                                    <Text style={styles.collateralSubtitle}>
+                                        Collateral verification (Required only for loans above ₱15,000)
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Collateral Warning Banner */}
+                            <View style={styles.collateralWarningBanner}>
+                                <View style={styles.collateralWarningHeader}>
+                                    <Ionicons name="warning-outline" size={16} color={ORANGE} style={{ marginRight: 6 }} />
+                                    <Text style={styles.collateralWarningTitle}>Collateral warning</Text>
+                                </View>
+                                <Text style={styles.collateralWarningText}>
+                                    ⚠️ Collateral is <Text style={{ fontFamily: "Poppins_700Bold" }}>REQUIRED</Text> for loan amounts above ₱15,000. Please upload supporting documents.
+                                </Text>
+                            </View>
+
+                            {/* Collateral Type Dropdown */}
+                            <View style={{ marginBottom: 16 }}>
+                                <Text style={styles.fieldLabel}>
+                                    Collateral Type<Text style={styles.requiredStar}> *</Text>
+                                </Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.dropdown,
+                                        showCollateralDropdown && styles.dropdownOpen,
+                                        fieldErrors.collateralType ? styles.dropdownError : null,
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={() => setShowCollateralDropdown(!showCollateralDropdown)}
+                                >
+                                    <Text style={[styles.dropdownValue, !selectedCollateralType && { color: "#9CA3AF" }]}>
+                                        {selectedCollateralType ?? "Select an option"}
+                                    </Text>
+                                    <Ionicons
+                                        name={showCollateralDropdown ? "chevron-up" : "chevron-down"}
+                                        size={18}
+                                        color="#6B7280"
+                                    />
+                                </TouchableOpacity>
+
+                                {showCollateralDropdown && (
+                                    <View style={styles.dropdownMenu}>
+                                        {COLLATERAL_TYPES.map((ct, index) => {
+                                            const isActive = selectedCollateralType === ct.value;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={ct.value}
+                                                    style={[
+                                                        styles.dropdownItem,
+                                                        isActive && styles.dropdownItemActive,
+                                                        index < COLLATERAL_TYPES.length - 1 && {
+                                                            borderBottomWidth: 1,
+                                                            borderBottomColor: "#F3F4F6",
+                                                        },
+                                                    ]}
+                                                    onPress={() => handleSelectCollateralType(ct.value)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
+                                                        {ct.label}
+                                                    </Text>
+                                                    {isActive && (
+                                                        <Ionicons name="checkmark-circle" size={18} color={BLUE} />
+                                                    )}
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                )}
+
+                                {fieldErrors.collateralType && (
+                                    <ValidationHint message={fieldErrors.collateralType} type="error" />
+                                )}
+                            </View>
+
+                            {/* Collateral Document */}
+                            <View>
+                                <Text style={styles.fieldLabel}>
+                                    Collateral Document<Text style={styles.requiredStar}> *</Text>
+                                </Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.uploadBox,
+                                        collateralDocumentName ? styles.uploadBoxFilled : null,
+                                        fieldErrors.collateralDocument ? styles.uploadBoxError : null,
+                                    ]}
+                                    activeOpacity={0.75}
+                                    onPress={handlePickDocument}
+                                >
+                                    {collateralDocumentName ? (
+                                        <>
+                                            <Ionicons name="document-attach" size={24} color={GREEN} style={{ marginBottom: 6 }} />
+                                            <Text style={styles.uploadFileNameText} numberOfLines={2}>
+                                                {collateralDocumentName}
+                                            </Text>
+                                            <Text style={styles.uploadChangeTap}>Tap to change</Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Ionicons name="cloud-upload-outline" size={24} color="#9CA3AF" style={{ marginBottom: 6 }} />
+                                            <Text style={styles.uploadPlaceholder}>
+                                                Drag & Drop your files or{" "}
+                                                <Text style={styles.uploadBrowse}>Browse</Text>
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                                <Text style={styles.uploadHint}>
+                                    Upload land title, vehicle OR/CR, or other collateral proof.
+                                </Text>
+                                {fieldErrors.collateralDocument && (
+                                    <ValidationHint message={fieldErrors.collateralDocument} type="error" />
+                                )}
+                            </View>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
         </>
@@ -459,6 +635,114 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         elevation: 4,
     },
+    // ── Collateral card styles ──
+    collateralCard: {
+        borderWidth: 1.5,
+        borderColor: "#FDE68A",
+    },
+    collateralIconBox: {
+        backgroundColor: ORANGE_LIGHT,
+    },
+    collateralSubtitle: {
+        fontSize: 12,
+        fontFamily: "Poppins_400Regular",
+        color: "#6B7280",
+        lineHeight: 18,
+    },
+    collateralWarningBanner: {
+        backgroundColor: ORANGE_LIGHT,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#FDE68A",
+        padding: 14,
+        marginBottom: 18,
+    },
+    collateralWarningHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 6,
+    },
+    collateralWarningTitle: {
+        fontSize: 13,
+        fontFamily: "Poppins_600SemiBold",
+        color: "#92400E",
+    },
+    collateralWarningText: {
+        fontSize: 13,
+        fontFamily: "Poppins_400Regular",
+        color: "#92400E",
+        lineHeight: 20,
+    },
+    collateralRow: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    collateralColLeft: {
+        flex: 1,
+    },
+    collateralColRight: {
+        flex: 1,
+    },
+    uploadBox: {
+        borderWidth: 1.5,
+        borderStyle: "dashed",
+        borderColor: "#D1D5DB",
+        borderRadius: 14,
+        backgroundColor: "#F9FAFB",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 18,
+        minHeight: 110,
+        marginBottom: 6,
+    },
+    uploadBoxFilled: {
+        borderColor: GREEN,
+        backgroundColor: "#F0FDF4",
+        borderStyle: "solid",
+    },
+    uploadBoxError: {
+        borderColor: RED,
+        backgroundColor: RED_LIGHT,
+        borderStyle: "solid",
+    },
+    uploadPlaceholder: {
+        fontSize: 12,
+        fontFamily: "Poppins_400Regular",
+        color: "#6B7280",
+        textAlign: "center",
+        lineHeight: 18,
+    },
+    uploadBrowse: {
+        fontFamily: "Poppins_700Bold",
+        color: "#111827",
+    },
+    uploadFileNameText: {
+        fontSize: 11,
+        fontFamily: "Poppins_500Medium",
+        color: "#166534",
+        textAlign: "center",
+        marginBottom: 2,
+    },
+    uploadChangeTap: {
+        fontSize: 10,
+        fontFamily: "Poppins_400Regular",
+        color: "#6B7280",
+    },
+    uploadHint: {
+        fontSize: 11,
+        fontFamily: "Poppins_400Regular",
+        color: "#9CA3AF",
+        lineHeight: 16,
+    },
+    requiredStar: {
+        color: RED,
+    },
+    dropdownError: {
+        borderColor: RED,
+        backgroundColor: RED_LIGHT,
+    },
+    // ── Shared / original styles ──
     cardTopRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -477,7 +761,7 @@ const styles = StyleSheet.create({
         color: "#111827",
         fontSize: 20,
         fontFamily: "Poppins_700Bold",
-        marginBottom: 6,
+        marginBottom: 2,
     },
     fieldLabel: {
         color: "#374151",
@@ -540,20 +824,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_600SemiBold",
         color: BLUE,
     },
-    textAreaWrapper: {
-        height: 100,
-        alignItems: "flex-start",
-        paddingVertical: 12,
-        marginBottom: 4,
-    },
-    textAreaIcon: {
-        marginRight: 10,
-        marginTop: 2,
-    },
-    textArea: {
-        height: "100%",
-        textAlignVertical: "top",
-    },
     dropdown: {
         flexDirection: "row",
         alignItems: "center",
@@ -584,6 +854,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 12,
         backgroundColor: "#fff",
         overflow: "hidden",
+        zIndex: 10,
     },
     dropdownItem: {
         flexDirection: "row",
@@ -655,7 +926,7 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         borderRadius: 16,
-        marginTop: 8,
+        marginTop: 15,
         overflow: "hidden",
     },
     submitButtonDisabled: {
