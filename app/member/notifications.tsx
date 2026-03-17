@@ -1,8 +1,18 @@
-import { fetchNotifications } from "@/api/notification"; // ✏️ update path to match your api file location
+import { deleteNotification, fetchNotifications } from "@/api/notification";
 import { useAuth } from "@/context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
+import { Trash2 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 type Notification = {
     id: number;
@@ -18,6 +28,7 @@ export default function NotificationsScreen() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     useEffect(() => {
         if (!profile?.profile_id) return;
@@ -47,37 +58,94 @@ export default function NotificationsScreen() {
         });
     };
 
-    return (
-        <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
-            <LinearGradient
-                colors={["#1A56DB", "#2563C7", "#3B82F6"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.hero}
-            >
-                <Text style={styles.heroTitle}>Notifications</Text>
-            </LinearGradient>
+    const confirmDelete = async () => {
+        if (deleteTargetId === null) return;
+        try {
+            await deleteNotification(deleteTargetId);
+            setNotifications((prev) => prev.filter((n) => n.id !== deleteTargetId));
+        } catch (err) {
+            console.log("Error", "Failed to delete notification. Please try again.");
+        } finally {
+            setDeleteTargetId(null);
+        }
+    };
 
-            <View style={styles.content}>
-                {loading ? (
-                    <ActivityIndicator size="large" color="#1A56DB" style={styles.loader} />
-                ) : error ? (
-                    <Text style={styles.errorText}>{error}</Text>
-                ) : notifications.length === 0 ? (
-                    <Text style={styles.emptyText}>No notifications yet.</Text>
-                ) : (
-                    notifications.map((item) => (
-                        <View key={item.id} style={styles.notifCard}>
-                            <View style={styles.notifHeader}>
-                                <Text style={styles.notifTitle}>{item.title}</Text>
-                                <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
+    return (
+        <>
+            <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+                <LinearGradient
+                    colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.hero}
+                >
+                    <Text style={styles.heroTitle}>Notifications</Text>
+                </LinearGradient>
+
+                <View style={styles.content}>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#1A56DB" style={styles.loader} />
+                    ) : error ? (
+                        <Text style={styles.errorText}>{error}</Text>
+                    ) : notifications.length === 0 ? (
+                        <Text style={styles.emptyText}>No notifications yet.</Text>
+                    ) : (
+                        notifications.map((item) => (
+                            <View key={item.id} style={styles.notifCard}>
+                                <View style={styles.notifHeader}>
+                                    <Text style={styles.notifTitle}>{item.title}</Text>
+                                    <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
+                                </View>
+                                <View style={styles.notifFooter}>
+                                    <Text style={styles.notifDescription}>{item.description}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setDeleteTargetId(item.id)}
+                                        style={styles.deleteButton}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    >
+                                        <Trash2 size={22} color="#ef4444" strokeWidth={2} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                            <Text style={styles.notifDescription}>{item.description}</Text>
+                        ))
+                    )}
+                </View>
+            </ScrollView>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                visible={deleteTargetId !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setDeleteTargetId(null)}
+            >
+                <Pressable style={styles.modalOverlay} onPress={() => setDeleteTargetId(null)}>
+                    <Pressable style={styles.modalCard} onPress={() => {}}>
+                        <View style={styles.modalIconWrapper}>
+                            <Trash2 size={28} color="#ef4444" strokeWidth={2} />
                         </View>
-                    ))
-                )}
-            </View>
-        </ScrollView>
+                        <Text style={styles.modalTitle}>Delete Notification</Text>
+                        <Text style={styles.modalMessage}>
+                            Are you sure you want to delete this notification? This action cannot be undone.
+                        </Text>
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setDeleteTargetId(null)}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.confirmButton}
+                                onPress={confirmDelete}
+                            >
+                                <Text style={styles.confirmButtonText}>Delete</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
+            </Modal>
+        </>
     );
 }
 
@@ -136,7 +204,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 6,
+        marginBottom: 12,
     },
     notifTitle: {
         fontSize: 18,
@@ -150,9 +218,89 @@ const styles = StyleSheet.create({
         color: "#94a3b8",
         fontWeight: "500",
     },
+    notifFooter: {
+        flexDirection: "row",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+    },
     notifDescription: {
         fontSize: 16,
         color: "#64748b",
         lineHeight: 19,
+        flex: 1,
+        marginRight: 12,
+    },
+    deleteButton: {
+        padding: 4,
+    },
+
+    // Modal styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 28,
+    },
+    modalCard: {
+        backgroundColor: "#ffffff",
+        borderRadius: 20,
+        padding: 28,
+        width: "100%",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    modalIconWrapper: {
+        backgroundColor: "#fef2f2",
+        borderRadius: 50,
+        padding: 16,
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        color: "#1e293b",
+        marginBottom: 10,
+        textAlign: "center",
+    },
+    modalMessage: {
+        fontSize: 15,
+        color: "#64748b",
+        textAlign: "center",
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    modalActions: {
+        flexDirection: "row",
+        gap: 12,
+        width: "100%",
+    },
+    cancelButton: {
+        flex: 1,
+        paddingVertical: 13,
+        borderRadius: 12,
+        backgroundColor: "#f1f5f9",
+        alignItems: "center",
+    },
+    cancelButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#64748b",
+    },
+    confirmButton: {
+        flex: 1,
+        paddingVertical: 13,
+        borderRadius: 12,
+        backgroundColor: "#ef4444",
+        alignItems: "center",
+    },
+    confirmButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#ffffff",
     },
 });
