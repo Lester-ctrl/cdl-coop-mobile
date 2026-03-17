@@ -19,15 +19,16 @@ import {
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
+// ✏️ Update each "route" value to match your file paths
 const actions = [
-  { label: "Manage\nAccounts", icon: "wallet-outline" },
-  { label: "Wallet", icon: "card-outline" },
-  { label: "Open\nAccount", icon: "add-circle-outline" },
-  { label: "Fund\nTransfer", icon: "swap-horizontal-outline" },
-  { label: "Payments", icon: "cash-outline" },
-  { label: "Apply\nLoan", icon: "document-text-outline" },
-  { label: "Rewards", icon: "gift-outline" },
-  { label: "More", icon: "grid-outline" },
+  { label: "Apply\nLoan",    icon: "document-outline",       route: "/member/apply-loan" },
+  { label: "Loan\nApplications",         icon: "list-outline",            route: "/member/application-status" },
+  { label: "Open\nAccount",  icon: "add-circle-outline",      route: "/open-account" },
+  { label: "Fund\nTransfer", icon: "swap-horizontal-outline", route: "/fund-transfer" },
+  { label: "Payments",       icon: "cash-outline",            route: "/payments" },
+  { label: "Apply\nLoan",    icon: "document-text-outline",   route: "/apply-loan" },
+  { label: "Rewards",        icon: "gift-outline",            route: "/rewards" },
+  { label: "More",           icon: "grid-outline",            route: "/more" },
 ];
 
 function HomeContent() {
@@ -63,7 +64,6 @@ function HomeContent() {
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
-          {/* Greeting + Avatar */}
           <View style={styles.headerMain}>
             <View style={styles.headerLeft}>
               <Text style={styles.greeting}>Good day,</Text>
@@ -110,9 +110,10 @@ function HomeContent() {
                 key={idx}
                 style={styles.gridItem}
                 activeOpacity={0.7}
+                onPress={() => router.push(item.route as any)}
               >
                 <View style={styles.iconBox}>
-                  <Ionicons name={item.icon as any} size={22} color="#1e40af" />
+                  <Ionicons name={item.icon as any} size={28} color="#1e40af" />
                 </View>
                 <Text style={styles.gridText}>{item.label}</Text>
               </TouchableOpacity>
@@ -395,7 +396,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   alertCard: {
-    // subtle red tint border
     borderWidth: 1,
     borderColor: "#fee2e2",
   },
