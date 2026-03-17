@@ -1,5 +1,13 @@
 import { SendLoanApplication } from "@/api/loan-application";
 import { useAuth } from "@/context/AuthContext";
+import {
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    useFonts,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -105,6 +113,16 @@ export default function ApplyLoan() {
     const [showCollateralDropdown, setShowCollateralDropdown] = useState<boolean>(false);
     const [collateralDocumentName, setCollateralDocumentName] = useState<string | null>(null);
     const [collateralDocumentUri, setCollateralDocumentUri] = useState<string | null>(null);
+
+    const [fontsLoaded] = useFonts({
+        Poppins_500Medium,
+        Poppins_600SemiBold,
+        Poppins_700Bold,
+        Poppins_800ExtraBold,
+        Poppins_400Regular
+      });
+    
+      if (!fontsLoaded) return null;
 
     const profile = session?.profile;
     const loanConfig = LOAN_TYPES.find((l) => l.value === selectedLoanType) ?? null;
@@ -599,7 +617,7 @@ const styles = StyleSheet.create({
     },
     tagText: {
         color: "#FFFFFF",
-        fontSize: 13,
+        fontSize: 14,
         fontFamily: "Poppins_400Regular",
         letterSpacing: 0.3,
     },
