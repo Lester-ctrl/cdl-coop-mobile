@@ -60,3 +60,31 @@ export async function SendLoanApplication(payload: any) {
 
     return json;
 }
+
+export async function FetchPendingApplications(memberId: any) {
+    const response = await fetch(`${BASE_URL}/member/fetch-loan-applications`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ memberId }),
+    });
+
+    const data = await response.json();
+    return data;
+}
+
+export async function cancelApplication(loanApplicationId: any){
+    const response = await fetch(`${BASE_URL}/cancel-loan-applications`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ loanApplicationId }),
+    });
+
+    const res = await response.json();
+    return res;
+}

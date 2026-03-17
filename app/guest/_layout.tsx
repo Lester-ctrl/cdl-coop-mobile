@@ -7,17 +7,12 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
-import GuestNavbar from "@/components/navigations/guestNavbar"; // adjust path if needed
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <View style={styles.container}>
-      
-      {/* GLOBAL NAVBAR */}
-      <GuestNavbar />
-
       {/* TABS */}
       <Tabs
         screenOptions={{
