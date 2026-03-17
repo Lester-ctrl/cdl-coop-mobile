@@ -1,4 +1,5 @@
 import { editProfile } from "@/api/EditLOProfile";
+import { useAuth } from "@/context/AuthContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,8 +14,9 @@ import {
   View,
 } from "react-native";
 
-export default function EditProfile() {
+export default function editLOProfile() {
   const params = useLocalSearchParams();
+  const { session, saveSession } = useAuth();
   const [profileId] = useState(params.profileId || "");
   const [firstName, setFirstName] = useState(params.firstName || "");
   const [middleName, setMiddleName] = useState(params.middleName || "");
@@ -28,7 +30,6 @@ export default function EditProfile() {
 
   const handleSave = async () => {
     if (!profileId) {
-      // Show an error or warning to the user
       alert("Profile ID is missing. Cannot update profile.");
       return;
     }
@@ -42,13 +43,32 @@ export default function EditProfile() {
       address,
       birthdate,
       sex,
-      // Add other fields as needed
     };
+
+    console.log("[EditProfile] sending update", { profileId, data });
+
     try {
       const result = await editProfile(profileId, data);
-      // Handle success (show message, navigate, etc.)
-    } catch (error) {
-      // Handle error
+
+      // Update local session so the profile page reflects the new data immediately.
+      if (session) {
+        await saveSession({
+          ...session,
+          profile: {
+            ...session.profile,
+            ...data,
+            profile_id: session.profile.profile_id,
+          },
+        });
+      }
+
+      // Use server's success message if provided
+      const successMessage = result?.message || "Profile updated successfully!";
+      alert(successMessage);
+      router.back();
+    } catch (error: any) {
+      console.error("Edit profile failed", error);
+      alert(error?.message ?? "Failed to update profile.");
     } finally {
       setLoading(false);
     }
@@ -57,7 +77,7 @@ export default function EditProfile() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
-      <LinearGradient colors={["#2563eb", "#3b82f6"]} style={styles.header}>
+      <LinearGradient colors={["#2563C7", "#3b82f6"]} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <FontAwesome6 name="arrow-left" size={18} color="#fff" />
         </TouchableOpacity>
@@ -67,19 +87,19 @@ export default function EditProfile() {
             <FontAwesome6 name="camera" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={styles.headerTitle}>Account Officer Profile</Text>
       </LinearGradient>
 
       {/* PERSONAL DETAILS */}
       <View style={styles.card}>
         <View style={styles.sectionHeader}>
-          <FontAwesome6 name="user" size={16} color="#2563eb" />
+          <FontAwesome6 name="user" size={16} color="#2563C7" />
           <Text style={styles.sectionTitle}>Personal Details</Text>
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>FIRST NAME</Text>
           <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
             <TextInput
               style={styles.input}
               value={firstName}
@@ -91,7 +111,7 @@ export default function EditProfile() {
         <View style={styles.field}>
           <Text style={styles.label}>MIDDLE NAME</Text>
           <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
             <TextInput
               style={styles.input}
               value={middleName}
@@ -103,7 +123,7 @@ export default function EditProfile() {
         <View style={styles.field}>
           <Text style={styles.label}>LAST NAME</Text>
           <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
             <TextInput
               style={styles.input}
               value={lastName}
@@ -162,19 +182,23 @@ export default function EditProfile() {
       </View>
 
       {/* SAVE BUTTON */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={handleSave}
+        disabled={loading}
+      >
         <FontAwesome6 name="floppy-disk" size={16} color="#fff" />
-        <Text style={styles.saveText}>Save Changes</Text>
+        <Text style={styles.saveText}>
+          {loading ? "Saving..." : "Save Changes"}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+// ── Styles (same as before, kept colors consistent with Account Officer theme) ──
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#eef2f7",
-  },
+  container: { flex: 1, backgroundColor: "#eef2f7" },
   header: {
     height: 140,
     borderBottomLeftRadius: 30,
@@ -214,18 +238,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#2563C7",
     borderRadius: 16,
     padding: 6,
     borderWidth: 2,
     borderColor: "#fff",
   },
-  headerTitle: {
-    marginTop: 8,
-    fontWeight: "700",
-    fontSize: 18,
-    color: "#fff",
-  },
+  headerTitle: { marginTop: 8, fontWeight: "700", fontSize: 18, color: "#fff" },
   card: {
     backgroundColor: "#fff",
     marginHorizontal: 20,
@@ -248,19 +267,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#334155",
   },
-  field: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 11,
-    color: "#64748b",
-    marginBottom: 4,
-    fontWeight: "600",
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  field: { marginBottom: 16 },
+  label: { fontSize: 11, color: "#64748b", marginBottom: 4, fontWeight: "600" },
+  inputRow: { flexDirection: "row", alignItems: "center" },
   input: {
     marginLeft: 8,
     fontSize: 14,
@@ -275,16 +284,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 25,
     marginBottom: 40,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#2563C7",
     paddingVertical: 14,
     borderRadius: 12,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
-  saveText: {
-    color: "#fff",
-    fontWeight: "700",
-    marginLeft: 8,
-  },
+  saveText: { color: "#fff", fontWeight: "700", marginLeft: 8 },
 });
