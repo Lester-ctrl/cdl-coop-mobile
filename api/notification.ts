@@ -11,7 +11,6 @@ export async function fetchNotifications(profile_id: any){
     });
 
     const data = await response.json();
-    console.log(data);
     return data;
 }
 
@@ -26,6 +25,5 @@ export async function deleteNotification(notif_id: any){
     });
 
     const data = await response.json();
-    console.log(data);
     return data;
 }

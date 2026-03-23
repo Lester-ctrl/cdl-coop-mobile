@@ -1,4 +1,5 @@
 import { SendLoanApplication } from "@/api/loan-application";
+import LoanPreviewCard from "@/components/loan-preview-card";
 import { useAuth } from "@/context/AuthContext";
 import {
     Poppins_400Regular,
@@ -590,6 +591,13 @@ export default function ApplyLoan() {
                             </View>
                         </View>
                     )}
+                    <LoanPreviewCard
+                        loanType={selectedLoanType}
+                        loanLabel={loanConfig?.label ?? null}
+                        amountRequested={amountRequested}
+                        term={term}
+                        interestRate={loanConfig?.maxInterest ?? 0}
+                    />
                 </View>
             </ScrollView>
         </>
