@@ -105,6 +105,7 @@ export default function TabLayout() {
       <Tabs.Screen name="application-status" options={{ href: null }} />
       <Tabs.Screen name="apply-loan" options={{ href: null }} />
       <Tabs.Screen name="loan-calculator" options={{ href: null }} />
+      <Tabs.Screen name="active-loans" options={{href:null}}/>
     </Tabs>
   );
 }
