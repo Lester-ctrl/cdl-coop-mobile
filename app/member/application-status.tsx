@@ -237,9 +237,11 @@ export default function ApplicationStatus() {
                             />
                         </View>
 
-                        <TouchableOpacity style={styles.cancelButton} onPress={handleCancelPress}>
-                            <Text style={styles.cancelButtonText}>Cancel Application</Text>
-                        </TouchableOpacity>
+                        {selectedApplication?.status !== "Approved" && (
+                            <TouchableOpacity style={styles.cancelButton} onPress={handleCancelPress}>
+                                <Text style={styles.cancelButtonText}>Cancel Application</Text>
+                            </TouchableOpacity>
+                        )}
 
                         <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal}>
                             <Text style={styles.closeButtonText}>Close</Text>
