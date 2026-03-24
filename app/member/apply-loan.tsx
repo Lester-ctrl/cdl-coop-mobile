@@ -269,7 +269,7 @@ export default function ApplyLoan() {
 
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
                 <LinearGradient
-                    colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+                    colors={["#51b61a", "#48a019", "#3A8E0D"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.hero}
@@ -286,7 +286,7 @@ export default function ApplyLoan() {
                     <View style={styles.card}>
                         <View style={styles.cardTopRow}>
                             <View style={styles.iconBox}>
-                                <Ionicons name="document-text-outline" size={22} color={BLUE} />
+                                <Ionicons name="document-text-outline" size={22} color="#3A8E0D" />
                             </View>
                             <Text style={styles.cardTitle}>Loan Application Details</Text>
                         </View>
@@ -341,7 +341,7 @@ export default function ApplyLoan() {
 
                             {loanConfig && (
                                 <View style={styles.infoBanner}>
-                                    <Ionicons name="information-circle-outline" size={16} color={BLUE} style={{ marginRight: 7, marginTop: 1 }} />
+                                    <Ionicons name="information-circle-outline" size={16} color="#3A8E0D" style={{ marginRight: 7, marginTop: 1 }} />
                                     <Text style={styles.infoBannerText}>{loanConfig.hint}</Text>
                                 </View>
                             )}
@@ -424,12 +424,12 @@ export default function ApplyLoan() {
                             <>
                                 <Text style={[styles.fieldLabel, { marginTop: 4 }]}>Interest Rate (%)</Text>
                                 <View style={[styles.inputWrapper, styles.inputWrapperLocked]}>
-                                    <Ionicons name="trending-up-outline" size={20} color={BLUE} style={styles.inputIcon} />
+                                    <Ionicons name="trending-up-outline" size={20} color="#3A8E0D" style={styles.inputIcon} />
                                     <Text style={styles.lockedValue}>
                                         {loanConfig?.maxInterest != null ? `${loanConfig.maxInterest}%` : "—"}
                                     </Text>
                                     <View style={styles.lockedBadge}>
-                                        <Ionicons name="lock-closed" size={11} color={BLUE} />
+                                        <Ionicons name="lock-closed" size={11} color="#3A8E0D" />
                                         <Text style={styles.lockedBadgeText}>Fixed</Text>
                                     </View>
                                 </View>
@@ -447,7 +447,7 @@ export default function ApplyLoan() {
                             onPress={handleSubmit}
                         >
                             <LinearGradient
-                                colors={isLoading ? ["#D1D5DB", "#D1D5DB"] : ["#1A56DB", "#3B82F6"]}
+                                colors={isLoading ? ["#D1D5DB", "#D1D5DB"] : ["#48a517", "#3A8E0D"]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={styles.submitGradient}
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 14,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#e6ffd8",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
         backgroundColor: RED_LIGHT,
     },
     inputWrapperLocked: {
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#e3ffd4",
         borderColor: "#C7D7F9",
     },
     inputIcon: {
@@ -834,12 +834,12 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 15,
         fontFamily: "Poppins_600SemiBold",
-        color: BLUE,
+        color: "#3A8E0D",
     },
     lockedBadge: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#C7D7F9",
+        backgroundColor: "#a6faa3",
         borderRadius: 20,
         paddingHorizontal: 8,
         paddingVertical: 3,
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
     lockedBadgeText: {
         fontSize: 11,
         fontFamily: "Poppins_600SemiBold",
-        color: BLUE,
+        color: "#3A8E0D",
     },
     dropdown: {
         flexDirection: "row",
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
     infoBanner: {
         flexDirection: "row",
         alignItems: "flex-start",
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#ebfde1",
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 9,
@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
     },
     infoBannerText: {
         flex: 1,
-        color: BLUE,
+        color: "#3A8E0D",
         fontSize: 12,
         fontFamily: "Poppins_400Regular",
         lineHeight: 18,
