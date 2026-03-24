@@ -11,6 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+    Image,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -25,7 +26,7 @@ const BLUE_MID = "#2563C7";
 const BLUE_LIGHT_BG = "#EEF2FF";
 
 export default function Login() {
-   const { saveSession } = useAuth();
+    const { saveSession } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -35,42 +36,39 @@ export default function Login() {
         Poppins_400Regular,
         Poppins_600SemiBold,
         Poppins_700Bold,
-      });
-    
-      if (!fontsLoaded) return null;
+    });
+
+    if (!fontsLoaded) return null;
 
     const handleLogin = async () => {
-      try {
-        if (!email.trim() || !password.trim()) {
-          console.log("Please enter both email and password.");
-          return;
+        try {
+            if (!email.trim() || !password.trim()) {
+                console.log("Please enter both email and password.");
+                return;
+            }
+
+            const result = await login(email, password);
+            await saveSession(result.data);
+
+            const role = result.data.role_name;
+
+            switch (role) {
+                case 'Member':
+                    router.replace('/member/home');
+                    break;
+                case 'Loan Officer':
+                    router.replace('/loan-officer/home');
+                    break;
+                case 'Account Officer':
+                    router.replace('/account-officer/home');
+                    break;
+                default:
+                    console.log('Unknown role:', role);
+                    break;
+            }
+        } catch (error: any) {
+            console.log("Login failed:", error.message);
         }
-
-        const result = await login(email, password);
-        await saveSession(result.data);
-
-        // Redirect based on role
-        const role = result.data.role_name;
-        console.log(result.data.role_name);
-
-        switch (role) {
-          case 'Member':
-            router.replace('/member/home');
-            break;
-          case 'Loan Officer':
-            router.replace('/loan-officer/home');
-            break;
-          case 'Account Officer':
-            router.replace('/account-officer/home');
-            break;
-          default:
-            console.log('Unknown role:', role);
-            break;
-        }
-
-      } catch (error: any) {
-        console.log("Login failed:", error.message);
-      }
     };
 
     return (
@@ -78,102 +76,104 @@ export default function Login() {
             style={styles.root}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          {/* Blue header */}
-          <LinearGradient
-              colors={["#1A56DB", "#2563C7", "#3B82F6"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.header}
-          >
-              <View style={styles.logoWrapper}>
-                  <View style={styles.logoBg}>
-                      <Ionicons name="business" size={30} color={BLUE_MID} />
-                  </View>
-              </View>
-              <Text style={styles.appName}>Community Cooperative</Text>
-          </LinearGradient>
+            {/* Blue header */}
+            <LinearGradient
+                colors={["#51b61a", "#48a019", "#3A8E0D"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.header}
+            >
+                <View style={styles.logoWrapper}>
+                    <Image
+                        source={require('@/assets/images/hilongos-logo.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                    />
+                </View>
+                <Text style={styles.appName}>Hilongos Multi-Purpose Cooperative</Text>
+            </LinearGradient>
 
-          {/* White card body */}
-          <View style={styles.body}>
-              <Text style={styles.welcomeTitle}>Welcome Back</Text>
+            {/* White card body */}
+            <View style={styles.body}>
+                <Text style={styles.welcomeTitle}>Welcome Back</Text>
 
-              {/* Email input */}
-              <View style={styles.inputWrapper}>
-                  <Ionicons
-                      name="person-outline"
-                      size={20}
-                      color="#9CA3AF"
-                      style={styles.inputIcon}
-                  />
-                  <TextInput
-                      style={styles.input}
-                      placeholder="Email Address"
-                      placeholderTextColor="#9CA3AF"
-                      value={email}
-                      onChangeText={setEmail}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                  />
-              </View>
+                {/* Email input */}
+                <View style={styles.inputWrapper}>
+                    <Ionicons
+                        name="person-outline"
+                        size={20}
+                        color="#9CA3AF"
+                        style={styles.inputIcon}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email Address"
+                        placeholderTextColor="#9CA3AF"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                </View>
 
-              {/* Password input */}
-              <View style={styles.inputWrapper}>
-                  <Ionicons
-                      name="lock-closed-outline"
-                      size={20}
-                      color="#9CA3AF"
-                      style={styles.inputIcon}
-                  />
-                  <TextInput
-                      style={styles.input}
-                      placeholder="Password"
-                      placeholderTextColor="#9CA3AF"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry={!showPassword}
-                      autoCapitalize="none"
-                  />
-                  <Pressable
-                      onPress={() => setShowPassword((prev) => !prev)}
-                      style={styles.eyeIcon}
-                      hitSlop={8}
-                  >
-                      <Ionicons
-                          name={showPassword ? "eye-outline" : "eye-off-outline"}
-                          size={20}
-                          color="#9CA3AF"
-                      />
-                  </Pressable>
-              </View>
+                {/* Password input */}
+                <View style={styles.inputWrapper}>
+                    <Ionicons
+                        name="lock-closed-outline"
+                        size={20}
+                        color="#9CA3AF"
+                        style={styles.inputIcon}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        placeholderTextColor="#9CA3AF"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                    />
+                    <Pressable
+                        onPress={() => setShowPassword((prev) => !prev)}
+                        style={styles.eyeIcon}
+                        hitSlop={8}
+                    >
+                        <Ionicons
+                            name={showPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color="#9CA3AF"
+                        />
+                    </Pressable>
+                </View>
 
-              {/* Login button */}
-              <Pressable
-                  onPress={handleLogin}
-                  style={({ pressed }) => [
-                      styles.loginBtn,
-                      pressed && styles.loginBtnPressed,
-                  ]}
-              >
-                  <LinearGradient
-                      colors={["#1A56DB", "#3B82F6"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.loginBtnGradient}
-                  >
-                      <Text style={styles.loginBtnText}>Login</Text>
-                  </LinearGradient>
-              </Pressable>
+                {/* Login button */}
+                <Pressable
+                    onPress={handleLogin}
+                    style={({ pressed }) => [
+                        styles.loginBtn,
+                        pressed && styles.loginBtnPressed,
+                    ]}
+                >
+                    <LinearGradient
+                        colors={["#48a019", "#3A8E0D"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.loginBtnGradient}
+                    >
+                        <Text style={styles.loginBtnText}>Login</Text>
+                    </LinearGradient>
+                </Pressable>
 
-              {/* Register link */}
-              <View style={styles.registerRow}>
-                  <Text style={styles.registerText}>Not a member yet? </Text>
-                  <Pressable hitSlop={6} onPress={()=>router.push('/guest/apply-now')}>
-                      <Text style={styles.registerLink}>Apply now</Text>
-                  </Pressable>
-              </View>
-          </View>
-      </KeyboardAvoidingView>
+                {/* Register link */}
+                <View style={styles.registerRow}>
+                    <Text style={styles.registerText}>Not a member yet? </Text>
+                    <Pressable hitSlop={6} onPress={() => router.push('/guest/apply-now')}>
+                        <Text style={styles.registerLink}>Apply now</Text>
+                    </Pressable>
+                </View>
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -189,19 +189,27 @@ const styles = StyleSheet.create({
         gap: 14,
     },
     logoWrapper: {
-        width: 68,
-        height: 68,
-        borderRadius: 34,
-        backgroundColor: "rgba(255,255,255,0.95)",
+        width: 85,
+        height: 85,
+        borderRadius: 42.5,
+        backgroundColor: "rgba(255,255,255,0.95)",   // keep light white for contrast
         alignItems: "center",
         justifyContent: "center",
         shadowColor: "#000",
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
+        shadowOpacity: 0.15,
+        shadowRadius: 15,
+        shadowOffset: { width: 0, height: 5 },
+        elevation: 8,
+    },
+    logoImage: {
+        width: 72,
+        height: 72,
+        // This helps with transparency issues
+        backgroundColor: 'transparent',
     },
     logoBg: {
+        width: 68,
+        height: 68,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -210,6 +218,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontFamily: "Poppins_700Bold",
         letterSpacing: 0.2,
+        textAlign: "center",
     },
     body: {
         flex: 1,
@@ -300,6 +309,6 @@ const styles = StyleSheet.create({
     registerLink: {
         fontSize: 14,
         fontFamily: "Poppins_600SemiBold",
-        color: BLUE,
+        color: "#3A8E0D",
     },
 });

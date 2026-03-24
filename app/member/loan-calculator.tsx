@@ -1,20 +1,20 @@
 import {
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
-    useFonts,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const BLUE = "#2952CC";
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
 
   /* ── Hero ── */
   hero: {
-    backgroundColor: BLUE,
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 24,
     paddingTop: 56,
     paddingBottom: 48,

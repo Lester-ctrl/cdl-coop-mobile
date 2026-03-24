@@ -74,7 +74,7 @@ export default function NotificationsScreen() {
         <>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
                 <LinearGradient
-                    colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+                    colors={["#51b61a", "#48a019", "#3A8E0D"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.hero}
@@ -84,7 +84,7 @@ export default function NotificationsScreen() {
 
                 <View style={styles.content}>
                     {loading ? (
-                        <ActivityIndicator size="large" color="#1A56DB" style={styles.loader} />
+                        <ActivityIndicator size="large" color="#3A8E0D" style={styles.loader} />
                     ) : error ? (
                         <Text style={styles.errorText}>{error}</Text>
                     ) : notifications.length === 0 ? (
