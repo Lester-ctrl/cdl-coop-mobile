@@ -1,10 +1,11 @@
 import { editProfile } from "@/api/EditLOProfile";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useAuth } from "@/context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,278 +14,117 @@ import {
   View,
 } from "react-native";
 
+import type { SessionData } from "@/context/AuthContext";
+
 export default function EditProfile() {
+  const { session, saveSession } = useAuth();
   const params = useLocalSearchParams();
-  const [profileId] = useState(params.profileId || "");
-  const [firstName, setFirstName] = useState(params.firstName || "");
-  const [middleName, setMiddleName] = useState(params.middleName || "");
-  const [lastName, setLastName] = useState(params.lastName || "");
-  const [email, setEmail] = useState(params.email || "");
-  const [mobile, setMobile] = useState(params.mobile || "");
-  const [address, setAddress] = useState(params.address || "");
-  const [birthdate, setBirthdate] = useState(params.birthdate || "");
-  const [sex, setSex] = useState(params.sex || "");
-  const [loading, setLoading] = useState(false);
+
+  const getParam = (value: string | string[] | undefined): string => {
+    return (Array.isArray(value) ? value[0] : value) || "";
+  };
+
+  const profileId = getParam(params.profileId);
+
+  const [form, setForm] = useState({
+    firstName: getParam(params.firstName),
+    middleName: getParam(params.middleName),
+    lastName: getParam(params.lastName),
+    email: getParam(params.email),
+    mobile: getParam(params.mobile),
+    address: getParam(params.address),
+  });
+
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (key: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleSave = async () => {
     if (!profileId) {
-      // Show an error or warning to the user
-      alert("Profile ID is missing. Cannot update profile.");
+      Alert.alert("Error", "Profile ID missing");
       return;
     }
-    setLoading(true);
-    const data = {
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      email,
-      mobile_number: mobile,
-      address,
-      birthdate,
-      sex,
-      // Add other fields as needed
-    };
+
+    setSaving(true);
+
     try {
-      const result = await editProfile(profileId, data);
-      // Handle success (show message, navigate, etc.)
-    } catch (error) {
-      // Handle error
+      const response = await editProfile(profileId, {
+        first_name: form.firstName,
+        middle_name: form.middleName,
+        last_name: form.lastName,
+        email: form.email,
+        mobile_number: form.mobile,
+        address: form.address,
+      });
+
+      // Update session with the response data immediately
+      if (response.profile) {
+        await saveSession({
+          ...session,
+          profile: response.profile,
+          user: response.user || session?.user,
+        } as SessionData);
+      }
+
+      // Then go back
+      router.back();
+    } catch (e) {
+      Alert.alert("Error", "Update failed");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* HEADER */}
+    <ScrollView style={styles.container}>
       <LinearGradient colors={["#2563eb", "#3b82f6"]} style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <FontAwesome6 name="arrow-left" size={18} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.avatarWrapper}>
-          <Image style={styles.avatar} />
-          <TouchableOpacity style={styles.cameraBtn}>
-            <FontAwesome6 name="camera" size={16} color="#fff" />
-          </TouchableOpacity>
-        </View>
         <Text style={styles.headerTitle}>Edit Profile</Text>
       </LinearGradient>
 
-      {/* PERSONAL DETAILS */}
       <View style={styles.card}>
-        <View style={styles.sectionHeader}>
-          <FontAwesome6 name="user" size={16} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Personal Details</Text>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>FIRST NAME</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
-            <TextInput
-              style={styles.input}
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="First Name"
-            />
-          </View>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>MIDDLE NAME</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
-            <TextInput
-              style={styles.input}
-              value={middleName}
-              onChangeText={setMiddleName}
-              placeholder="Middle Name"
-            />
-          </View>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>LAST NAME</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="user" size={14} color="#2563eb" />
-            <TextInput
-              style={styles.input}
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Last Name"
-            />
-          </View>
-        </View>
+        {Object.entries(form).map(([key, value]) => (
+          <TextInput
+            key={key}
+            style={styles.input}
+            value={value}
+            onChangeText={(text) =>
+              handleChange(key as keyof typeof form, text)
+            }
+            placeholder={key}
+          />
+        ))}
       </View>
 
-      {/* CONTACT INFORMATION */}
-      <View style={styles.card}>
-        <View style={styles.sectionHeader}>
-          <FontAwesome6 name="address-card" size={16} color="#22c55e" />
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>EMAIL ADDRESS</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="envelope" size={14} color="#22c55e" />
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email Address"
-              keyboardType="email-address"
-            />
-          </View>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>MOBILE NUMBER</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="phone" size={14} color="#f97316" />
-            <TextInput
-              style={styles.input}
-              value={mobile}
-              onChangeText={setMobile}
-              placeholder="Mobile Number"
-              keyboardType="phone-pad"
-            />
-          </View>
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>RESIDENTIAL ADDRESS</Text>
-          <View style={styles.inputRow}>
-            <FontAwesome6 name="house" size={14} color="#9333ea" />
-            <TextInput
-              style={[styles.input, { height: 60 }]}
-              value={address}
-              onChangeText={setAddress}
-              placeholder="Residential Address"
-              multiline
-            />
-          </View>
-        </View>
-      </View>
-
-      {/* SAVE BUTTON */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <FontAwesome6 name="floppy-disk" size={16} color="#fff" />
-        <Text style={styles.saveText}>Save Changes</Text>
+        {saving ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.saveText}>Save</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#eef2f7",
-  },
-  header: {
-    height: 140,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    position: "relative",
-  },
-  backBtn: {
-    position: "absolute",
-    left: 20,
-    top: 54,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 2,
-  },
-  avatarWrapper: {
-    alignItems: "center",
-    marginTop: -45,
-    marginBottom: 10,
-    position: "relative",
-  },
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 4,
-    borderColor: "#fff",
-    backgroundColor: "#ddd",
-  },
-  cameraBtn: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "#2563eb",
-    borderRadius: 16,
-    padding: 6,
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  headerTitle: {
-    marginTop: 8,
-    fontWeight: "700",
-    fontSize: 18,
-    color: "#fff",
-  },
-  card: {
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    marginLeft: 8,
-    fontWeight: "700",
-    fontSize: 15,
-    color: "#334155",
-  },
-  field: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 11,
-    color: "#64748b",
-    marginBottom: 4,
-    fontWeight: "600",
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  container: { flex: 1 },
+  header: { padding: 20 },
+  headerTitle: { color: "#fff", fontSize: 18 },
+  card: { padding: 20 },
   input: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#1e293b",
-    flex: 1,
     backgroundColor: "#f1f5f9",
+    marginBottom: 10,
+    padding: 10,
     borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
   },
   saveButton: {
-    marginHorizontal: 20,
-    marginTop: 25,
-    marginBottom: 40,
     backgroundColor: "#2563eb",
-    paddingVertical: 14,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "center",
+    padding: 15,
+    margin: 20,
+    borderRadius: 10,
     alignItems: "center",
   },
-  saveText: {
-    color: "#fff",
-    fontWeight: "700",
-    marginLeft: 8,
-  },
+  saveText: { color: "#fff" },
 });

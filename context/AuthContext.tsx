@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface Profile {
   profile_id: number;
@@ -20,7 +20,7 @@ interface UserData {
   avatar: string | null;
 }
 
-interface SessionData {
+export interface SessionData {
   user: UserData;
   profile: Profile;
   role_name: string;
@@ -42,10 +42,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const stored = await AsyncStorage.getItem('session');
+        const stored = await AsyncStorage.getItem("session");
         if (stored) setSession(JSON.parse(stored));
       } catch (e) {
-        console.log('Failed to load session:', e);
+        console.log("Failed to load session:", e);
       } finally {
         setIsLoading(false);
       }
@@ -54,17 +54,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const saveSession = async (data: SessionData) => {
-    await AsyncStorage.setItem('session', JSON.stringify(data));
+    await AsyncStorage.setItem("session", JSON.stringify(data));
     setSession(data);
   };
 
   const clearSession = async () => {
-    await AsyncStorage.removeItem('session');
+    await AsyncStorage.removeItem("session");
     setSession(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, saveSession, clearSession, isLoading }}>
+    <AuthContext.Provider
+      value={{ session, saveSession, clearSession, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -72,6 +74,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 };
