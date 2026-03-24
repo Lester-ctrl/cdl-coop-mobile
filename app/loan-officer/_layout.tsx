@@ -40,16 +40,16 @@ export default function LoanOfficerLayout() {
         />
 
         <Tabs.Screen
-          name="loan-management/loan-dash"
+          name="notifications"
           options={{
             tabBarLabel: ({ focused }) => (
               <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
-                Loan Application
+                Notifications
               </Text>
             ),
             tabBarIcon: ({ focused }) => (
               <Ionicons
-                name="cash-outline"
+                name="notifications-circle-outline"
                 color={focused ? "#3498db" : "#A0A0A0"}
                 size={24}
               />
@@ -77,6 +77,10 @@ export default function LoanOfficerLayout() {
 
         {/*  Hidden Tabs */}
         <Tabs.Screen name="loan-management/loans" options={{ href: null }} />
+        <Tabs.Screen
+          name="loan-management/loan-dash"
+          options={{ href: null }}
+        />
         <Tabs.Screen
           name="loan-management/partial-payments"
           options={{ href: null }}

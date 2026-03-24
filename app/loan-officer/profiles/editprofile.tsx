@@ -1,4 +1,4 @@
-import { editProfile } from "@/api/EditLOProfile";
+import { editProfile } from "@/api/Loanofficer/EditLOProfile";
 import { useAuth } from "@/context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";

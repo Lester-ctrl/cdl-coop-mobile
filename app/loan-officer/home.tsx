@@ -1,5 +1,6 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -42,12 +43,32 @@ const actions = [
 ];
 
 const sections = [
-  { label: "Products & Services", icon: "grid-outline" },
-  { label: "Loan Management", icon: "cash-outline" },
-  { label: "Payments & Collections", icon: "card-outline" },
-  { label: "News, Events, Promos", icon: "megaphone-outline" },
-  { label: "Reports & Statements", icon: "document-text-outline" },
-];
+  {
+    label: "Products & Services",
+    icon: "grid-outline",
+    route: "/loan-officer/productandservices/loan-products",
+  },
+  {
+    label: "Loan Management",
+    icon: "cash-outline",
+    route: "/loan-officer/loan-management/loan-dash",
+  },
+  {
+    label: "Payments & Collections",
+    icon: "card-outline",
+    route: "/loan-officer/paymentsandcollections",
+  },
+  {
+    label: "News, Events, Promos",
+    icon: "megaphone-outline",
+    route: "/loan-officer/newsandevents",
+  },
+  {
+    label: "Reports & Statements",
+    icon: "document-text-outline",
+    route: "/loan-officer/reportandstatements",
+  },
+] as const;
 
 export default function LoanOfficerDashboard() {
   return (
@@ -103,7 +124,11 @@ export default function LoanOfficerDashboard() {
 
         <View style={styles.grid}>
           {sections.map((section, idx) => (
-            <TouchableOpacity key={idx} style={styles.gridItem}>
+            <TouchableOpacity
+              key={idx}
+              style={styles.gridItem}
+              onPress={() => router.push(section.route as any)}
+            >
               <View style={styles.iconBox}>
                 <Ionicons
                   name={section.icon as any}
