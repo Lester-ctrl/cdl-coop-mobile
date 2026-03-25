@@ -7,7 +7,8 @@ import {
     useFonts,
 } from "@expo-google-fonts/poppins";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
     Modal,
     Pressable,
@@ -17,6 +18,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -68,20 +70,22 @@ export default function ApplicationStatus() {
 
     const profile = session?.profile;
 
-    useEffect(() => {
-        const loadApplications = async () => {
-            try {
-                if (profile?.profile_id) {
-                    const result = await FetchPendingApplications(profile?.profile_id);
-                    setLoanApplications(result?.loanApplications ?? []);
+    useFocusEffect(
+        useCallback(() => {
+            const loadApplications = async () => {
+                try {
+                    if (profile?.profile_id) {
+                        const result = await FetchPendingApplications(profile?.profile_id);
+                        setLoanApplications(result?.loanApplications ?? []);
+                    }
+                } catch (error) {
+                    console.log("Error fetching loan applications: ", error);
+                    setLoanApplications([]);
                 }
-            } catch (error) {
-                console.log("Error fetching loan applications: ", error);
-                setLoanApplications([]);
-            }
-        };
-        loadApplications();
-    }, []);
+            };
+            loadApplications();
+        }, [profile?.profile_id])
+    );
 
     const [fontsLoaded] = useFonts({
         Poppins_400Regular,
@@ -127,7 +131,7 @@ export default function ApplicationStatus() {
     };
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
                 <LinearGradient
                     colors={["#51b61a", "#48a019", "#3A8E0D"]}
@@ -290,7 +294,7 @@ export default function ApplicationStatus() {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </>
+        </SafeAreaView>
     );
 }
 

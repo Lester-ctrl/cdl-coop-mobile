@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Notification = {
     id: number;
@@ -71,7 +72,7 @@ export default function NotificationsScreen() {
     };
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
                 <LinearGradient
                     colors={["#51b61a", "#48a019", "#3A8E0D"]}
@@ -145,7 +146,7 @@ export default function NotificationsScreen() {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </>
+        </SafeAreaView>
     );
 }
 

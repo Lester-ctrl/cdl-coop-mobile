@@ -23,6 +23,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BLUE = "#2952CC";
 const BLUE_LIGHT = "#EEF2FF";
@@ -241,7 +242,7 @@ export default function ApplyLoan() {
     };
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             {/* Success Modal */}
             <Modal visible={showSuccess} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
@@ -600,7 +601,7 @@ export default function ApplyLoan() {
                     />
                 </View>
             </ScrollView>
-        </>
+        </SafeAreaView>
     );
 }
 
