@@ -1,21 +1,22 @@
 import {
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
-    useFonts,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BLUE = "#2952CC";
 const BLUE_DARK = "#1a3aab";
@@ -205,282 +206,284 @@ export default function LoanCalculator() {
     : "Amortization Schedule (First Year)";
 
   return (
-    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
-      {/* ── Hero Header ── */}
-      <View style={styles.hero}>
-        <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>Financial Planning Tool</Text>
-        </View>
-        <Text style={styles.heroTitle}>Loan Calculator</Text>
-        <Text style={styles.heroSubtitle}>
-          Estimate your monthly loan payments and plan your finances with our
-          easy-to-use calculator.
-        </Text>
-      </View>
-
-      {/* ── Result Cards ── */}
-      <View style={styles.resultRow}>
-        <View style={[styles.resultCard, { backgroundColor: BLUE }]}>
-          <View style={styles.resultLabelRow}>
-            <Ionicons name="wallet-outline" size={13} color="rgba(255,255,255,0.75)" />
-            <Text style={styles.resultLabel}>  MONTHLY PAYMENT</Text>
+        {/* ── Hero Header ── */}
+        <View style={styles.hero}>
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroBadgeText}>Financial Planning Tool</Text>
           </View>
-          <Text style={styles.resultValue}>
-            {monthlyPayment !== null ? `₱${fmt(monthlyPayment)}` : "—"}
+          <Text style={styles.heroTitle}>Loan Calculator</Text>
+          <Text style={styles.heroSubtitle}>
+            Estimate your monthly loan payments and plan your finances with our
+            easy-to-use calculator.
           </Text>
         </View>
 
-        <View style={[styles.resultCard, { backgroundColor: PURPLE }]}>
-          <View style={styles.resultLabelRow}>
-            <Ionicons name="checkmark-circle-outline" size={13} color="rgba(255,255,255,0.75)" />
-            <Text style={styles.resultLabel}>  TOTAL INTEREST</Text>
+        {/* ── Result Cards ── */}
+        <View style={styles.resultRow}>
+          <View style={[styles.resultCard, { backgroundColor: BLUE }]}>
+            <View style={styles.resultLabelRow}>
+              <Ionicons name="wallet-outline" size={13} color="rgba(255,255,255,0.75)" />
+              <Text style={styles.resultLabel}>  MONTHLY PAYMENT</Text>
+            </View>
+            <Text style={styles.resultValue}>
+              {monthlyPayment !== null ? `₱${fmt(monthlyPayment)}` : "—"}
+            </Text>
           </View>
-          <Text style={styles.resultValue}>
-            {totalInterest !== null ? `₱${fmt(totalInterest)}` : "—"}
+
+          <View style={[styles.resultCard, { backgroundColor: PURPLE }]}>
+            <View style={styles.resultLabelRow}>
+              <Ionicons name="checkmark-circle-outline" size={13} color="rgba(255,255,255,0.75)" />
+              <Text style={styles.resultLabel}>  TOTAL INTEREST</Text>
+            </View>
+            <Text style={styles.resultValue}>
+              {totalInterest !== null ? `₱${fmt(totalInterest)}` : "—"}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Loan Details Form ── */}
+        <View style={styles.formCard}>
+          <View style={styles.formHeader}>
+            <Ionicons name="list" size={20} color={BLUE} />
+            <Text style={styles.formHeaderText}>Loan Details</Text>
+          </View>
+
+          <View style={styles.formDivider} />
+
+          {/* Loan Type Dropdown */}
+          <Text style={styles.fieldLabel}>Loan Type</Text>
+          <TouchableOpacity
+            style={styles.dropdown}
+            activeOpacity={0.8}
+            onPress={() => setShowDropdown(!showDropdown)}
+          >
+            <Text style={styles.dropdownValue}>{loan.label}</Text>
+            <Ionicons
+              name={showDropdown ? "chevron-up" : "chevron-down"}
+              size={18}
+              color="#6B7280"
+            />
+          </TouchableOpacity>
+
+          {showDropdown && (
+            <View style={styles.dropdownMenu}>
+              {LOAN_TYPES.map((l, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.dropdownItem, i === selectedLoan && styles.dropdownItemActive]}
+                  onPress={() => switchLoan(i)}
+                >
+                  <Text style={[styles.dropdownItemText, i === selectedLoan && styles.dropdownItemTextActive]}>
+                    {l.label}
+                  </Text>
+                  <Text style={styles.dropdownItemHint}>{l.rateNote}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Info note */}
+          <View style={styles.infoNote}>
+            <Ionicons name="information-circle" size={14} color={BLUE} style={{ marginRight: 6, flexShrink: 0 }} />
+            <Text style={styles.infoNoteText}>{loan.rateNote}</Text>
+          </View>
+
+          {loan.collateralNote && (
+            <View style={[styles.infoNote, { backgroundColor: AMBER_LIGHT, marginTop: -8 }]}>
+              <Ionicons name="alert-circle" size={14} color="#D97706" style={{ marginRight: 6, flexShrink: 0 }} />
+              <Text style={[styles.infoNoteText, { color: "#92400E" }]}>{loan.collateralNote}</Text>
+            </View>
+          )}
+
+          {/* Share Capital — Guaranteed only */}
+          {loan.key === "guaranteed" && (
+            <>
+              <Text style={styles.fieldLabel}>Share Capital (₱)</Text>
+              <View style={styles.inputRow}>
+                <View style={styles.inputPrefix}>
+                  <Text style={styles.inputPrefixText}>₱</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={shareCapital}
+                  onChangeText={setShareCapital}
+                  keyboardType="numeric"
+                  placeholder="e.g. 5000"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+              <Text style={styles.rateHint}>
+                Max loanable: ₱{fmt((parseFloat(shareCapital) || 0) * 2)}
+              </Text>
+            </>
+          )}
+
+          {/* Loan Amount */}
+          <Text style={styles.fieldLabel}>
+            Loan Amount (₱){loan.maxAmount ? `  ·  Max ₱${loan.maxAmount.toLocaleString()}` : ""}
           </Text>
+          <View style={styles.inputRow}>
+            <View style={styles.inputPrefix}>
+              <Text style={styles.inputPrefixText}>₱</Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={loanAmount}
+              onChangeText={setLoanAmount}
+              keyboardType="numeric"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+
+          {/* Interest Rate — hidden for emergency */}
+          {loan.key !== "emergency" && (
+            <>
+              <Text style={styles.fieldLabel}>Monthly Interest Rate (%)  ·  Max {loan.maxRate}%</Text>
+              <View style={styles.inputRow}>
+                <View style={styles.inputPrefix}>
+                  <Text style={styles.inputPrefixText}>%</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={interestRate}
+                  onChangeText={setInterestRate}
+                  keyboardType="numeric"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+            </>
+          )}
+
+          {/* Loan Term */}
+          <Text style={styles.fieldLabel}>
+            Loan Term (months)  ·  Max {loan.maxTermMonths} months
+          </Text>
+          <View style={styles.inputRow}>
+            <View style={styles.inputPrefix}>
+              <Ionicons name="calendar-outline" size={16} color="#6B7280" />
+            </View>
+            <TextInput
+              style={styles.input}
+              value={loanTerm}
+              onChangeText={setLoanTerm}
+              keyboardType="numeric"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+          {termYears !== "" && loan.key !== "emergency" && (
+            <Text style={styles.termHint}>{termYears}</Text>
+          )}
+
+          {/* Error */}
+          {errorMsg && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={15} color={RED} style={{ marginRight: 8, flexShrink: 0 }} />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          )}
+
+          {/* Calculate Button */}
+          <TouchableOpacity
+            style={styles.calcButton}
+            activeOpacity={0.85}
+            onPress={calculate}
+          >
+            <Ionicons name="calculator" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.calcButtonText}>Calculate</Text>
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* ── Loan Details Form ── */}
-      <View style={styles.formCard}>
-        <View style={styles.formHeader}>
-          <Ionicons name="list" size={20} color={BLUE} />
-          <Text style={styles.formHeaderText}>Loan Details</Text>
-        </View>
+        {/* ── Payment Summary ── */}
+        {hasCalculated && monthlyPayment !== null && (
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>Payment Summary</Text>
+            <View style={styles.summaryDivider} />
 
-        <View style={styles.formDivider} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Loan Type</Text>
+              <Text style={styles.summaryValue}>{loan.label}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Loan Amount</Text>
+              <Text style={styles.summaryValue}>₱{fmt(P)}</Text>
+            </View>
+            {loan.key !== "emergency" && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Monthly Interest</Text>
+                <Text style={styles.summaryValue}>{interestRate}%</Text>
+              </View>
+            )}
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Loan Term</Text>
+              <Text style={styles.summaryValue}>{loanTerm} months</Text>
+            </View>
 
-        {/* Loan Type Dropdown */}
-        <Text style={styles.fieldLabel}>Loan Type</Text>
-        <TouchableOpacity
-          style={styles.dropdown}
-          activeOpacity={0.8}
-          onPress={() => setShowDropdown(!showDropdown)}
-        >
-          <Text style={styles.dropdownValue}>{loan.label}</Text>
-          <Ionicons
-            name={showDropdown ? "chevron-up" : "chevron-down"}
-            size={18}
-            color="#6B7280"
-          />
-        </TouchableOpacity>
+            <View style={styles.summaryDivider} />
 
-        {showDropdown && (
-          <View style={styles.dropdownMenu}>
-            {LOAN_TYPES.map((l, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.dropdownItem, i === selectedLoan && styles.dropdownItemActive]}
-                onPress={() => switchLoan(i)}
-              >
-                <Text style={[styles.dropdownItemText, i === selectedLoan && styles.dropdownItemTextActive]}>
-                  {l.label}
-                </Text>
-                <Text style={styles.dropdownItemHint}>{l.rateNote}</Text>
-              </TouchableOpacity>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryHighlightLabel}>Monthly Payment</Text>
+              <Text style={styles.summaryHighlightValue}>₱{fmt(monthlyPayment)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Total Interest</Text>
+              <Text style={styles.summaryValue}>₱{totalInterest !== null ? fmt(totalInterest) : "—"}</Text>
+            </View>
+
+            <View style={styles.summaryDivider} />
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryTotalLabel}>Total Payment</Text>
+              <Text style={styles.summaryTotalValue}>
+                ₱{totalPayment !== null ? fmt(totalPayment) : "—"}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── Amortization Schedule ── */}
+        {hasCalculated && tableRows.length > 0 && (
+          <View style={styles.amortCard}>
+            <Text style={styles.amortTitle}>{tableTitle}</Text>
+            <View style={styles.summaryDivider} />
+
+            <View style={styles.amortHeaderRow}>
+              <Text style={[styles.amortHeaderCell, { width: 32 }]}>Mo.</Text>
+              <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Pmt</Text>
+              <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Prin</Text>
+              <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Int</Text>
+              <Text style={[styles.amortHeaderCell, { flex: 1, textAlign: "right" }]}>Bal</Text>
+            </View>
+
+            {tableRows.map((row, i) => (
+              <View key={i} style={[styles.amortRow, i % 2 === 0 && styles.amortRowAlt]}>
+                <Text style={[styles.amortCell, { width: 32 }]}>{row.month}</Text>
+                <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.payment)}</Text>
+                <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.principal)}</Text>
+                <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.interest)}</Text>
+                <Text style={[styles.amortCell, { flex: 1, textAlign: "right" }]}>₱{fmt(row.balance)}</Text>
+              </View>
             ))}
           </View>
         )}
 
-        {/* Info note */}
-        <View style={styles.infoNote}>
-          <Ionicons name="information-circle" size={14} color={BLUE} style={{ marginRight: 6, flexShrink: 0 }} />
-          <Text style={styles.infoNoteText}>{loan.rateNote}</Text>
-        </View>
-
-        {loan.collateralNote && (
-          <View style={[styles.infoNote, { backgroundColor: AMBER_LIGHT, marginTop: -8 }]}>
-            <Ionicons name="alert-circle" size={14} color="#D97706" style={{ marginRight: 6, flexShrink: 0 }} />
-            <Text style={[styles.infoNoteText, { color: "#92400E" }]}>{loan.collateralNote}</Text>
-          </View>
-        )}
-
-        {/* Share Capital — Guaranteed only */}
-        {loan.key === "guaranteed" && (
-          <>
-            <Text style={styles.fieldLabel}>Share Capital (₱)</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputPrefix}>
-                <Text style={styles.inputPrefixText}>₱</Text>
-              </View>
-              <TextInput
-                style={styles.input}
-                value={shareCapital}
-                onChangeText={setShareCapital}
-                keyboardType="numeric"
-                placeholder="e.g. 5000"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
-            <Text style={styles.rateHint}>
-              Max loanable: ₱{fmt((parseFloat(shareCapital) || 0) * 2)}
-            </Text>
-          </>
-        )}
-
-        {/* Loan Amount */}
-        <Text style={styles.fieldLabel}>
-          Loan Amount (₱){loan.maxAmount ? `  ·  Max ₱${loan.maxAmount.toLocaleString()}` : ""}
-        </Text>
-        <View style={styles.inputRow}>
-          <View style={styles.inputPrefix}>
-            <Text style={styles.inputPrefixText}>₱</Text>
-          </View>
-          <TextInput
-            style={styles.input}
-            value={loanAmount}
-            onChangeText={setLoanAmount}
-            keyboardType="numeric"
-            placeholderTextColor="#9CA3AF"
+        {/* ── Disclaimer ── */}
+        <View style={styles.disclaimer}>
+          <Ionicons
+            name="information-circle-outline"
+            size={15}
+            color="#9CA3AF"
+            style={{ marginRight: 6, marginTop: 1 }}
           />
+          <Text style={styles.disclaimerText}>
+            Results are estimates only. Actual payments may vary based on your loan agreement and cooperative policies.
+          </Text>
         </View>
 
-        {/* Interest Rate — hidden for emergency */}
-        {loan.key !== "emergency" && (
-          <>
-            <Text style={styles.fieldLabel}>Monthly Interest Rate (%)  ·  Max {loan.maxRate}%</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputPrefix}>
-                <Text style={styles.inputPrefixText}>%</Text>
-              </View>
-              <TextInput
-                style={styles.input}
-                value={interestRate}
-                onChangeText={setInterestRate}
-                keyboardType="numeric"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
-          </>
-        )}
-
-        {/* Loan Term */}
-        <Text style={styles.fieldLabel}>
-          Loan Term (months)  ·  Max {loan.maxTermMonths} months
-        </Text>
-        <View style={styles.inputRow}>
-          <View style={styles.inputPrefix}>
-            <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-          </View>
-          <TextInput
-            style={styles.input}
-            value={loanTerm}
-            onChangeText={setLoanTerm}
-            keyboardType="numeric"
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
-        {termYears !== "" && loan.key !== "emergency" && (
-          <Text style={styles.termHint}>{termYears}</Text>
-        )}
-
-        {/* Error */}
-        {errorMsg && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={15} color={RED} style={{ marginRight: 8, flexShrink: 0 }} />
-            <Text style={styles.errorText}>{errorMsg}</Text>
-          </View>
-        )}
-
-        {/* Calculate Button */}
-        <TouchableOpacity
-          style={styles.calcButton}
-          activeOpacity={0.85}
-          onPress={calculate}
-        >
-          <Ionicons name="calculator" size={18} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.calcButtonText}>Calculate</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Payment Summary ── */}
-      {hasCalculated && monthlyPayment !== null && (
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Payment Summary</Text>
-          <View style={styles.summaryDivider} />
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Loan Type</Text>
-            <Text style={styles.summaryValue}>{loan.label}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Loan Amount</Text>
-            <Text style={styles.summaryValue}>₱{fmt(P)}</Text>
-          </View>
-          {loan.key !== "emergency" && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Monthly Interest</Text>
-              <Text style={styles.summaryValue}>{interestRate}%</Text>
-            </View>
-          )}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Loan Term</Text>
-            <Text style={styles.summaryValue}>{loanTerm} months</Text>
-          </View>
-
-          <View style={styles.summaryDivider} />
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryHighlightLabel}>Monthly Payment</Text>
-            <Text style={styles.summaryHighlightValue}>₱{fmt(monthlyPayment)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total Interest</Text>
-            <Text style={styles.summaryValue}>₱{totalInterest !== null ? fmt(totalInterest) : "—"}</Text>
-          </View>
-
-          <View style={styles.summaryDivider} />
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryTotalLabel}>Total Payment</Text>
-            <Text style={styles.summaryTotalValue}>
-              ₱{totalPayment !== null ? fmt(totalPayment) : "—"}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* ── Amortization Schedule ── */}
-      {hasCalculated && tableRows.length > 0 && (
-        <View style={styles.amortCard}>
-          <Text style={styles.amortTitle}>{tableTitle}</Text>
-          <View style={styles.summaryDivider} />
-
-          <View style={styles.amortHeaderRow}>
-            <Text style={[styles.amortHeaderCell, { width: 32 }]}>Mo.</Text>
-            <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Pmt</Text>
-            <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Prin</Text>
-            <Text style={[styles.amortHeaderCell, { flex: 1 }]}>Int</Text>
-            <Text style={[styles.amortHeaderCell, { flex: 1, textAlign: "right" }]}>Bal</Text>
-          </View>
-
-          {tableRows.map((row, i) => (
-            <View key={i} style={[styles.amortRow, i % 2 === 0 && styles.amortRowAlt]}>
-              <Text style={[styles.amortCell, { width: 32 }]}>{row.month}</Text>
-              <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.payment)}</Text>
-              <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.principal)}</Text>
-              <Text style={[styles.amortCell, { flex: 1 }]}>₱{fmt(row.interest)}</Text>
-              <Text style={[styles.amortCell, { flex: 1, textAlign: "right" }]}>₱{fmt(row.balance)}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* ── Disclaimer ── */}
-      <View style={styles.disclaimer}>
-        <Ionicons
-          name="information-circle-outline"
-          size={15}
-          color="#9CA3AF"
-          style={{ marginRight: 6, marginTop: 1 }}
-        />
-        <Text style={styles.disclaimerText}>
-          Results are estimates only. Actual payments may vary based on your loan agreement and cooperative policies.
-        </Text>
-      </View>
-
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -492,9 +495,9 @@ const styles = StyleSheet.create({
 
   /* ── Hero ── */
   hero: {
-    backgroundColor: BLUE,
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 24,
-    paddingTop: 56,
+    paddingTop: 26,
     paddingBottom: 48,
   },
   heroBadge: {

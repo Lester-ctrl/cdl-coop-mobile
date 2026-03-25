@@ -20,7 +20,7 @@ import {
 } from "react-native";
 
 export default function ProfilePage() {
-  const { session } = useAuth();
+  const { session, clearSession } = useAuth();
 
   const [fontsLoaded] = useFonts({
     Poppins_500Medium,
@@ -43,19 +43,32 @@ export default function ProfilePage() {
 
   const avatarUrl = user?.avatar ?? null;
 
+  const handleLogout = async () => {
+    await clearSession();
+    router.replace('/');
+  };
+
   return (
     <SafeAreaView style={styles.root}>
 
-      {/* ── Blue Header ── */}
+      {/* ── Green Header ── */}
       <LinearGradient
-        colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+        colors={["#51b61a", "#48a019", "#3A8E0D"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={20} color="#fff" />
-        </TouchableOpacity>
+        {/* Top row: back button (left) + logout button (right) */}
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} activeOpacity={0.7}>
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.7}>
+            <Text style={styles.logoutText}>Logout</Text>
+            <Ionicons name="log-out-outline" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
         {/* Avatar */}
         <View style={styles.avatarWrapper}>
@@ -189,15 +202,33 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 42,
     borderBottomRightRadius: 42,
   },
-  backBtn: {
-    alignSelf: "flex-start",
+  headerTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignSelf: "stretch",
+    marginBottom: 16,
+  },
+  headerBtn: {
     width: 34,
     height: 34,
     borderRadius: 10,
     backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+  },
+  logoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  logoutText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
   avatarWrapper: {
     width: 96,
@@ -340,7 +371,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     height: 54,
     borderRadius: 14,
-    backgroundColor: BLUE,
+    backgroundColor: "#3A8E0D",
     shadowColor: BLUE,
     shadowOpacity: 0.35,
     shadowRadius: 12,

@@ -52,7 +52,7 @@ export default function PaymentsAndCollections() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
-        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -90,7 +90,7 @@ export default function PaymentsAndCollections() {
           onPress={handleAddPayment}
         >
           <LinearGradient
-            colors={["#2563eb", "#3b82f6"]}
+            colors={["#48a019", "#51b61a"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.buttonGradient}
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
 
   headerSubtitle: {
     fontSize: 15,
-    color: "#dbeafe",
+    color: "#D4EDD8",
   },
 
   section: {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1e3a8a",
+    color: "#2D5016",
     marginBottom: 14,
   },
 
@@ -224,13 +224,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1e3a8a",
+    color: "#2D5016",
   },
 
   amount: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#2563eb",
+    color: "#3A8E0D",
   },
 
   cardDate: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
 
   typeBadge: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: "#DCFCE7",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -248,6 +248,6 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#1e40af",
+    color: "#2D5016",
   },
 });

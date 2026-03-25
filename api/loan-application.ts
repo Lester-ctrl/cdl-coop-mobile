@@ -63,7 +63,7 @@ export async function SendLoanApplication(payload: any) {
 
 export async function FetchPendingApplications(memberId: any) {
     const response = await fetch(`${BASE_URL}/member/fetch-loan-applications`, {
-        method: "POST",
+        method: "POST", 
         headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"

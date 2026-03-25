@@ -11,6 +11,19 @@ export async function fetchNotifications(profile_id: any){
     });
 
     const data = await response.json();
-    console.log(data);
+    return data;
+}
+
+export async function deleteNotification(notif_id: any){
+    const response = await fetch(`${BASE_URL}/member/delete-notification`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ notif_id }),
+    });
+
+    const data = await response.json();
     return data;
 }

@@ -1,3 +1,4 @@
+import { getDashboardData } from "@/api/dashboard";
 import { useAuth } from "@/context/AuthContext";
 import {
   Poppins_500Medium,
@@ -9,7 +10,7 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -19,23 +20,20 @@ import {
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
-// ✏️ Update each "route" value to match your file paths
 const actions = [
-  { label: "Apply\nLoan",    icon: "document-outline",       route: "/member/apply-loan" },
-  { label: "Loan\nApplications",         icon: "list-outline",            route: "/member/application-status" },
-  { label: "Open\nAccount",  icon: "add-circle-outline",      route: "/open-account" },
-  { label: "Fund\nTransfer", icon: "swap-horizontal-outline", route: "/fund-transfer" },
-  { label: "Payments",       icon: "cash-outline",            route: "/payments" },
-  { label: "Apply\nLoan",    icon: "document-text-outline",   route: "/apply-loan" },
-  { label: "Rewards",        icon: "gift-outline",            route: "/rewards" },
-  { label: "More",           icon: "grid-outline",            route: "/more" },
+  { label: "Apply\nLoan", icon: "document-outline", route: "/member/apply-loan" },
+  { label: "Loan\nApplications", icon: "list-outline", route: "/member/application-status" },
+  { label: "Loan\nCalculator",  icon: "calculator-outline", route: "/member/loan-calculator" },
+  { label: "Active Loans", icon: "time-outline", route: "/member/active-loans"},
+  { label: "Loan History", icon: "hourglass-outline", route: "/member/loan-history"}
 ];
 
 function HomeContent() {
   const { session } = useAuth();
   const router = useRouter();
-  const [showMenu, setShowMenu] = useState(false);
   const insets = useSafeAreaInsets();
+  const [totalLoanBalance, setTotalLoanBalance] = useState<number>(0);
+  const [activeLoans, setActiveLoans] = useState<number>(0);
 
   const profile = session?.profile;
   const roleName = session?.role_name ?? "N/A";
@@ -47,19 +45,33 @@ function HomeContent() {
     Poppins_800ExtraBold,
   });
 
+  useEffect(() => {
+    const fetchData = async ()=>{
+      try{
+        const res = await getDashboardData(profile?.profile_id);
+        setTotalLoanBalance(parseFloat(res.totalLoanBalance));
+        setActiveLoans(res.activeLoans);
+
+      }catch(error){
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
+
   if (!fontsLoaded) return null;
 
-  const handleLogout = () => {
-    setShowMenu(false);
-    router.replace("/");
-  };
+  // const handleLogout = () => {
+  //   setShowMenu(false);
+  //   router.replace("/");
+  // };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* HEADER */}
         <LinearGradient
-          colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+          colors={["#51b61a", "#48a019", "#3A8E0D"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -82,23 +94,25 @@ function HomeContent() {
             <View style={[styles.statIcon, { backgroundColor: "#e0f2fe" }]}>
               <MaterialIcons name="account-balance" size={22} color="#0284c7" />
             </View>
-            <Text style={styles.statLabel}>Total Balance</Text>
-            <Text style={styles.statValue}>₱125,500</Text>
+            <Text style={styles.statLabel}>Total Loan Balance</Text>
+            <Text style={styles.statValue}>
+              ₱ {totalLoanBalance.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
           </View>
           <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: "#fce7f3" }]}>
-              <MaterialIcons name="trending-up" size={22} color="#ec4899" />
+            <View style={[styles.statIcon, { backgroundColor: "#f8f8b1" }]}>
+              <MaterialIcons name="trending-up" size={22} color="#b4b42d" />
             </View>
             <Text style={styles.statLabel}>Active Loans</Text>
-            <Text style={styles.statValue}>₱45,200</Text>
+            <Text style={styles.statValue}>{activeLoans}</Text>
           </View>
-          <View style={styles.statCard}>
+          {/* <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: "#dcfce7" }]}>
               <MaterialIcons name="savings" size={22} color="#16a34a" />
             </View>
             <Text style={styles.statLabel}>Savings</Text>
             <Text style={styles.statValue}>₱80,300</Text>
-          </View>
+          </View> */}
         </View>
 
         {/* ACTION GRID */}
@@ -113,7 +127,7 @@ function HomeContent() {
                 onPress={() => router.push(item.route as any)}
               >
                 <View style={styles.iconBox}>
-                  <Ionicons name={item.icon as any} size={28} color="#1e40af" />
+                  <Ionicons name={item.icon as any} size={28} color="#3A8E0D" />
                 </View>
                 <Text style={styles.gridText}>{item.label}</Text>
               </TouchableOpacity>
@@ -191,7 +205,7 @@ const styles = StyleSheet.create({
 
   /* ── HEADER ── */
   header: {
-    backgroundColor: "#1e40af",
+    // backgroundColor: "#1e40af",
     paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 32,

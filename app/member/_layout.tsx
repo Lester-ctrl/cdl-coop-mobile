@@ -1,5 +1,4 @@
 import { fetchNotifications } from "@/api/notification"; // ✏️ same path as your notifications screen
-import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,7 +36,7 @@ export default function TabLayout() {
 
   if (isLoading || !session) return null;
 
-  const activeColor = Colors[colorScheme ?? "light"].tint ?? "#1A56DB";
+  const activeColor = "#3A8E0D";
   const inactiveColor = "#9ca3af";
 
   return (
@@ -105,6 +104,8 @@ export default function TabLayout() {
       <Tabs.Screen name="application-status" options={{ href: null }} />
       <Tabs.Screen name="apply-loan" options={{ href: null }} />
       <Tabs.Screen name="loan-calculator" options={{ href: null }} />
+      <Tabs.Screen name="active-loans" options={{href:null}}/>
+      <Tabs.Screen name="loan-history" options={{href:null}}/>
     </Tabs>
   );
 }
