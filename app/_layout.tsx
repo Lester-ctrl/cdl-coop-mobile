@@ -8,7 +8,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="member" />
         <Stack.Screen name="account-officer" />
-        <Stack.Screen name="loan-officer" />
+        {/* <Stack.Screen name="loan-officer" /> */}
       </Stack>
     </AuthProvider>
   );

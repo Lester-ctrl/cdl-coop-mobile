@@ -41,7 +41,7 @@ export default function ReportAndStatement() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
-        colors={["#1e3a8a", "#2563eb", "#60a5fa"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -60,7 +60,7 @@ export default function ReportAndStatement() {
             onPress={() => router.push(item.route)}
           >
             <View style={styles.iconContainer}>
-              <Ionicons name={item.icon} size={22} color="#2563eb" />
+              <Ionicons name={item.icon} size={22} color="#3A8E0D" />
             </View>
 
             <Text style={styles.cardText}>{item.title}</Text>
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
 
   headerSubtitle: {
     fontSize: 15,
-    color: "#e0e7ff",
+    color: "#D4EDD8",
   },
 
   section: {
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#DCFCE7",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,

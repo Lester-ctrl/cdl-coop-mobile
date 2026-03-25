@@ -2,11 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function LoanProducts() {
@@ -29,7 +29,7 @@ export default function LoanProducts() {
         <View style={styles.card}>
           <View style={styles.topRow}>
             <View style={styles.iconBox}>
-              <Ionicons name="person" size={20} color="#1a46a7" />
+              <Ionicons name="person" size={20} color="#3A8E0D" />
             </View>
 
             <View style={styles.aprBadge}>
@@ -69,7 +69,7 @@ export default function LoanProducts() {
         <View style={styles.card}>
           <View style={styles.topRow}>
             <View style={styles.iconBox}>
-              <Ionicons name="home" size={20} color="#1a46a7" />
+              <Ionicons name="home" size={20} color="#3A8E0D" />
             </View>
 
             <View style={styles.aprBadge}>
@@ -109,7 +109,7 @@ export default function LoanProducts() {
         <View style={styles.card}>
           <View style={styles.topRow}>
             <View style={styles.iconBox}>
-              <Ionicons name="business" size={20} color="#1a46a7" />
+              <Ionicons name="business" size={20} color="#3A8E0D" />
             </View>
 
             <View style={styles.aprBadge}>
@@ -183,7 +183,7 @@ export default function LoanProducts() {
 
         {/* Ready to Apply Card */}
         <LinearGradient
-          colors={["#2f5fd0", "#1a46a7"]}
+          colors={["#48a019", "#3A8E0D"]}
           style={styles.applyCard}
         >
           <Text style={styles.applyTitle}>Ready to Apply?</Text>
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f4f6",
   },
   header: {
-    backgroundColor: "#1a46a7",
+    backgroundColor: "#3A8E0D",
     padding: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerSubtitle: {
-    color: "#dbeafe",
+    color: "#D4EDD8",
     fontSize: 14,
   },
   card: {
@@ -278,23 +278,23 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   iconBox: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: "#DCFCE7",
     padding: 15,
     borderRadius: 12,
   },
   iconText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2563eb",
+    color: "#3A8E0D",
   },
   aprBadge: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: "#DCFCE7",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   aprText: {
-    color: "#2563eb",
+    color: "#3A8E0D",
     fontWeight: "600",
   },
   cardTitle: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   check: {
-    color: "#2563eb",
+    color: "#3A8E0D",
     marginRight: 8,
     fontWeight: "bold",
   },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
 
   applyText: {
-    color: "#dbeafe",
+    color: "#D4EDD8",
     marginBottom: 20,
   },
 
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
 
   applyButtonText: {
-    color: "#1a46a7",
+    color: "#3A8E0D",
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   statsTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#2563eb",
+    color: "#3A8E0D",
     marginBottom: 4,
   },
 
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
 
   actionButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#3A8E0D",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,

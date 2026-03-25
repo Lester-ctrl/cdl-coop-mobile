@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   headerSubtitle: {
-    color: "#dbeafe",
+    color: "#D4EDD8", // light green
     marginTop: 6,
     fontSize: 14,
   },
@@ -181,9 +181,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   primaryBtn: {
-    backgroundColor: "#2563eb",
-    flexDirection: "row",
-    alignItems: "center",
+    backgroundColor: "#3A8E0D", // green
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,
@@ -192,7 +190,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 12,
-    marginLeft: 6,
   },
   secondaryBtn: {
     backgroundColor: "#d1fae5",
@@ -206,7 +203,6 @@ const styles = StyleSheet.create({
     color: "#065f46",
     fontWeight: "700",
     fontSize: 12,
-    marginLeft: 6,
   },
   recommendBtn: {
     backgroundColor: "#e0e7ff",
@@ -220,7 +216,6 @@ const styles = StyleSheet.create({
     color: "#2563eb",
     fontWeight: "700",
     fontSize: 12,
-    marginLeft: 6,
   },
   rejectBtn: {
     backgroundColor: "#fee2e2",
@@ -234,6 +229,35 @@ const styles = StyleSheet.create({
     color: "#b91c1c",
     fontWeight: "700",
     fontSize: 12,
-    marginLeft: 6,
+  },
+  filterCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 18,
+    marginTop: -25,
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: "#2D5016", // green shadow
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  noResult: {
+    textAlign: "center",
+    marginTop: 40,
+    color: "#3A8E0D", // green
+    fontWeight: "600",
+  },
+  balanceAmount: {
+    fontWeight: "800",
+    color: "#3A8E0D", // green
+  },
+  ghostBtnText: {
+    color: "#2D5016", // green
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  badgeActive: {
+    backgroundColor: "#DCFCE7", // light green
   },
 });
