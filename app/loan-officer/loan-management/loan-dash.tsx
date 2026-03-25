@@ -12,11 +12,11 @@ import {
 
 const dashboardCards = [
   {
-    label: "Active Loans",
+    label: "Loans Applications",
     icon: "card-outline",
     bg: "#EEF3FB",
     color: "#2563C7",
-    route: "/loan-officer/loan-management/Loans",
+    route: "/loan-officer/loan-management/loans",
   },
   {
     label: "Partial Payments",

@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
 
   /* ── Hero ── */
   hero: {
-    backgroundColor: BLUE,
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 28,
     paddingTop: 64,
     paddingBottom: 52,
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   submitButton: {
-    backgroundColor: "#2952CC",
+    backgroundColor: "#3A8E0D",
     borderRadius: 14,
     paddingVertical: 16,
     flexDirection: "row",

@@ -1,4 +1,4 @@
-import { getActiveLoans } from "@/api/active-loans";
+import { getLoanHistory } from "@/api/loan-history";
 import { useAuth } from "@/context/AuthContext";
 import {
     Poppins_400Regular,
@@ -27,8 +27,10 @@ const BLUE_LIGHT = "#EEF2FF";
 const GREEN = "#22C55E";
 const GREEN_LIGHT = "#F0FDF4";
 const PURPLE = "#7C3AED";
+const GRAY = "#6B7280";
+const GRAY_LIGHT = "#F3F4F6";
 
-type ActiveLoan = {
+type Loan = {
     loan_account_id: number;
     profile_id: number;
     principal_amount: number;
@@ -38,7 +40,7 @@ type ActiveLoan = {
     maturity_date: string;
     monthly_amortization: number;
     balance: number;
-    status: string;
+    status: string; // "Active" | "Completed" | etc.
 };
 
 type AmortRow = {
@@ -68,6 +70,21 @@ function fmt(n: number): string {
     });
 }
 
+function isActive(status: string) {
+    return status?.toLowerCase() === "active";
+}
+
+function StatusBadgeSmall({ status }: { status: string }) {
+    const active = isActive(status);
+    return (
+        <View style={[styles.rowStatusBadge, active ? styles.rowBadgeActive : styles.rowBadgeCompleted]}>
+            <Text style={[styles.rowStatusBadgeText, { color: active ? "#15803D" : GRAY }]}>
+                {status}
+            </Text>
+        </View>
+    );
+}
+
 function DetailRow({ label, value }: { label: string; value: string }) {
     return (
         <View style={styles.detailRow}>
@@ -77,7 +94,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     );
 }
 
-function buildSchedule(loan: ActiveLoan, paidDates: string[]): AmortRow[] {
+function buildSchedule(loan: Loan, paidDates: string[]): AmortRow[] {
     const P = parseFloat(String(loan.principal_amount));
     const r = parseFloat(String(loan.interest_rate)) / 100;
     const n = loan.term_months;
@@ -99,8 +116,6 @@ function buildSchedule(loan: ActiveLoan, paidDates: string[]): AmortRow[] {
         const prinPaid = monthly - intPaid;
         balance = Math.max(0, balance - prinPaid);
 
-        // Due month is the same month as release + (i - 1),
-        // e.g. month 1 is due in the release month itself
         const dueDate = new Date(releaseDate);
         dueDate.setMonth(dueDate.getMonth() + (i - 1));
         const dueYearMonth = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}`;
@@ -117,12 +132,12 @@ function buildSchedule(loan: ActiveLoan, paidDates: string[]): AmortRow[] {
     return rows;
 }
 
-export default function ActiveLoans() {
+export default function LoanHistory() {
     const { session } = useAuth();
-    const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalLoading, setModalLoading] = useState(false);
-    const [selectedLoan, setSelectedLoan] = useState<ActiveLoan | null>(null);
+    const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [paidDates, setPaidDates] = useState<PaidDates>({});
 
@@ -136,10 +151,10 @@ export default function ActiveLoans() {
         Poppins_800ExtraBold,
     });
 
-    const fetchActiveLoans = async () => {
+    const fetchLoanHistory = async () => {
         try {
-            const res = await getActiveLoans(profile?.profile_id);
-            setActiveLoans(res.activeLoans ?? []);
+            const res = await getLoanHistory(profile?.profile_id);
+            setLoans(res.loans ?? []);
             setPaidDates(res.paidDates ?? {});
         } catch (error) {
             console.log(error);
@@ -149,15 +164,15 @@ export default function ActiveLoans() {
     };
 
     useEffect(() => {
-        fetchActiveLoans();
+        fetchLoanHistory();
     }, []);
 
-    const handleRowPress = async (loan: ActiveLoan) => {
+    const handleRowPress = async (loan: Loan) => {
         setSelectedLoan(loan);
         setModalVisible(true);
         try {
             setModalLoading(true);
-            const res = await getActiveLoans(profile?.profile_id);
+            const res = await getLoanHistory(profile?.profile_id);
             setPaidDates(res.paidDates ?? {});
         } catch (error) {
             console.log(error);
@@ -173,16 +188,19 @@ export default function ActiveLoans() {
 
     const amortSchedule = useMemo(() => {
         if (!selectedLoan) return [];
-        // paidDates keys come back as strings from the API, so coerce to string
         const dates = paidDates[String(selectedLoan.loan_account_id)] ?? [];
         return buildSchedule(selectedLoan, dates);
     }, [selectedLoan, paidDates]);
 
     if (!fontsLoaded) return null;
 
+    const activeCount = loans.filter((l) => isActive(l.status)).length;
+    const completedCount = loans.length - activeCount;
+
     return (
         <>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+
                 {/* Hero */}
                 <LinearGradient
                     colors={["#51b61a", "#48a019", "#3A8E0D"]}
@@ -191,22 +209,42 @@ export default function ActiveLoans() {
                     style={styles.hero}
                 >
                     <View style={styles.tag}>
-                        <Text style={styles.tagText}>My Active Loans</Text>
+                        <Text style={styles.tagText}>Loan History</Text>
                     </View>
-                    <Text style={styles.heroTitle}>Active Loans</Text>
-                    <Text style={styles.heroDesc}>View all your currently active loan accounts.</Text>
+                    <Text style={styles.heroTitle}>Loan History</Text>
+                    <Text style={styles.heroDesc}>View all your loan accounts — active and completed.</Text>
+
+                    {/* Summary pills */}
+                    {!loading && loans.length > 0 && (
+                        <View style={styles.heroPills}>
+                            <View style={styles.heroPill}>
+                                <Text style={styles.heroPillValue}>{activeCount}</Text>
+                                <Text style={styles.heroPillLabel}>Active</Text>
+                            </View>
+                            <View style={styles.heroPillDivider} />
+                            <View style={styles.heroPill}>
+                                <Text style={styles.heroPillValue}>{completedCount}</Text>
+                                <Text style={styles.heroPillLabel}>Completed</Text>
+                            </View>
+                            <View style={styles.heroPillDivider} />
+                            <View style={styles.heroPill}>
+                                <Text style={styles.heroPillValue}>{loans.length}</Text>
+                                <Text style={styles.heroPillLabel}>Total</Text>
+                            </View>
+                        </View>
+                    )}
                 </LinearGradient>
 
                 {/* Card */}
                 <View style={styles.card}>
                     <View style={styles.cardTopRow}>
                         <View style={styles.iconBox}>
-                            <Ionicons name="wallet-outline" size={22} color={BLUE} />
+                            <Ionicons name="time-outline" size={22} color={BLUE} />
                         </View>
                         <View>
-                            <Text style={styles.cardTitle}>Active Loans</Text>
+                            <Text style={styles.cardTitle}>All Loans</Text>
                             <Text style={styles.cardSubtitle}>
-                                {activeLoans.length} active {activeLoans.length === 1 ? "loan" : "loans"}
+                                {loans.length} {loans.length === 1 ? "loan" : "loans"} found
                             </Text>
                         </View>
                     </View>
@@ -217,22 +255,22 @@ export default function ActiveLoans() {
                         <Text style={[styles.tableHeaderText, { flex: 1, textAlign: "right" }]}>Principal</Text>
                     </View>
 
-                    {/* Loading */}
+                    {/* Rows */}
                     {loading ? (
                         <View style={styles.centerBox}>
                             <ActivityIndicator size="small" color={BLUE} />
-                            <Text style={styles.loadingText}>Loading loans...</Text>
+                            <Text style={styles.loadingText}>Loading loan history...</Text>
                         </View>
-                    ) : activeLoans.length === 0 ? (
+                    ) : loans.length === 0 ? (
                         <View style={styles.centerBox}>
                             <View style={styles.emptyIconBox}>
                                 <Ionicons name="document-outline" size={32} color="#9CA3AF" />
                             </View>
-                            <Text style={styles.emptyTitle}>No Active Loans</Text>
-                            <Text style={styles.emptyDesc}>You don't have any active loan accounts at the moment.</Text>
+                            <Text style={styles.emptyTitle}>No Loans Found</Text>
+                            <Text style={styles.emptyDesc}>You don't have any loan records yet.</Text>
                         </View>
                     ) : (
-                        activeLoans.map((item, index) => (
+                        loans.map((item, index) => (
                             <TouchableOpacity
                                 key={item.loan_account_id}
                                 onPress={() => handleRowPress(item)}
@@ -240,21 +278,25 @@ export default function ActiveLoans() {
                                 style={[
                                     styles.tableRow,
                                     index % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                    index === activeLoans.length - 1 && styles.rowLast,
+                                    index === loans.length - 1 && styles.rowLast,
                                 ]}
                             >
+                                {/* Date + status dot */}
                                 <View style={[styles.rowLeft, { flex: 1.4 }]}>
-                                    <View style={styles.statusDot} />
+                                    <View style={[
+                                        styles.statusDot,
+                                        { backgroundColor: isActive(item.status) ? GREEN : GRAY },
+                                    ]} />
                                     <View>
                                         <Text style={styles.dateText}>{formatDate(item.release_date)}</Text>
                                         <Text style={styles.loanIdText}>#{item.loan_account_id}</Text>
                                     </View>
                                 </View>
+
+                                {/* Principal + status badge */}
                                 <View style={[styles.rowRight, { flex: 1 }]}>
                                     <Text style={styles.principalText}>₱{fmt(item.principal_amount)}</Text>
-                                    <View style={styles.activeBadge}>
-                                        <Text style={styles.activeBadgeText}>Active</Text>
-                                    </View>
+                                    <StatusBadgeSmall status={item.status} />
                                 </View>
                                 <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginLeft: 6 }} />
                             </TouchableOpacity>
@@ -286,8 +328,19 @@ export default function ActiveLoans() {
                                     <Text style={styles.modalTitle}>Loan Details</Text>
                                     <Text style={styles.modalSubtitle}>Account #{selectedLoan?.loan_account_id}</Text>
                                 </View>
-                                <View style={styles.activeBadgeLg}>
-                                    <Text style={styles.activeBadgeLgText}>● Active</Text>
+                                {/* Dynamic badge — green for Active, gray for Completed */}
+                                <View style={[
+                                    styles.modalStatusBadge,
+                                    isActive(selectedLoan?.status ?? "")
+                                        ? styles.modalBadgeActive
+                                        : styles.modalBadgeCompleted,
+                                ]}>
+                                    <Text style={[
+                                        styles.modalStatusBadgeText,
+                                        { color: isActive(selectedLoan?.status ?? "") ? "#15803D" : GRAY },
+                                    ]}>
+                                        ● {selectedLoan?.status ?? "—"}
+                                    </Text>
                                 </View>
                             </View>
 
@@ -325,6 +378,10 @@ export default function ActiveLoans() {
                             {/* Detail rows */}
                             <View style={styles.detailsContainer}>
                                 <DetailRow
+                                    label="Status"
+                                    value={selectedLoan?.status ?? "—"}
+                                />
+                                <DetailRow
                                     label="Interest Rate"
                                     value={selectedLoan ? `${selectedLoan.interest_rate}% / month` : "—"}
                                 />
@@ -345,8 +402,6 @@ export default function ActiveLoans() {
                             {/* ── Amortization Table ── */}
                             {amortSchedule.length > 0 && (
                                 <View style={styles.amortCard}>
-
-                                    {/* Card header */}
                                     <View style={styles.amortCardHeader}>
                                         <View style={styles.amortIconBox}>
                                             <Ionicons name="calculator-outline" size={16} color={BLUE} />
@@ -357,7 +412,6 @@ export default function ActiveLoans() {
                                         )}
                                     </View>
 
-                                    {/* Horizontally scrollable table */}
                                     <ScrollView
                                         horizontal
                                         showsHorizontalScrollIndicator={true}
@@ -392,7 +446,7 @@ export default function ActiveLoans() {
                                                     <Text style={[styles.amortCell, styles.colAmount]}>₱{fmt(row.balance)}</Text>
                                                     <View style={styles.colStatus}>
                                                         <View style={[
-                                                            styles.statusBadge,
+                                                            styles.amortStatusBadge,
                                                             row.paid ? styles.paidBadge : styles.unpaidBadge,
                                                         ]}>
                                                             <View style={[
@@ -400,7 +454,7 @@ export default function ActiveLoans() {
                                                                 { backgroundColor: row.paid ? "#22C55E" : "#F59E0B" },
                                                             ]} />
                                                             <Text style={[
-                                                                styles.statusBadgeText,
+                                                                styles.amortStatusText,
                                                                 { color: row.paid ? "#15803D" : "#B45309" },
                                                             ]}>
                                                                 {row.paid ? "Paid" : "Unpaid"}
@@ -444,7 +498,7 @@ const styles = StyleSheet.create({
     // Hero
     hero: {
         padding: 28,
-        paddingBottom: 36,
+        paddingBottom: 28,
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
     },
@@ -477,6 +531,38 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_400Regular",
         lineHeight: 22,
         textAlign: "center",
+        marginBottom: 20,
+    },
+
+    // Hero summary pills
+    heroPills: {
+        flexDirection: "row",
+        backgroundColor: "rgba(255,255,255,0.15)",
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 8,
+        alignItems: "center",
+        justifyContent: "space-around",
+    },
+    heroPill: {
+        alignItems: "center",
+        flex: 1,
+    },
+    heroPillValue: {
+        fontSize: 20,
+        fontFamily: "Poppins_700Bold",
+        color: "#FFFFFF",
+    },
+    heroPillLabel: {
+        fontSize: 11,
+        fontFamily: "Poppins_400Regular",
+        color: "rgba(255,255,255,0.75)",
+        marginTop: 2,
+    },
+    heroPillDivider: {
+        width: 1,
+        height: 32,
+        backgroundColor: "rgba(255,255,255,0.25)",
     },
 
     // Card
@@ -557,7 +643,6 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: GREEN,
     },
     dateText: {
         fontSize: 13,
@@ -575,19 +660,25 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_700Bold",
         color: BLUE,
     },
-    activeBadge: {
-        backgroundColor: GREEN_LIGHT,
+
+    // Row status badges
+    rowStatusBadge: {
         borderRadius: 20,
         paddingHorizontal: 10,
         paddingVertical: 3,
     },
-    activeBadgeText: {
+    rowBadgeActive: {
+        backgroundColor: GREEN_LIGHT,
+    },
+    rowBadgeCompleted: {
+        backgroundColor: GRAY_LIGHT,
+    },
+    rowStatusBadgeText: {
         fontSize: 10,
         fontFamily: "Poppins_600SemiBold",
-        color: "#15803D",
     },
 
-    // Empty / loading states
+    // Empty / loading
     centerBox: {
         paddingVertical: 32,
         alignItems: "center",
@@ -673,16 +764,20 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_400Regular",
         color: "#9CA3AF",
     },
-    activeBadgeLg: {
-        backgroundColor: GREEN_LIGHT,
+    modalStatusBadge: {
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 6,
     },
-    activeBadgeLgText: {
+    modalBadgeActive: {
+        backgroundColor: GREEN_LIGHT,
+    },
+    modalBadgeCompleted: {
+        backgroundColor: GRAY_LIGHT,
+    },
+    modalStatusBadgeText: {
         fontSize: 12,
         fontFamily: "Poppins_600SemiBold",
-        color: "#15803D",
     },
     modalDivider: {
         height: 1,
@@ -770,7 +865,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
-        marginBottom: 10,
+        marginBottom: 12,
     },
     amortIconBox: {
         width: 30,
@@ -786,7 +881,7 @@ const styles = StyleSheet.create({
         color: "#374151",
     },
 
-    // Amort table — fixed-width columns so horizontal scroll works
+    // Amort table
     amortHeaderRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -815,8 +910,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_500Medium",
         color: "#374151",
     },
-
-    // Fixed-width columns — never use flex here or horizontal scroll breaks
     colMo: {
         width: 40,
         paddingLeft: 4,
@@ -830,9 +923,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
-    // Status badge
-    statusBadge: {
+    amortStatusBadge: {
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
@@ -851,7 +942,7 @@ const styles = StyleSheet.create({
         height: 5,
         borderRadius: 3,
     },
-    statusBadgeText: {
+    amortStatusText: {
         fontSize: 10,
         fontFamily: "Poppins_600SemiBold",
     },

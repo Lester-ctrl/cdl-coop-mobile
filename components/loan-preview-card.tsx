@@ -92,7 +92,7 @@ export default function LoanPreviewCard({
             {/* ── Header ── */}
             <View style={styles.header}>
                 <View style={styles.iconBox}>
-                    <Ionicons name="calculator-outline" size={22} color={BLUE} />
+                    <Ionicons name="calculator-outline" size={22} color="#3A8E0D" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>Loan Preview</Text>
@@ -112,12 +112,12 @@ export default function LoanPreviewCard({
                     </View>
                     <Text style={[styles.metricValue, { color: BLUE }]}>₱{fmt(monthly)}</Text>
                 </View>
-                <View style={[styles.metricCard, { backgroundColor: PURPLE_LIGHT }]}>
+                <View style={[styles.metricCard, { backgroundColor: "#fcfcd6" }]}>
                     <View style={styles.metricLabelRow}>
-                        <Ionicons name="trending-up-outline" size={12} color={PURPLE} />
-                        <Text style={[styles.metricLabel, { color: PURPLE }]}>  TOTAL INTEREST</Text>
+                        <Ionicons name="trending-up-outline" size={12} color="#c0c037" />
+                        <Text style={[styles.metricLabel, { color: "#c0c037" }]}>  TOTAL INTEREST</Text>
                     </View>
-                    <Text style={[styles.metricValue, { color: PURPLE }]}>₱{fmt(totalInterest)}</Text>
+                    <Text style={[styles.metricValue, { color: "#c0c037" }]}>₱{fmt(totalInterest)}</Text>
                 </View>
             </View>
 
@@ -138,7 +138,7 @@ export default function LoanPreviewCard({
                         <Text style={styles.barPct}>₱{fmt(totalInterest)} ({interestPct.toFixed(1)}%)</Text>
                     </View>
                     <View style={styles.barTrack}>
-                        <View style={[styles.barFill, { width: `${interestPct}%` as any, backgroundColor: PURPLE }]} />
+                        <View style={[styles.barFill, { width: `${interestPct}%` as any, backgroundColor: "#e4e44b" }]} />
                     </View>
                 </View>
             </View>
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 12,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#e4ffd6",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
         color: "#6B7280",
     },
     loanTypeBadge: {
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#e4ffd6",
         borderRadius: 20,
         paddingHorizontal: 10,
         paddingVertical: 5,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     loanTypeBadgeText: {
         fontSize: 10,
         fontFamily: "Poppins_600SemiBold",
-        color: BLUE,
+        color: "#3A8E0D",
     },
     metricsCol: {
         flexDirection: "column",

@@ -1,63 +1,84 @@
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const Tab = createBottomTabNavigator();
 
-const loans = [
-  {
-    id: 1,
-    member: "Anna Villanueva",
-    balance: 12500,
-    status: "Active",
-    overdue: false,
-  },
-  {
-    id: 2,
-    member: "Carlos Mendoza",
-    balance: 5200,
-    status: "Active",
-    overdue: true,
-  },
-  {
-    id: 3,
-    member: "Liza Ramos",
-    balance: 9800,
-    status: "Active",
-    overdue: false,
-  },
-];
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export default function Loans() {
   const [search, setSearch] = useState("");
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
-  const [rangeLoans, setRangeLoans] = useState(loans);
+  const [loans, setLoans] = useState([]);
+  const [filteredLoans, setFilteredLoans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const nameFilteredLoans = rangeLoans.filter((loan) =>
-    loan.member.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const handleRangeFilter = () => {
-    const minVal = min ? parseInt(min, 10) : 0;
-    const maxVal = max ? parseInt(max, 10) : Infinity;
-
-    setRangeLoans(
-      loans.filter((loan) => loan.balance >= minVal && loan.balance <= maxVal),
-    );
+  const fetchLoans = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${BASE_URL}/loan-applications`);
+      if (!res.ok) throw new Error("Failed to fetch loan applications");
+      const data = await res.json();
+      setLoans(data.data || []);
+      setFilteredLoans(data.data || []);
+    } catch (err) {
+      setError(err.message || "Error fetching loans");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchLoans();
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchLoans();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    // Filter by name and range
+    let result = loans;
+    if (search) {
+      result = result.filter((loan) => {
+        const firstName = loan.member?.profile?.first_name || "";
+        const lastName = loan.member?.profile?.last_name || "";
+        const fullName = `${firstName} ${lastName}`.toLowerCase();
+        return fullName.includes(search.toLowerCase());
+      });
+    }
+    const minVal = min ? parseInt(min, 10) : 0;
+    const maxVal = max ? parseInt(max, 10) : Infinity;
+    result = result.filter((loan) => {
+      const bal = loan.loanAccount?.balance || 0;
+      return bal >= minVal && bal <= maxVal;
+    });
+    setFilteredLoans(result);
+  }, [search, min, max, loans]);
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       {/* HEADER */}
       <LinearGradient
         colors={["#1e3a8a", "#2563eb", "#3b82f6"]}
@@ -65,9 +86,9 @@ export default function Loans() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>Active</Text>
+        <Text style={styles.headerTitle}>Loan Applications</Text>
         <Text style={styles.headerSubtitle}>
-          Search and manage member loan accounts
+          Search and manage member loan applications
         </Text>
       </LinearGradient>
 
@@ -95,40 +116,44 @@ export default function Loans() {
             value={max}
             onChangeText={setMax}
           />
-          <TouchableOpacity
-            style={styles.filterBtn}
-            onPress={handleRangeFilter}
-          >
-            <FontAwesome6 name="filter-circle-dollar" size={20} color="#fff" />
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* LOAN LIST */}
+      {/* LOAN APPLICATION LIST */}
       <View style={styles.loanList}>
-        {nameFilteredLoans.length === 0 ? (
-          <Text style={styles.noResult}>No loans found</Text>
+        {loading ? (
+          <Text style={styles.noResult}>Loading...</Text>
+        ) : error ? (
+          <Text style={[styles.noResult, { color: "#dc2626" }]}>{error}</Text>
+        ) : filteredLoans.length === 0 ? (
+          <Text style={styles.noResult}>No loan applications found</Text>
         ) : (
-          nameFilteredLoans.map((loan) => (
-            <View key={loan.id} style={styles.loanCard}>
+          filteredLoans.map((loan) => (
+            <View key={loan.loan_application_id} style={styles.loanCard}>
               <View style={styles.loanHeader}>
-                <Text style={styles.memberName}>{loan.member}</Text>
-
+                <Text style={styles.memberName}>
+                  {loan.member?.profile?.first_name &&
+                  loan.member?.profile?.last_name
+                    ? `${loan.member.profile.first_name} ${loan.member.profile.last_name}`
+                    : "Unknown Member"}
+                </Text>
                 <View
                   style={[
                     styles.statusBadge,
-                    loan.overdue ? styles.badgeOverdue : styles.badgeActive,
+                    loan.loanAccount?.is_overdue
+                      ? styles.badgeOverdue
+                      : styles.badgeActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
-                      loan.overdue
+                      loan.loanAccount?.is_overdue
                         ? { color: "#dc2626" }
                         : { color: "#2563eb" },
                     ]}
                   >
-                    {loan.overdue ? "Overdue" : "Active"}
+                    {loan.loanAccount?.is_overdue ? "Overdue" : "Active"}
                   </Text>
                 </View>
               </View>
@@ -136,8 +161,17 @@ export default function Loans() {
               <Text style={styles.balance}>
                 Balance:{" "}
                 <Text style={styles.balanceAmount}>
-                  ₱{loan.balance.toLocaleString()}
+                  ₱
+                  {(
+                    loan.loanAccount?.balance ||
+                    loan.amount_requested ||
+                    0
+                  ).toLocaleString()}
                 </Text>
+              </Text>
+
+              <Text style={[styles.badgeText, { marginTop: 8 }]}>
+                Status: {loan.status || "Pending"}
               </Text>
 
               <View style={styles.actionRow}>

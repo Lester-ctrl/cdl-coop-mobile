@@ -1,25 +1,25 @@
 import { login } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import {
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 const BLUE = "#2952CC";
@@ -31,8 +31,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
@@ -44,20 +42,17 @@ export default function Login() {
   if (!fontsLoaded) return null;
 
   const handleLogin = async () => {
-    setError("");
-    setLoading(true);
     try {
       if (!email.trim() || !password.trim()) {
-        setError("Please enter both email and password.");
-        setLoading(false);
+        console.log("Please enter both email and password.");
         return;
       }
 
       const result = await login(email, password);
       await saveSession(result.data);
 
-      // Redirect based on role
       const role = result.data.role_name;
+
       switch (role) {
         case "Member":
           router.replace("/member/home");
@@ -69,38 +64,39 @@ export default function Login() {
           router.replace("/account-officer/home");
           break;
         default:
-          setError("Unknown role: " + role);
+          console.log("Unknown role:", role);
           break;
       }
     } catch (error: any) {
-      setError("Invalid credentials");
-    } finally {
-      setLoading(false);
+      console.log("Login failed:", error.message);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Blue header */}
+    <View style={{ flex: 1 }}>
+      {/* Header with Logo - stays fixed at top */}
       <LinearGradient
-        colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+        colors={["#51b61a", "#48a019", "#3A8E0D"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={styles.logoWrapper}>
-          <View style={styles.logoBg}>
-            <Ionicons name="business" size={30} color={BLUE_MID} />
-          </View>
+          <Image
+            source={require("@/assets/images/hilongos-logo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
-        <Text style={styles.appName}>Community Cooperative</Text>
+        <Text style={styles.appName}>Hilongos Multi-Purpose Cooperative</Text>
       </LinearGradient>
 
+      {/* Keyboard avoiding content */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* White card body with inputs and login button */}
+        {/* White card body */}
         <View style={styles.body}>
           <Text style={styles.welcomeTitle}>Welcome Back</Text>
 
@@ -157,43 +153,36 @@ export default function Login() {
           {/* Login button */}
           <Pressable
             onPress={handleLogin}
-            disabled={loading}
             style={({ pressed }) => [
               styles.loginBtn,
               pressed && styles.loginBtnPressed,
-              loading && { opacity: 0.7 },
             ]}
           >
             <LinearGradient
-              colors={["#1A56DB", "#3B82F6"]}
+              colors={["#48a019", "#3A8E0D"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.loginBtnGradient}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginBtnText}>Login</Text>
-              )}
+              <Text style={styles.loginBtnText}>Login</Text>
             </LinearGradient>
           </Pressable>
-
-          {error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : (
-            <View style={styles.emptyView} />
-          )}
         </View>
       </KeyboardAvoidingView>
 
-      {/* Register link absolutely positioned at the bottom */}
-      <View style={styles.registerRow}>
-        <Text style={styles.registerText}>Not a member yet? </Text>
-        <Pressable hitSlop={6} onPress={() => router.push("/guest/apply-now")}>
-          <Text style={styles.registerLink}>Apply now</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      {/* Register link - stays fixed at bottom, outside KeyboardAvoidingView */}
+      <SafeAreaView edges={["bottom", "left", "right"]}>
+        <View style={styles.registerRow}>
+          <Text style={styles.registerText}>Not a member yet? </Text>
+          <Pressable
+            hitSlop={6}
+            onPress={() => router.push("/guest/apply-now")}
+          >
+            <Text style={styles.registerLink}>Apply now</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -209,19 +198,27 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   logoWrapper: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: "rgba(255,255,255,0.95)",
+    width: 85,
+    height: 85,
+    borderRadius: 42.5,
+    backgroundColor: "rgba(255,255,255,0.95)", // keep light white for contrast
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 8,
+  },
+  logoImage: {
+    width: 72,
+    height: 72,
+    // This helps with transparency issues
+    backgroundColor: "transparent",
   },
   logoBg: {
+    width: 68,
+    height: 68,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -230,6 +227,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 0.2,
+    textAlign: "center",
   },
   body: {
     flex: 1,
@@ -302,25 +300,15 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_700Bold",
     letterSpacing: 0.3,
   },
-  errorText: {
-    color: "#EF4444",
-    fontSize: 14,
-    fontFamily: "Poppins_400Regular",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  emptyView: {
-    height: 20,
-  },
   registerRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
     bottom: 48,
+    alignSelf: "center",
     left: 0,
     right: 0,
-    zIndex: 10,
   },
   registerText: {
     fontSize: 14,
@@ -330,6 +318,6 @@ const styles = StyleSheet.create({
   registerLink: {
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
-    color: BLUE,
+    color: "#3A8E0D",
   },
 });

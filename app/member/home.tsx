@@ -25,6 +25,7 @@ const actions = [
   { label: "Loan\nApplications", icon: "list-outline", route: "/member/application-status" },
   { label: "Loan\nCalculator",  icon: "calculator-outline", route: "/member/loan-calculator" },
   { label: "Active Loans", icon: "time-outline", route: "/member/active-loans"},
+  { label: "Loan History", icon: "hourglass-outline", route: "/member/loan-history"}
 ];
 
 function HomeContent() {
@@ -70,7 +71,7 @@ function HomeContent() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* HEADER */}
         <LinearGradient
-          colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+          colors={["#51b61a", "#48a019", "#3A8E0D"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -99,8 +100,8 @@ function HomeContent() {
             </Text>
           </View>
           <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: "#fce7f3" }]}>
-              <MaterialIcons name="trending-up" size={22} color="#ec4899" />
+            <View style={[styles.statIcon, { backgroundColor: "#f8f8b1" }]}>
+              <MaterialIcons name="trending-up" size={22} color="#b4b42d" />
             </View>
             <Text style={styles.statLabel}>Active Loans</Text>
             <Text style={styles.statValue}>{activeLoans}</Text>
@@ -126,7 +127,7 @@ function HomeContent() {
                 onPress={() => router.push(item.route as any)}
               >
                 <View style={styles.iconBox}>
-                  <Ionicons name={item.icon as any} size={28} color="#1e40af" />
+                  <Ionicons name={item.icon as any} size={28} color="#3A8E0D" />
                 </View>
                 <Text style={styles.gridText}>{item.label}</Text>
               </TouchableOpacity>
