@@ -15,8 +15,8 @@ const news = [
     date: "2026-03-05",
     description: "We are excited to announce a new loan product for members.",
     icon: "megaphone-outline" as const,
-    color: "#2563C7",
-    bg: "#EEF3FB",
+    color: "#3A8E0D",
+    bg: "#DCFCE7",
   },
   {
     id: 2,
@@ -62,7 +62,7 @@ export default function NewsAndEvent() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
-        colors={["#1A56DB", "#2563C7", "#3B82F6"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}

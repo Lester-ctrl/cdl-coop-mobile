@@ -13,14 +13,14 @@ import {
 const stats = [
   {
     label: "Active Loans",
-    value: "12",
+    value: "3",
     icon: "card-outline",
-    bg: "#EEF3FB",
-    color: "#2563C7",
+    bg: "#DCFCE7",
+    color: "#16A34A",
   },
   {
     label: "Partial Payments",
-    value: "₱8,000",
+    value: "3",
     icon: "wallet-outline",
     bg: "#DCFCE7",
     color: "#16A34A",
@@ -75,7 +75,7 @@ export default function LoanOfficerDashboard() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
       <LinearGradient
-        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -109,7 +109,7 @@ export default function LoanOfficerDashboard() {
           {actions.map((action, idx) => (
             <TouchableOpacity key={idx} style={styles.gridItem}>
               <View style={styles.iconBox}>
-                <Ionicons name={action.icon as any} size={22} color="#284B9B" />
+                <Ionicons name={action.icon as any} size={22} color="#3A8E0D" />
               </View>
 
               <Text style={styles.gridText}>{action.label}</Text>
@@ -133,7 +133,7 @@ export default function LoanOfficerDashboard() {
                 <Ionicons
                   name={section.icon as any}
                   size={22}
-                  color="#284B9B"
+                  color="#3A8E0D"
                 />
               </View>
 
@@ -180,7 +180,7 @@ export default function LoanOfficerDashboard() {
           </Text>
 
           <TouchableOpacity
-            style={[styles.newsBtn, { backgroundColor: "#EF4444" }]}
+            style={[styles.newsBtn, { backgroundColor: "#DC2626" }]}
           >
             <Text style={styles.newsBtnText}>Pay Now</Text>
             <MaterialIcons name="arrow-forward" size={16} color="#fff" />
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: "#284B9B",
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 20,
     paddingTop: 44,
     paddingBottom: 70,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    color: "#BFDBFE",
+    color: "#DCFCE7",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: "#E0E7FF",
+    color: "#D4EDD8",
     fontSize: 14,
     marginTop: 6,
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
 
   newsBadge: {
-    backgroundColor: "#DBEAFE",
+    backgroundColor: "#DCFCE7",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   newsBadgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#1E40AF",
+    color: "#2D5016",
   },
 
   newsTitle: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
 
   newsBtn: {
-    backgroundColor: "#284B9B",
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,

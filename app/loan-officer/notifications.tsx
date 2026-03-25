@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface Notification {
@@ -22,7 +22,7 @@ const SAMPLE_NOTIFICATIONS: Notification[] = [
   {
     id: "1",
     title: "Loan Application Approved",
-    message: "Your loan application has been approved. Amount: ₦500,000",
+    message: "Your loan application has been approved. Amount: 10,000",
     timestamp: "2 hours ago",
     read: false,
     icon: "checkmark-circle",
@@ -31,21 +31,21 @@ const SAMPLE_NOTIFICATIONS: Notification[] = [
   {
     id: "2",
     title: "Payment Received",
-    message: "Payment of ₦50,000 has been received from John Doe",
+    message: "Payment of 50,000 has been received from John Doe",
     timestamp: "5 hours ago",
     read: false,
     icon: "download",
     color: "#3b82f6",
   },
-  {
-    id: "3",
-    title: "Loan Disbursed",
-    message: "Loan of ₦300,000 has been disbursed to your account",
-    timestamp: "1 day ago",
-    read: true,
-    icon: "cash",
-    color: "#f59e0b",
-  },
+  // {
+  //   id: "3",
+  //   title: "Loan Disbursed",
+  //   message: "Loan of 30,000 has been disbursed to your account",
+  //   timestamp: "1 day ago",
+  //   read: true,
+  //   icon: "cash",
+  //   color: "#f59e0b",
+  // },
   {
     id: "4",
     title: "Account Update",

@@ -39,7 +39,7 @@ export default function LoanManagementDashboard() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
       <LinearGradient
-        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    backgroundColor: "#284B9B",
+    backgroundColor: "#3A8E0D",
     paddingHorizontal: 20,
     paddingTop: 44,
     paddingBottom: 70,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   greeting: {
-    color: "#BFDBFE",
+    color: "#DCFCE7",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   subtitle: {
-    color: "#E0E7FF",
+    color: "#D4EDD8",
     fontSize: 14,
     marginTop: 6,
   },

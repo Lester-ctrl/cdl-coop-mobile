@@ -32,6 +32,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -42,9 +43,10 @@ export default function Login() {
   if (!fontsLoaded) return null;
 
   const handleLogin = async () => {
+    setError(null);
     try {
       if (!email.trim() || !password.trim()) {
-        console.log("Please enter both email and password.");
+        setError("Please enter both email and password.");
         return;
       }
 
@@ -64,11 +66,11 @@ export default function Login() {
           router.replace("/account-officer/home");
           break;
         default:
-          console.log("Unknown role:", role);
+          setError("Unknown role. Please contact support.");
           break;
       }
     } catch (error: any) {
-      console.log("Login failed:", error.message);
+      setError("Invalid email or password. Please try again.");
     }
   };
 
