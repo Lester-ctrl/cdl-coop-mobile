@@ -10,7 +10,8 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
@@ -21,6 +22,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BLUE = "#1A56DB";
 const BLUE_LIGHT = "#EEF2FF";
@@ -136,21 +138,22 @@ export default function ActiveLoans() {
         Poppins_800ExtraBold,
     });
 
-    const fetchActiveLoans = async () => {
-        try {
-            const res = await getActiveLoans(profile?.profile_id);
-            setActiveLoans(res.activeLoans ?? []);
-            setPaidDates(res.paidDates ?? {});
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchActiveLoans();
-    }, []);
+    useFocusEffect(
+        useCallback(()=>{
+            const fetchActiveLoans = async () => {
+                try {
+                    const res = await getActiveLoans(profile?.profile_id);
+                    setActiveLoans(res.activeLoans ?? []);
+                    setPaidDates(res.paidDates ?? {});
+                } catch (error) {
+                    console.log(error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchActiveLoans();
+        }, [profile?.profile_id])
+    );
 
     const handleRowPress = async (loan: ActiveLoan) => {
         setSelectedLoan(loan);
@@ -181,7 +184,7 @@ export default function ActiveLoans() {
     if (!fontsLoaded) return null;
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
                 {/* Hero */}
                 <LinearGradient
@@ -431,7 +434,7 @@ export default function ActiveLoans() {
                     </View>
                 </View>
             </Modal>
-        </>
+        </SafeAreaView>
     );
 }
 

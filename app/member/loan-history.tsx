@@ -10,7 +10,8 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
@@ -21,6 +22,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BLUE = "#1A56DB";
 const BLUE_LIGHT = "#EEF2FF";
@@ -151,21 +153,22 @@ export default function LoanHistory() {
         Poppins_800ExtraBold,
     });
 
-    const fetchLoanHistory = async () => {
-        try {
-            const res = await getLoanHistory(profile?.profile_id);
-            setLoans(res.loans ?? []);
-            setPaidDates(res.paidDates ?? {});
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchLoanHistory();
-    }, []);
+    useFocusEffect(
+        useCallback(()=>{
+            const fetchLoanHistory = async () => {
+                try {
+                    const res = await getLoanHistory(profile?.profile_id);
+                    setLoans(res.loans ?? []);
+                    setPaidDates(res.paidDates ?? {});
+                } catch (error) {
+                    console.log(error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchLoanHistory();
+        }, [profile?.profile_id])
+    );
 
     const handleRowPress = async (loan: Loan) => {
         setSelectedLoan(loan);
@@ -198,7 +201,7 @@ export default function LoanHistory() {
     const completedCount = loans.length - activeCount;
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
 
                 {/* Hero */}
@@ -485,7 +488,7 @@ export default function LoanHistory() {
                     </View>
                 </View>
             </Modal>
-        </>
+        </SafeAreaView>
     );
 }
 

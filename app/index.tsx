@@ -31,6 +31,7 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+    const [error, setError] = useState<string | null>(null);
 
     const [fontsLoaded] = useFonts({
         Poppins_400Regular,
@@ -41,9 +42,10 @@ export default function Login() {
     if (!fontsLoaded) return null;
 
     const handleLogin = async () => {
+        setError(null);
         try {
             if (!email.trim() || !password.trim()) {
-                console.log("Please enter both email and password.");
+                setError("Please enter both email and password.");
                 return;
             }
 
@@ -63,11 +65,11 @@ export default function Login() {
                     router.replace('/account-officer/home');
                     break;
                 default:
-                    console.log('Unknown role:', role);
+                    setError("Unknown role. Please contact support.");
                     break;
             }
         } catch (error: any) {
-            console.log("Login failed:", error.message);
+            setError("Invalid email or password. Please try again.");
         }
     };
 
@@ -96,6 +98,13 @@ export default function Login() {
             {/* White card body */}
             <View style={styles.body}>
                 <Text style={styles.welcomeTitle}>Welcome Back</Text>
+
+                {error && (
+                    <View style={styles.errorBox}>
+                        <Ionicons name="alert-circle-outline" size={16} color="#EF4444" style={{ marginRight: 8 }} />
+                        <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                )}
 
                 {/* Email input */}
                 <View style={styles.inputWrapper}>
@@ -164,14 +173,6 @@ export default function Login() {
                         <Text style={styles.loginBtnText}>Login</Text>
                     </LinearGradient>
                 </Pressable>
-
-                {/* Register link */}
-                <View style={styles.registerRow}>
-                    <Text style={styles.registerText}>Not a member yet? </Text>
-                    <Pressable hitSlop={6} onPress={() => router.push('/guest/apply-now')}>
-                        <Text style={styles.registerLink}>Apply now</Text>
-                    </Pressable>
-                </View>
             </View>
         </KeyboardAvoidingView>
     );
@@ -310,5 +311,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Poppins_600SemiBold",
         color: "#3A8E0D",
+    },
+    errorBox: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FEF2F2",
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#FECACA",
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 12,
+    },
+    errorText: {
+        flex: 1,
+        fontSize: 13,
+        fontFamily: "Poppins_400Regular",
+        color: "#EF4444",
+        lineHeight: 18,
     },
 });
