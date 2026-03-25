@@ -1,11 +1,12 @@
-import LoanOfficerNavbar from "@/components/navigations/accountofficer";
+import AccountOfficerNavbar from "@/components/navbar/account-officer";
 import { Slot } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function LoanOfficerLayout() {
+export default function AccountOfficerLayout() {
   return (
-    <>
-      <LoanOfficerNavbar />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       <Slot />
-    </>
+      <AccountOfficerNavbar />
+    </SafeAreaView>
   );
 }

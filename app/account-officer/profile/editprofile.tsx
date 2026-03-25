@@ -198,7 +198,7 @@ export default function EditProfile() {
 
 // ── Styles (same as before, kept colors consistent with Account Officer theme) ──
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#eef2f7" },
+  container: { flex: 1, backgroundColor: "#eef2f7", paddingBottom: 80 },
   header: {
     height: 140,
     borderBottomLeftRadius: 30,
@@ -281,9 +281,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   saveButton: {
-    marginHorizontal: 20,
-    marginTop: 25,
-    marginBottom: 40,
+    marginHorizontal: 70,
+    marginTop: 10,
+    marginBottom: 100,
     backgroundColor: "#2563C7",
     paddingVertical: 14,
     borderRadius: 12,

@@ -1,6 +1,9 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -48,24 +51,99 @@ const sections = [
   { label: "Reports & Statements", icon: "document-text-outline" },
 ];
 
-// const navbarItems = [
-//   { label: "Home", icon: "home-outline" },
-//   { label: "Loans", icon: "cash-outline" },
-//   { label: "Payments", icon: "wallet-outline" },
-//   { label: "Reports", icon: "document-text-outline" },
-//   { label: "Profile", icon: "person-outline" },
-// ];
-
 export default function AccountOfficerDashboard() {
+  const router = useRouter();
+  const { session, clearSession } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const userName = session?.profile?.first_name ?? "Account Officer";
+
+  const handleCloseMenu = () => setShowMenu(false);
+
+  const handleProfile = () => {
+    router.push("/account-officer/profile");
+    handleCloseMenu();
+  };
+
+  const handleSettings = () => {
+    alert("Settings page coming soon!");
+    handleCloseMenu();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await clearSession();
+    } catch (e) {
+      console.log("Logout clear error:", e);
+    }
+    router.replace("/");
+  };
+
+  const handleOverlayPress = (e: any) => {
+    if (e.target === e.currentTarget) {
+      handleCloseMenu();
+    }
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* FULL OVERLAY FOR DROPDOWN */}
+      {showMenu && (
+        <Pressable style={styles.globalOverlay} onPress={handleOverlayPress} />
+      )}
+
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome, Account Officer 👋</Text>
-        <Text style={styles.title}>Account Officer Dashboard</Text>
-        <Text style={styles.subtitle}>
-          Manage member accounts, loan applications, and payments efficiently.
-        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            width: "100%",
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>Welcome, {userName} 👋</Text>
+            <Text style={styles.title}>Account Officer Dashboard</Text>
+            <Text style={styles.subtitle}>
+              Manage member accounts, loan applications, and payments
+              efficiently.
+            </Text>
+          </View>
+
+          {/* PROFILE BUTTON */}
+          <TouchableOpacity
+            onPress={() => setShowMenu(!showMenu)}
+            style={styles.profileBtn}
+            activeOpacity={0.7}
+          >
+            <View style={styles.profileIconContainer}>
+              <Ionicons name="person-circle-outline" size={52} color="#fff" />
+              <Ionicons
+                name={showMenu ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#fff"
+                style={styles.arrowIcon}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* DROPDOWN */}
+        {showMenu && (
+          <View style={styles.dropdown}>
+            <View style={styles.arrow} />
+            <TouchableOpacity style={styles.menuItem} onPress={handleProfile}>
+              <Text style={styles.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
+              <Text style={styles.menuItemText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* STATS */}
@@ -86,22 +164,6 @@ export default function AccountOfficerDashboard() {
           </View>
         ))}
       </View>
-
-      {/* NAVBAR-LIKE SECTION */}
-      {/* <View style={styles.navbarSection}>
-        {navbarItems.map((item, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={styles.navbarItem}
-            activeOpacity={0.7}
-          >
-            <View style={styles.navbarIconBox}>
-              <Ionicons name={item.icon as any} size={28} color="#1c3faa" />
-            </View>
-            <Text style={styles.navbarText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View> */}
 
       {/* QUICK ACTIONS */}
       <View style={styles.section}>
@@ -184,19 +246,99 @@ export default function AccountOfficerDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#f8fafc", flex: 1 },
+  container: { flex: 1, backgroundColor: "#f8fafc" },
+  globalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
+    zIndex: 100,
+  },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 18,
+    paddingTop: 50,
+    paddingBottom: 24,
     backgroundColor: "#1c3faa",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginBottom: 18,
+    marginBottom: 80,
+    position: "relative",
+    zIndex: 200,
   },
-  greeting: { color: "#93c5fd", fontSize: 14, fontWeight: "500" },
-  title: { color: "#fff", fontSize: 28, fontWeight: "800", marginTop: 2 },
-  subtitle: { color: "#e0e7ff", fontSize: 14, fontWeight: "500", marginTop: 8 },
+  greeting: {
+    color: "#93c5fd",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  title: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  subtitle: {
+    color: "#e0e7ff",
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 8,
+  },
+  profileBtn: {
+    padding: 4,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    marginTop: 2,
+  },
+  profileIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  arrowIcon: {
+    marginLeft: -12,
+  },
+  dropdown: {
+    position: "absolute",
+    top: 110,
+    right: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 30,
+    minWidth: 160,
+    zIndex: 1000,
+  },
+  arrow: {
+    position: "absolute",
+    top: -8,
+    right: 16,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 8,
+    borderBottomColor: "#fff",
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+  },
+  menuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    fontSize: 14,
+    color: "#1e293b",
+    fontWeight: "600",
+  },
+  logoutText: {
+    color: "#ef4444",
+    fontWeight: "700",
+  },
   statsRow: {
     flexDirection: "row",
     gap: 12,
@@ -217,35 +359,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
   },
-
-  /* NAVBAR-LIKE SECTION */
-  navbarSection: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 28,
-  },
-  navbarItem: {
-    width: "30%",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  navbarIconBox: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 6,
-  },
-  navbarText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1c3faa",
-    textAlign: "center",
-  },
-
   section: { paddingHorizontal: 20, marginBottom: 28 },
   sectionTitle: {
     fontSize: 18,
@@ -273,7 +386,6 @@ const styles = StyleSheet.create({
     color: "#475569",
     fontWeight: "600",
   },
-
   newsCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -306,7 +418,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#64748b",
     lineHeight: 18,
-    marginBottom: 12,
   },
   newsBtn: {
     backgroundColor: "#1c3faa",

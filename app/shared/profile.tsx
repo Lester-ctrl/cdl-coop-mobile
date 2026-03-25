@@ -1,9 +1,9 @@
 import { useAuth } from "@/context/AuthContext";
-import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const roleName = session?.role_name ?? "N/A";
 
   const fullName = profile
-    ? `${profile.first_name} ${profile.middle_name ?? ""} ${profile.last_name}`
+    ? `${profile.first_name || ""} ${profile.middle_name || ""} ${profile.last_name || ""}`
         .replace(/\s+/g, " ")
         .trim()
     : (user?.username ?? "User");
@@ -36,238 +36,296 @@ export default function ProfilePage() {
     editProfilePath = "/member/profile/editprofile"; // optional
   }
 
-  const fields = [
-    {
-      label: "First Name",
-      value: profile?.first_name ?? "—",
-      icon: "person-outline",
-    },
-    {
-      label: "Middle Name",
-      value: profile?.middle_name ?? "—",
-      icon: "person-outline",
-    },
-    {
-      label: "Last Name",
-      value: profile?.last_name ?? "—",
-      icon: "person-outline",
-    },
-    { label: "Email", value: profile?.email ?? "—", icon: "mail-outline" },
-    {
-      label: "Mobile Number",
-      value: profile?.mobile_number ?? "—",
-      icon: "call-outline",
-    },
-    {
-      label: "Birthdate",
-      value: profile?.birthdate ?? "—",
-      icon: "calendar-outline",
-    },
-    { label: "Sex", value: profile?.sex ?? "—", icon: "transgender-outline" },
-    {
-      label: "Address",
-      value: profile?.address ?? "—",
-      icon: "location-outline",
-    },
-    { label: "Username", value: user?.username ?? "—", icon: "at-outline" },
-    { label: "Coop ID", value: user?.coop_id ?? "—", icon: "id-card-outline" },
-    { label: "Role", value: roleName, icon: "shield-checkmark-outline" },
-  ];
+  const handleEdit = () => {
+    if (profile?.profile_id && editProfilePath) {
+      router.push({
+        pathname: editProfilePath,
+        params: {
+          profileId: profile.profile_id,
+          firstName: profile.first_name || "",
+          middleName: profile.middle_name || "",
+          lastName: profile.last_name || "",
+          email: profile.email || "",
+          mobile: profile.mobile_number || "",
+          address: profile.address || "",
+          birthdate: profile.birthdate || "",
+          sex: profile.sex || "",
+        },
+      });
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={22} color={BLUE} />
+      <LinearGradient colors={["#2563C7", "#3b82f6"]} style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <FontAwesome6 name="arrow-left" size={18} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 36 }} />
+        <View style={styles.avatarWrapper}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <FontAwesome6 name="user" size={40} color="#fff" />
+            </View>
+          )}
+          <TouchableOpacity style={styles.cameraBtn} disabled>
+            <FontAwesome6 name="camera" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.headerTitle}>{roleName} Profile</Text>
+      </LinearGradient>
+
+      {/* Personal Details */}
+      <View style={styles.card}>
+        <View style={[styles.sectionHeader, { gap: 8 }]}>
+          <FontAwesome6 name="user" size={16} color="#2563C7" />
+          <Text style={styles.sectionTitle}>Personal Details</Text>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>FIRST NAME</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
+            <Text style={styles.displayValue}>
+              {profile?.first_name || "—"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>MIDDLE NAME</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
+            <Text style={styles.displayValue}>
+              {profile?.middle_name || "—"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>LAST NAME</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="user" size={14} color="#2563C7" />
+            <Text style={styles.displayValue}>{profile?.last_name || "—"}</Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>SEX</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="venus-mars" size={14} color="#2563C7" />
+            <Text style={styles.displayValue}>{profile?.sex || "—"}</Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>BIRTHDATE</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="cake-candle" size={14} color="#2563C7" />
+            <Text style={styles.displayValue}>{profile?.birthdate || "—"}</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Avatar + Name */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarFallback}>
-                <Ionicons name="person" size={40} color={BLUE} />
-              </View>
-            )}
-          </View>
-          <Text style={styles.fullName}>{fullName}</Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>{roleName}</Text>
+      {/* Contact Information */}
+      <View style={styles.card}>
+        <View style={[styles.sectionHeader, { gap: 8 }]}>
+          <FontAwesome6 name="address-card" size={16} color="#22c55e" />
+          <Text style={styles.sectionTitle}>Contact Information</Text>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>EMAIL ADDRESS</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="envelope" size={14} color="#22c55e" />
+            <Text style={styles.displayValue}>{profile?.email || "—"}</Text>
           </View>
         </View>
-
-        {/* Info Fields */}
-        <View style={styles.card}>
-          {fields.map((field, index) => (
-            <View key={field.label}>
-              <View style={styles.fieldRow}>
-                <View style={styles.fieldIconBox}>
-                  <Ionicons name={field.icon as any} size={18} color={BLUE} />
-                </View>
-                <View style={styles.fieldText}>
-                  <Text style={styles.fieldLabel}>{field.label}</Text>
-                  <Text style={styles.fieldValue}>{field.value}</Text>
-                </View>
-              </View>
-              {index < fields.length - 1 && (
-                <View style={styles.fieldDivider} />
-              )}
-            </View>
-          ))}
+        <View style={styles.field}>
+          <Text style={styles.label}>MOBILE NUMBER</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="phone" size={14} color="#f97316" />
+            <Text style={styles.displayValue}>
+              {profile?.mobile_number || "—"}
+            </Text>
+          </View>
         </View>
-
-        {/* Edit Profile Button */}
-        {(roleName === "Loan Officer" || roleName === "Account Officer") &&
-          profile && (
-            <TouchableOpacity
-              style={{
-                margin: 16,
-                backgroundColor: "#2563eb",
-                padding: 12,
-                borderRadius: 8,
-              }}
-              onPress={() => {
-                router.push({
-                  pathname: editProfilePath,
-                  params: {
-                    profileId: profile.profile_id,
-                    firstName: profile.first_name,
-                    middleName: profile.middle_name,
-                    lastName: profile.last_name,
-                    email: profile.email,
-                    mobile: profile.mobile_number,
-                    address: profile.address,
-                    birthdate: profile.birthdate,
-                    sex: profile.sex,
-                  },
-                });
-              }}
+        <View style={styles.field}>
+          <Text style={styles.label}>RESIDENTIAL ADDRESS</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="house" size={14} color="#9333ea" />
+            <Text
+              style={[styles.displayValue, styles.multiLine]}
+              numberOfLines={3}
             >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>
-                Edit Profile
-              </Text>
-            </TouchableOpacity>
-          )}
-      </ScrollView>
-    </SafeAreaView>
+              {profile?.address || "—"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Username, Coop ID, Role */}
+      <View style={styles.card}>
+        <View style={styles.field}>
+          <Text style={styles.label}>USERNAME</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="at" size={14} color="#ef4444" />
+            <Text style={styles.displayValue}>{user?.username || "—"}</Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>COOP ID</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="id-badge" size={14} color="#10b981" />
+            <Text style={styles.displayValue}>{user?.coop_id || "—"}</Text>
+          </View>
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>ROLE</Text>
+          <View style={styles.inputRow}>
+            <FontAwesome6 name="shield-check" size={14} color="#8b5cf6" />
+            <Text style={styles.displayValue}>{roleName}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Edit Button */}
+      {(roleName === "Loan Officer" || roleName === "Account Officer") &&
+        editProfilePath && (
+          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+            <FontAwesome6 name="pen-to-square" size={16} color="#fff" />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        )}
+    </ScrollView>
   );
 }
 
-// Styles & Colors
-const BLUE = "#2563C7";
-const ACTIVE_BG = "#EEF3FB";
-const CARD = "#FFFFFF";
-const BG = "#F5F6FA";
-const BORDER = "#E8EAF0";
-const TEXT = "#1C1C2E";
-const MUTED = "#8890A4";
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG },
+  container: {
+    flex: 1,
+    backgroundColor: "#eef2f7",
+  },
   header: {
-    flexDirection: "row",
+    height: 140,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    paddingTop: 50,
+    paddingHorizontal: 20,
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: CARD,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    position: "relative",
   },
   backBtn: {
+    position: "absolute",
+    left: 20,
+    top: 54,
     width: 36,
     height: 36,
-    borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: TEXT },
-  scroll: { paddingBottom: 40 },
-  avatarSection: { alignItems: "center", paddingVertical: 32, gap: 10 },
   avatarWrapper: {
+    position: "relative",
+    marginTop: -30,
+  },
+  avatar: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    overflow: "hidden",
-    borderWidth: 3,
-    borderColor: BLUE,
-    backgroundColor: ACTIVE_BG,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
+    borderWidth: 4,
+    borderColor: "#fff",
   },
-  avatarImage: { width: 90, height: 90, borderRadius: 45 },
   avatarFallback: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: ACTIVE_BG,
+    borderWidth: 4,
+    borderColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.3)",
     alignItems: "center",
     justifyContent: "center",
   },
-  fullName: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: TEXT,
-    textAlign: "center",
-  },
-  roleBadge: {
-    backgroundColor: ACTIVE_BG,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-  },
-  roleBadgeText: { fontSize: 13, fontWeight: "600", color: BLUE },
-  card: {
-    marginHorizontal: 16,
-    backgroundColor: CARD,
+  cameraBtn: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#2563C7",
     borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  fieldRow: {
+  headerTitle: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  card: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    gap: 14,
+    marginBottom: 16,
   },
-  fieldIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: ACTIVE_BG,
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#334155",
+    marginLeft: 8,
+  },
+  field: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 11,
+    color: "#64748b",
+    marginBottom: 6,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  inputRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
   },
-  fieldText: { flex: 1 },
-  fieldLabel: {
-    fontSize: 12,
-    color: MUTED,
+  displayValue: {
+    flex: 1,
+    fontSize: 15,
+    color: "#1e293b",
     fontWeight: "500",
-    marginBottom: 2,
+    marginLeft: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
   },
-  fieldValue: { fontSize: 15, color: TEXT, fontWeight: "600" },
-  fieldDivider: { height: 1, backgroundColor: BORDER, marginLeft: 50 },
+  multiLine: {
+    lineHeight: 22,
+    paddingVertical: 12,
+  },
+  editButton: {
+    marginHorizontal: 70,
+    marginTop: 10,
+    marginBottom: 100,
+    backgroundColor: "#2563C7",
+    paddingVertical: 14,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  editButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    marginLeft: 8,
+  },
 });
