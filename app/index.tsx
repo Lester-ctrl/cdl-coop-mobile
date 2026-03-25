@@ -9,8 +9,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -33,6 +34,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -40,13 +42,26 @@ export default function Login() {
     Poppins_700Bold,
   });
 
+  // login failed timeout
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   if (!fontsLoaded) return null;
 
   const handleLogin = async () => {
     setError(null);
+    setLoading(true);
     try {
       if (!email.trim() || !password.trim()) {
         setError("Please enter both email and password.");
+        setLoading(false);
         return;
       }
 
@@ -70,7 +85,9 @@ export default function Login() {
           break;
       }
     } catch (error: any) {
-      setError("Invalid email or password. Please try again.");
+      setError("You input a wrong credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,9 +172,11 @@ export default function Login() {
           {/* Login button */}
           <Pressable
             onPress={handleLogin}
+            disabled={loading}
             style={({ pressed }) => [
               styles.loginBtn,
               pressed && styles.loginBtnPressed,
+              loading && { opacity: 0.7 },
             ]}
           >
             <LinearGradient
@@ -184,6 +203,39 @@ export default function Login() {
           </Pressable>
         </View>
       </SafeAreaView>
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <View style={styles.loaderSpinner}>
+              <ActivityIndicator size={48} color="#2563eb" />
+            </View>
+            <Text style={styles.loadingTitle}>Signing In</Text>
+            <Text style={styles.loadingSubtext}>Please wait a moment...</Text>
+          </View>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.errorToast}>
+          <View style={styles.errorContent}>
+            <View style={[styles.errorIconBox, { backgroundColor: "#fee2e2" }]}>
+              <Ionicons name="close-circle" size={24} color="#dc2626" />
+            </View>
+            <View style={styles.errorMessageBox}>
+              <Text style={styles.errorTitle}>Login Failed</Text>
+              <Text style={styles.errorMessage}>{error}</Text>
+            </View>
+            <Pressable
+              onPress={() => setError(null)}
+              hitSlop={8}
+              style={styles.errorCloseBtn}
+            >
+              <Ionicons name="close" size={20} color="#9ca3af" />
+            </Pressable>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -321,5 +373,96 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
     color: "#3A8E0D",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 99,
+  },
+  loadingCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 40,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+    width: "80%",
+    maxWidth: 280,
+  },
+  loaderSpinner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f0f9ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginBottom: 8,
+    fontFamily: "Poppins_700Bold",
+  },
+  loadingSubtext: {
+    fontSize: 13,
+    color: "#64748b",
+    fontFamily: "Poppins_400Regular",
+    textAlign: "center",
+  },
+  errorToast: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    right: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    zIndex: 100,
+    overflow: "hidden",
+  },
+  errorContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 12,
+  },
+  errorIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  errorMessageBox: {
+    flex: 1,
+  },
+  errorTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginBottom: 2,
+    fontFamily: "Poppins_700Bold",
+  },
+  errorMessage: {
+    fontSize: 13,
+    color: "#64748b",
+    fontFamily: "Poppins_400Regular",
+  },
+  errorCloseBtn: {
+    padding: 6,
+    flexShrink: 0,
   },
 });
