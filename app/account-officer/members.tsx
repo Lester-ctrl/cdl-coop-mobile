@@ -26,75 +26,9 @@ export default function LoanOfficerLoanManagement() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Loan Management</Text>
-        <Text style={styles.subtitle}>
-          Record payments, review, approve, reject, and modify loan terms.
-        </Text>
-        {loanApplications.map((loan) => (
-          <View key={loan.id} style={styles.loanBox}>
-            <View style={styles.loanInfo}>
-              <Text style={styles.member}>{loan.member}</Text>
-              <Text style={styles.amount}>{loan.amount}</Text>
-              <Text style={styles.status}>{loan.status}</Text>
-            </View>
-            <View style={styles.termsRow}>
-              <View style={styles.termField}>
-                <Text style={styles.termLabel}>Interest</Text>
-                <TextInput
-                  style={styles.termInput}
-                  defaultValue={loan.interest}
-                />
-              </View>
-              <View style={styles.termField}>
-                <Text style={styles.termLabel}>Months</Text>
-                <TextInput
-                  style={styles.termInput}
-                  defaultValue={loan.months.toString()}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.termField}>
-                <Text style={styles.termLabel}>Amount</Text>
-                <TextInput
-                  style={styles.termInput}
-                  defaultValue={loan.amount.replace("₱", "")}
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
-            <View style={styles.actionsRow}>
-              <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]}>
-                <Text style={[styles.actionText, styles.approveText]}>
-                  Approve
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]}>
-                <Text style={[styles.actionText, styles.rejectText]}>
-                  Reject
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.paymentsSection}>
-              <Text style={styles.paymentsTitle}>Payment History</Text>
-              {loan.payments.map((p) => (
-                <View key={p.id} style={styles.paymentRow}>
-                  <Text style={styles.paymentDate}>{p.date}</Text>
-                  <Text style={styles.paymentAmount}>{p.amount}</Text>
-                </View>
-              ))}
-              <View style={styles.partialPaymentRow}>
-                <TextInput
-                  style={styles.partialPaymentInput}
-                  placeholder="Enter partial payment"
-                  keyboardType="numeric"
-                />
-                <TouchableOpacity style={styles.recordBtn}>
-                  <Text style={styles.recordText}>Record Payment</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        ))}
+        <Text style={styles.title}>Members</Text>
+        
+        
       </View>
     </ScrollView>
   );
