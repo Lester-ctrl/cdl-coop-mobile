@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 const members = [
   { id: 1, name: "Juan Dela Cruz", savings: "₱5,000", status: "Active" },
   { id: 2, name: "Maria Santos", savings: "₱8,200", status: "Active" },
@@ -15,11 +16,28 @@ const members = [
 export default function Accounts() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Accounts Management</Text>
+
+        {/* HEADER */}
+            <View style={styles.header}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  width: "100%",
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                   <Text style={styles.title}>Accounts Management</Text>
         <Text style={styles.subtitle}>
           View, update, and manage member accounts.
         </Text>
+                </View>
+              </View>
+            </View>
+            
+            
+      <View style={styles.card}>
         {members.map((m) => (
           <View key={m.id} style={styles.memberBox}>
             <View style={styles.memberInfo}>
@@ -33,6 +51,7 @@ export default function Accounts() {
               >
                 {m.status}
               </Text>
+              
             </View>
             <View style={styles.actionsRow}>
               <TouchableOpacity style={styles.actionBtn}>
@@ -48,40 +67,73 @@ export default function Accounts() {
               </TouchableOpacity>
             </View>
           </View>
+          
         ))}
+         {/* Reports Section */}
+      <View style={{ marginTop: 30 }}>
+        <Text style={styles.sectionTitle}>Member</Text>
+
+        <TouchableOpacity
+          style={styles.gridItem}
+          activeOpacity={0.7}
+          onPress={() => router.push("/account-officer/members")}
+        >
+          <View style={styles.iconBox}>
+            <Ionicons name="people-outline" size={28} color="#0d8147" />
+          </View>
+          <Text style={styles.gridText}>Member</Text>
+        </TouchableOpacity>
+      </View>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+    header: {
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 24,
+    backgroundColor: "#099a1c",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 80,
+    position: "relative",
+    zIndex: 200,
+  },
+  greeting: {
+    color: "#93c5fd",
+    fontSize: 14,
+    fontWeight: "500",
+  },
   container: {
-    padding: 20,
+    padding: 0,
     backgroundColor: "#f3f6fb",
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 20,
     width: "100%",
-    maxWidth: 400,
+    maxWidth: "95%",
     alignSelf: "center",
     shadowColor: "#1c3faa",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 8,
+    marginTop: -60,
   },
   title: {
-    fontSize: 22,
+    fontSize: 30,
     fontWeight: "700",
-    color: "#1c3faa",
+    color: "#e9eaeb",
     marginBottom: 6,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#6b7280",
+    color: "#dfe1e4",
     marginBottom: 18,
     textAlign: "center",
   },
@@ -151,5 +203,36 @@ const styles = StyleSheet.create({
   },
   updateText: {
     color: "#065f46",
+  },
+  gridItem: {
+    width: "48%",
+    alignItems: "center",
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  iconBox: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 8,
+  },
+  gridText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0a2708",
+    textAlign: "center",
+  },
+    sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginBottom: 12,
   },
 });

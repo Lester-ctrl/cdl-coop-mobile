@@ -110,40 +110,7 @@ export default function AccountOfficerDashboard() {
               efficiently.
             </Text>
           </View>
-
-          {/* PROFILE BUTTON */}
-          <TouchableOpacity
-            onPress={() => setShowMenu(!showMenu)}
-            style={styles.profileBtn}
-            activeOpacity={0.7}
-          >
-            <View style={styles.profileIconContainer}>
-              <Ionicons name="person-circle-outline" size={52} color="#fff" />
-              <Ionicons
-                name={showMenu ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="#fff"
-                style={styles.arrowIcon}
-              />
-            </View>
-          </TouchableOpacity>
         </View>
-
-        {/* DROPDOWN */}
-        {showMenu && (
-          <View style={styles.dropdown}>
-            <View style={styles.arrow} />
-            <TouchableOpacity style={styles.menuItem} onPress={handleProfile}>
-              <Text style={styles.menuItemText}>Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
-              <Text style={styles.menuItemText}>Settings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {/* STATS */}
@@ -176,7 +143,7 @@ export default function AccountOfficerDashboard() {
               activeOpacity={0.8}
             >
               <View style={styles.iconBox}>
-                <Ionicons name={action.icon as any} size={24} color="#1c3faa" />
+                <Ionicons name={action.icon as any} size={24} color="#179023" />
               </View>
               <Text style={styles.gridText}>{action.label}</Text>
             </TouchableOpacity>
@@ -198,7 +165,7 @@ export default function AccountOfficerDashboard() {
                 <Ionicons
                   name={section.icon as any}
                   size={24}
-                  color="#1c3faa"
+                  color="#13842d"
                 />
               </View>
               <Text style={styles.gridText}>{section.label}</Text>
@@ -260,7 +227,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 24,
-    backgroundColor: "#1c3faa",
+    backgroundColor: "#099a1c",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     marginBottom: 80,
@@ -268,15 +235,17 @@ const styles = StyleSheet.create({
     zIndex: 200,
   },
   greeting: {
-    color: "#93c5fd",
-    fontSize: 14,
+    color: "#f8f8f8",
+    fontSize: 20,
     fontWeight: "500",
+    marginTop: -24
   },
   title: {
     color: "#fff",
     fontSize: 28,
     fontWeight: "800",
-    marginTop: 2,
+    marginTop: 20,
+    
   },
   subtitle: {
     color: "#e0e7ff",
@@ -284,61 +253,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: 8,
   },
-  profileBtn: {
-    padding: 4,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    marginTop: 2,
-  },
-  profileIconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  arrowIcon: {
-    marginLeft: -12,
-  },
-  dropdown: {
-    position: "absolute",
-    top: 110,
-    right: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingVertical: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 30,
-    minWidth: 160,
-    zIndex: 1000,
-  },
-  arrow: {
-    position: "absolute",
-    top: -8,
-    right: 16,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderBottomWidth: 8,
-    borderBottomColor: "#fff",
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-  },
-  menuItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  menuItemText: {
-    fontSize: 14,
-    color: "#1e293b",
-    fontWeight: "600",
-  },
-  logoutText: {
-    color: "#ef4444",
-    fontWeight: "700",
-  },
+ 
   statsRow: {
     flexDirection: "row",
     gap: 12,

@@ -58,7 +58,7 @@ export default function ProfilePage() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <LinearGradient colors={["#2563C7", "#3b82f6"]} style={styles.header}>
+      <LinearGradient colors={["#0b7d1a", "#16b844f4"]} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <FontAwesome6 name="arrow-left" size={18} color="#fff" />
         </TouchableOpacity>
@@ -71,7 +71,7 @@ export default function ProfilePage() {
             </View>
           )}
           <TouchableOpacity style={styles.cameraBtn} disabled>
-            <FontAwesome6 name="camera" size={16} color="#fff" />
+            <FontAwesome6 name="camera" size={15} color="#fff" />
           </TouchableOpacity>
         </View>
         <Text style={styles.headerTitle}>{roleName} Profile</Text>
@@ -211,6 +211,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
+  headerTitle: {
+  marginTop: 10
+},
+
   backBtn: {
     position: "absolute",
     left: 20,
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     position: "relative",
-    marginTop: -30,
+    marginTop: -40,
   },
   avatar: {
     width: 90,
@@ -315,7 +319,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 70,
     marginTop: 10,
     marginBottom: 100,
-    backgroundColor: "#2563C7",
+    backgroundColor: "#108115",
     paddingVertical: 14,
     borderRadius: 12,
     flexDirection: "row",

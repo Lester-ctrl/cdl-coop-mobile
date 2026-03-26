@@ -61,6 +61,7 @@ export default function EditProfile() {
           },
         });
       }
+      
 
       // Use server's success message if provided
       const successMessage = result?.message || "Profile updated successfully!";
@@ -73,21 +74,39 @@ export default function EditProfile() {
       setLoading(false);
     }
   };
+  
+  const profile = session?.profile;
+  const user = session?.user;
+  const roleName = session?.role_name ?? "N/A";
+
+  const fullName = profile
+    ? `${profile.first_name || ""} ${profile.middle_name || ""} ${profile.last_name || ""}`
+        .replace(/\s+/g, " ")
+        .trim()
+    : (user?.username ?? "User");
+
+  const avatarUrl = user?.avatar ?? null;
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
-      <LinearGradient colors={["#2563C7", "#3b82f6"]} style={styles.header}>
+      <LinearGradient colors={["#0b7d1a", "#16b844dd"]} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <FontAwesome6 name="arrow-left" size={18} color="#fff" />
         </TouchableOpacity>
         <View style={styles.avatarWrapper}>
-          <Image style={styles.avatar} />
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <FontAwesome6 name="user" size={40} color="#fff" />
+            </View>
+          )}
           <TouchableOpacity style={styles.cameraBtn}>
             <FontAwesome6 name="camera" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.headerTitle}>Account Officer Profile</Text>
+        <Text style={styles.headerTitle}> Edit Profile</Text>
       </LinearGradient>
 
       {/* PERSONAL DETAILS */}
@@ -234,11 +253,21 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
     backgroundColor: "#ddd",
   },
+   avatarFallback: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 4,
+    borderColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cameraBtn: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#2563C7",
+    backgroundColor: "#2f46ab",
     borderRadius: 16,
     padding: 6,
     borderWidth: 2,
@@ -284,7 +313,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 70,
     marginTop: 10,
     marginBottom: 100,
-    backgroundColor: "#2563C7",
+    backgroundColor: "#0d8e2f",
     paddingVertical: 14,
     borderRadius: 12,
     flexDirection: "row",
