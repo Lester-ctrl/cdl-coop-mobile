@@ -1,10 +1,13 @@
+import {
+  getActiveMembers,
+  getCollections,
+  getLoanDisbursement,
+} from "@/api/accountofficer/widgets";
 import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { getActiveMembers, getLoanDisbursement,
-   getCollections } from "@/api/accountofficer/widgets"; 
 
 interface StatCardProps {
   label: string;
@@ -14,7 +17,13 @@ interface StatCardProps {
   bg: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, bg }) => {
+const StatCard: React.FC<StatCardProps> = ({
+  label,
+  value,
+  icon,
+  color,
+  bg,
+}) => {
   return (
     <View style={[styles.card, { backgroundColor: bg }]}>
       <Ionicons name={icon} size={24} color={color} />
@@ -31,9 +40,10 @@ export default function AccountOfficerDashboard() {
 
   // State for dynamic stats
   const [activeMembers, setActiveMembers] = useState<number | null>(null);
-  const [loanDisbursement, setLoanDisbursements] = useState<number | null>(null);
+  const [loanDisbursement, setLoanDisbursements] = useState<number | null>(
+    null,
+  );
   const [collections, setCollections] = useState<number | null>(null);
-
 
   // Fetch Active Members
   useEffect(() => {
@@ -67,7 +77,7 @@ export default function AccountOfficerDashboard() {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const data = await getCollections();  
+        const data = await getCollections();
         setCollections(data.collected_this_period);
       } catch (err) {
         console.error("Error fetching collections:", err);
@@ -104,60 +114,75 @@ export default function AccountOfficerDashboard() {
   const stats = [
     {
       label: "Active Members",
-      value: activeMembers ?? "…", 
+      value: activeMembers ?? "…",
       icon: "people-outline",
       color: "#1c3faa",
       bg: "#dbeafe",
     },
     {
       label: "Loans Disbursed",
-      value: loanDisbursement != null ? `₱${loanDisbursement.toLocaleString()}` : "…",
+      value:
+        loanDisbursement != null
+          ? `₱${loanDisbursement.toLocaleString()}`
+          : "…",
       icon: "wallet-outline",
       color: "#16a34a",
       bg: "#dcfce7",
     },
-    { label: "Active Loan Accounts", 
+    {
+      label: "Active Loan Accounts",
       value: "₱8,000",
-       icon: "wallet-outline",
-        color: "#1c3faa",
-         bg: "#dbeafe" 
-        },
-    { label: "Collections",
-       value: collections != null ? `₱${collections.toLocaleString()}` : "…",
-        icon: "cash-outline",
-         color: "#16a34a",
-          bg: "#dcfce7" 
-        },
- 
-    
-           { label: "Pending Applications",
-       value: "3",
-       icon: "document-text-outline", 
-       color: "#f59e42", 
-       bg: "#fef9c3"
-      },
+      icon: "wallet-outline",
+      color: "#1c3faa",
+      bg: "#dbeafe",
+    },
+    {
+      label: "Collections",
+      value: collections != null ? `₱${collections.toLocaleString()}` : "…",
+      icon: "cash-outline",
+      color: "#16a34a",
+      bg: "#dcfce7",
+    },
 
-    
-    { label: "Delinquent Members",
-       value: "5", 
-       icon: "alert-circle-outline",
-        color: "#b4321e",
-         bg: "#fc2d2664"
-         },
+    {
+      label: "Pending Applications",
+      value: "3",
+      icon: "document-text-outline",
+      color: "#f59e42",
+      bg: "#fef9c3",
+    },
+
+    {
+      label: "Delinquent Members",
+      value: "5",
+      icon: "alert-circle-outline",
+      color: "#b4321e",
+      bg: "#fc2d2664",
+    },
   ];
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      {showMenu && <Pressable style={styles.globalOverlay} onPress={handleOverlayPress} />}
+      {showMenu && (
+        <Pressable style={styles.globalOverlay} onPress={handleOverlayPress} />
+      )}
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            width: "100%",
+          }}
+        >
           <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>Welcome, {userName} 👋</Text>
             <Text style={styles.title}>Account Officer Dashboard</Text>
             <Text style={styles.subtitle}>
-              Manage member accounts, loan applications, and payments efficiently.
+              Manage member accounts, loan applications, and payments
+              efficiently.
             </Text>
           </View>
         </View>
@@ -166,7 +191,14 @@ export default function AccountOfficerDashboard() {
       {/* STATS */}
       <View style={styles.statsRow}>
         {stats.map((stat, idx) => (
-          <StatCard key={idx} label={stat.label} value={stat.value} icon={stat.icon} color={stat.color} bg={stat.bg} />
+          <StatCard
+            key={idx}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+            bg={stat.bg}
+          />
         ))}
       </View>
     </ScrollView>
@@ -174,74 +206,66 @@ export default function AccountOfficerDashboard() {
 }
 
 const styles = StyleSheet.create({
-  globalOverlay:
-   {
-     position: "absolute",
-      top: 0,
-       left: 0, 
-       right: 0,
-        bottom: 0,
-         backgroundColor: "transparent",
-          zIndex: 100
-        },
+  globalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
+    zIndex: 100,
+  },
   header: {
-     paddingHorizontal: 20,
-     paddingTop: 60,
-      paddingBottom: 10,
-       backgroundColor: "#099a1c",
-        borderBottomLeftRadius: 24,
-         borderBottomRightRadius: 24, 
-         marginBottom: 20, 
-         position: "relative", 
-         zIndex: 200 
-        },
-  greeting:
-   { 
-    color: "#f8f8f8", 
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 10,
+    backgroundColor: "#099a1c",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 20,
+    position: "relative",
+    zIndex: 200,
+  },
+  greeting: {
+    color: "#f8f8f8",
     fontSize: 15,
-     fontWeight: "500",
-      marginTop: -24
-     },
-  title:
-   { 
+    fontWeight: "500",
+    marginTop: -24,
+  },
+  title: {
     color: "#fff",
-     fontSize: 28,
-      fontWeight: "800", 
-      marginTop: 0
-     },
-  subtitle:
-   {
-     color: "#e0e7ff",
-      fontSize: 14,
-       fontWeight: "500", 
-       marginTop: 8
-       },
-  statsRow: 
-  {
-     flexDirection: "row",
-      flexWrap: "wrap",
-       justifyContent: "space-between",
-        paddingHorizontal: 16,
-         marginBottom: 24 
-        },
-  card: 
-  { 
-    width: "49%", 
-  padding: 16, 
-  borderRadius: 12,
-  alignItems: "center",
-  justifyContent: "center", 
-  marginBottom: 12
-    },
-  value:
-   { 
+    fontSize: 28,
+    fontWeight: "800",
+    marginTop: 0,
+  },
+  subtitle: {
+    color: "#e0e7ff",
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 8,
+  },
+  statsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  card: {
+    width: "49%",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  value: {
     fontSize: 24,
-     fontWeight: "bold",
-      marginVertical: 4
-     },
-  label:
-   { 
-    fontSize: 14, 
-    color: "#555" 
+    fontWeight: "bold",
+    marginVertical: 4,
+  },
+  label: {
+    fontSize: 14,
+    color: "#555",
   },
 });
