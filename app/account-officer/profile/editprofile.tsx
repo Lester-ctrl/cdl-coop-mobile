@@ -1,4 +1,4 @@
-import { editAccountOfficers } from "@/api/account_officers";
+import { editAccountOfficers } from "@/api/accountofficer/account_officers";
 import { useAuth } from "@/context/AuthContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { LinearGradient } from "expo-linear-gradient";
