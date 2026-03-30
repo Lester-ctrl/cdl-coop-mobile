@@ -29,8 +29,8 @@ type Notification = {
 };
 
 export default function NotificationsScreen() {
-    const { session } = useAuth();
-    const profile = session?.profile;
+  const { session } = useAuth();
+  const profile = session?.profile;
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -66,14 +66,14 @@ export default function NotificationsScreen() {
         }, [profile?.profile_id])
     );
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString("en-PH", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
-    };
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-PH", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
     // Mark as seen and open modal
     const handleNotificationPress = async (notif: Notification) => {
@@ -119,17 +119,20 @@ export default function NotificationsScreen() {
         }
     };
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
-            <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
-                <LinearGradient
-                    colors={["#51b61a", "#48a019", "#3A8E0D"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.hero}
-                >
-                    <Text style={styles.heroTitle}>Notifications</Text>
-                </LinearGradient>
+  return (
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#3A8E0D" }}
+      edges={["top"]}
+    >
+      <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#51b61a", "#48a019", "#3A8E0D"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <Text style={styles.heroTitle}>Notifications</Text>
+        </LinearGradient>
 
                 <View style={styles.content}>
                     {loading ? (
@@ -210,7 +213,11 @@ export default function NotificationsScreen() {
                         </>
                     )}
                 </View>
-            </ScrollView>
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
 
             {/* Notification Detail Modal */}
             <Modal
