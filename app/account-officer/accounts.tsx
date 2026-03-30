@@ -79,7 +79,7 @@ export default function Accounts() {
           onPress={() => router.push("/account-officer/members")}
         >
           <View style={styles.iconBox}>
-            <Ionicons name="people-outline" size={28} color="#0d8147" />
+            <Ionicons name="person-outline" size={28} color="#0d8147" />
           </View>
           <Text style={styles.gridText}>Member</Text>
         </TouchableOpacity>
