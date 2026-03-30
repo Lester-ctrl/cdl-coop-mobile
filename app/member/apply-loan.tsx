@@ -256,7 +256,7 @@ export default function ApplyLoan() {
                         </Text>
                         <TouchableOpacity style={styles.modalButton} onPress={resetForm} activeOpacity={0.85}>
                             <LinearGradient
-                                colors={["#1A56DB", "#3B82F6"]}
+                                colors={["#3A8E0D", "#51b61a"]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={styles.modalButtonGradient}

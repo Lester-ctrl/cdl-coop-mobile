@@ -1,7 +1,7 @@
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export async function getLoanHistory(pid: any){
-    const response = await fetch(`${BASE_URL}/member/loan-history`, {
+    const response = await fetch(`${BASE_URL}/api/member/loan-history`, {
         method: "post", 
         headers: {
             "Content-Type": "application/json",

@@ -17,7 +17,7 @@ interface UserData {
   user_id: string;
   username: string;
   coop_id: string;
-  avatar: string | null;
+  image_path: string | null;
 }
 
 export interface SessionData {

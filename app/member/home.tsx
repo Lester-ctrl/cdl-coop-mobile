@@ -9,8 +9,8 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -45,26 +45,23 @@ function HomeContent() {
     Poppins_800ExtraBold,
   });
 
-  useEffect(() => {
-    const fetchData = async ()=>{
-      try{
-        const res = await getDashboardData(profile?.profile_id);
-        setTotalLoanBalance(parseFloat(res.totalLoanBalance));
-        setActiveLoans(res.activeLoans);
+  useFocusEffect(
+    useCallback(()=>{
+      const fetchData = async ()=>{
+        try{
+          const res = await getDashboardData(profile?.profile_id);
+          setTotalLoanBalance(parseFloat(res.totalLoanBalance));
+          setActiveLoans(res.activeLoans);
 
-      }catch(error){
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
+        }catch(error){
+          console.log(error);
+        }
+      };
+      fetchData();
+    }, [profile?.profile_id])
+  );
 
   if (!fontsLoaded) return null;
-
-  // const handleLogout = () => {
-  //   setShowMenu(false);
-  //   router.replace("/");
-  // };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

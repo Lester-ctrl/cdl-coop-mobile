@@ -1,26 +1,25 @@
 import { login } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import {
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-  useFonts,
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 
 const BLUE = "#2952CC";
@@ -192,7 +191,7 @@ export default function Login() {
       </KeyboardAvoidingView>
 
       {/* Register link - stays fixed at bottom, outside KeyboardAvoidingView */}
-      <SafeAreaView edges={["bottom", "left", "right"]}>
+      {/* <SafeAreaView edges={["bottom", "left", "right"]}>
         <View style={styles.registerRow}>
           <Text style={styles.registerText}>Not a member yet? </Text>
           <Pressable
@@ -202,7 +201,7 @@ export default function Login() {
             <Text style={styles.registerLink}>Apply now</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </SafeAreaView> */}
 
       {loading && (
         <View style={styles.loadingOverlay}>

@@ -35,13 +35,11 @@ export default function ProfilePage() {
   const user = session?.user;
   const roleName = session?.role_name ?? "N/A";
 
-  const fullName = profile
-    ? `${profile.first_name} ${profile.middle_name ?? ""} ${profile.last_name}`
-        .replace(/\s+/g, " ")
-        .trim()
-    : user?.username ?? "User";
+  const rawAvatar = user?.image_path || null;
 
-  const avatarUrl = user?.avatar ?? null;
+  const avatarUrl = rawAvatar
+    ? `${process.env.EXPO_PUBLIC_BASE_URL}/${rawAvatar}`
+    : null;
 
   const handleLogout = async () => {
     await clearSession();
@@ -51,20 +49,28 @@ export default function ProfilePage() {
   return (
     <SafeAreaView style={styles.root}>
 
-      {/* ── Green Header ── */}
+      {/* Green Header */}
       <LinearGradient
         colors={["#51b61a", "#48a019", "#3A8E0D"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        {/* Top row: back button (left) + logout button (right) */}
+        {/* Top row */}
         <View style={styles.headerTopRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.headerBtn} 
+            activeOpacity={0.7}
+          >
             <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            onPress={handleLogout} 
+            style={styles.logoutBtn} 
+            activeOpacity={0.7}
+          >
             <Text style={styles.logoutText}>Logout</Text>
             <Ionicons name="log-out-outline" size={18} color="#fff" />
           </TouchableOpacity>
@@ -73,10 +79,18 @@ export default function ProfilePage() {
         {/* Avatar */}
         <View style={styles.avatarWrapper}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            <Image 
+              source={{ uri: avatarUrl }} 
+              style={styles.avatarImage}
+              resizeMode="cover"
+              onError={(error) => {
+                console.log("❌ Image failed to load:", avatarUrl);
+                console.log("Error:", error.nativeEvent);
+              }}
+            />
           ) : (
             <View style={styles.avatarFallback}>
-              <Ionicons name="person" size={44} color={BLUE} />
+              <Ionicons name="person" size={44} color="#2563C7" />
             </View>
           )}
         </View>
@@ -86,7 +100,7 @@ export default function ProfilePage() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Personal Details ── */}
+        {/* Personal Details */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconBox}>
@@ -108,7 +122,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        {/* ── Contact Information ── */}
+        {/* Contact Information */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconBox}>
@@ -126,7 +140,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        {/* ── Account Details ── */}
+        {/* Account Details */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconBox}>
@@ -144,8 +158,12 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        {/* ── Edit Profile Button ── */}
-        <TouchableOpacity style={styles.editBtn} activeOpacity={0.85}>
+        {/* Edit Profile Button */}
+        <TouchableOpacity 
+          style={styles.editBtn} 
+          activeOpacity={0.85}
+          onPress={() => router.push('/member/edit-profile')}  // add this
+        >
           <Ionicons name="pencil-outline" size={18} color="#fff" />
           <Text style={styles.editBtnText}>Edit Profile</Text>
         </TouchableOpacity>
@@ -154,16 +172,8 @@ export default function ProfilePage() {
   );
 }
 
-/* ── Reusable Field Row ── */
-function FieldRow({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: string;
-}) {
+/* Reusable Components */
+function FieldRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
     <View style={styles.fieldRow}>
       <Ionicons name={icon as any} size={18} color={BLUE} style={styles.fieldIcon} />
@@ -179,6 +189,7 @@ function Divider() {
   return <View style={styles.fieldDivider} />;
 }
 
+/* Constants & Styles */
 const BLUE      = "#2563C7";
 const ACTIVE_BG = "#EEF3FB";
 const CARD      = "#FFFFFF";
@@ -193,7 +204,6 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
   },
 
-  /* ── Header ── */
   header: {
     paddingTop: 16,
     paddingBottom: 52,
@@ -230,6 +240,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
+
+  /* Avatar */
   avatarWrapper: {
     width: 96,
     height: 96,
@@ -238,12 +250,10 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
     backgroundColor: ACTIVE_BG,
-    alignItems: "center",
-    justifyContent: "center",
   },
   avatarImage: {
-    width: 96,
-    height: 96,
+    width: "100%",
+    height: "100%",
     borderRadius: 48,
   },
   avatarFallback: {
@@ -255,44 +265,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  /* ── Name Section ── */
-  nameSection: {
-    alignItems: "center",
-    marginTop: -44,
-    paddingTop: 52,
-    paddingBottom: 20,
-    gap: 8,
-  },
-  fullName: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: TEXT,
-    textAlign: "center",
-  },
-  roleBadge: {
-    backgroundColor: ACTIVE_BG,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-  },
-  roleBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: BLUE,
-  },
-
   scroll: {
     paddingBottom: 40,
   },
 
-  /* ── Section ── */
   section: {
     marginTop: 40,
     marginHorizontal: 16,
     marginBottom: 20,
-    paddingHorizontal: 30
   },
   sectionHeader: {
     paddingHorizontal: 10,
@@ -315,7 +295,6 @@ const styles = StyleSheet.create({
     color: TEXT,
   },
 
-  /* ── Card ── */
   card: {
     backgroundColor: CARD,
     borderRadius: 16,
@@ -328,7 +307,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  /* ── Field Row ── */
   fieldRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -361,7 +339,6 @@ const styles = StyleSheet.create({
     marginLeft: 30,
   },
 
-  /* ── Edit Button ── */
   editBtn: {
     flexDirection: "row",
     alignItems: "center",

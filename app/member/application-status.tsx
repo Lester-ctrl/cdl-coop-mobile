@@ -6,6 +6,7 @@ import {
     Poppins_700Bold,
     useFonts,
 } from "@expo-google-fonts/poppins";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -19,6 +20,8 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const ITEMS_PER_PAGE = 10;
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -67,8 +70,15 @@ export default function ApplicationStatus() {
     const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const profile = session?.profile;
+
+    const totalPages = Math.ceil(loanApplications.length / ITEMS_PER_PAGE);
+    const paginatedApplications = loanApplications.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     useFocusEffect(
         useCallback(() => {
@@ -77,10 +87,12 @@ export default function ApplicationStatus() {
                     if (profile?.profile_id) {
                         const result = await FetchPendingApplications(profile?.profile_id);
                         setLoanApplications(result?.loanApplications ?? []);
+                        setCurrentPage(1);
                     }
                 } catch (error) {
                     console.log("Error fetching loan applications: ", error);
                     setLoanApplications([]);
+                    setCurrentPage(1);
                 }
             };
             loadApplications();
@@ -118,9 +130,9 @@ export default function ApplicationStatus() {
             const result = await cancelApplication(selectedApplication?.loan_application_id);
             console.log("Cancel result:", result);
 
-            // Refresh the list
             const updated = await FetchPendingApplications(profile?.profile_id);
             setLoanApplications(updated?.loanApplications ?? []);
+            setCurrentPage(1);
 
             setCancelConfirmVisible(false);
             handleCloseModal();
@@ -162,7 +174,7 @@ export default function ApplicationStatus() {
                             <Text style={styles.emptyText}>No applications found.</Text>
                         </View>
                     ) : (
-                        loanApplications.map((item, index) => (
+                        paginatedApplications.map((item, index) => (
                             <TouchableOpacity
                                 key={index}
                                 onPress={() => handleRowPress(item)}
@@ -177,6 +189,39 @@ export default function ApplicationStatus() {
                                 </View>
                             </TouchableOpacity>
                         ))
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <View style={styles.pagination}>
+                            <TouchableOpacity
+                                style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                                onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                            </TouchableOpacity>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <TouchableOpacity
+                                    key={page}
+                                    style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
+                                    onPress={() => setCurrentPage(page)}
+                                >
+                                    <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
+                                        {page}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+
+                            <TouchableOpacity
+                                style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                                onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </ScrollView>
@@ -241,7 +286,7 @@ export default function ApplicationStatus() {
                             />
                         </View>
 
-                        {selectedApplication?.status !== "Approved" && (
+                        {selectedApplication?.status !== "Approved" && selectedApplication?.status !== "Cancelled" && (
                             <TouchableOpacity style={styles.cancelButton} onPress={handleCancelPress}>
                                 <Text style={styles.cancelButtonText}>Cancel Application</Text>
                             </TouchableOpacity>
@@ -265,7 +310,6 @@ export default function ApplicationStatus() {
                 <Pressable style={styles.modalOverlay} onPress={handleCancelDismiss}>
                     <Pressable style={styles.confirmSheet} onPress={() => {}}>
 
-                        {/* Warning Icon */}
                         <View style={styles.warningIconContainer}>
                             <Text style={styles.warningIcon}>⚠️</Text>
                         </View>
@@ -418,7 +462,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FEF9C3",
     },
     statusCancelled: {
-        backgroundColor: "#d6d5d5"
+        backgroundColor: "#d6d5d5",
     },
     statusOther: {
         backgroundColor: "#DCFCE7",
@@ -447,6 +491,40 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: "Poppins_400Regular",
         color: "#94A3B8",
+    },
+
+    // Pagination
+    pagination: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 16,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#F1F5F9",
+    },
+    pageButton: {
+        width: 46,
+        height: 46,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#F1F5F9",
+    },
+    pageButtonActive: {
+        backgroundColor: "#3A8E0D",
+    },
+    pageButtonDisabled: {
+        backgroundColor: "#F8FAFC",
+    },
+    pageButtonText: {
+        fontSize: 16,
+        fontFamily: "Poppins_700Bold",
+        color: "#374151",
+    },
+    pageButtonTextActive: {
+        color: "#FFFFFF",
     },
 
     // Modal (shared overlay)

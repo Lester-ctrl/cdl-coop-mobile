@@ -1,38 +1,39 @@
-import { fetchNotifications } from "@/api/notification"; // ✏️ same path as your notifications screen
+import { fetchUnreadNotifications } from "@/api/notification";
 import { useAuth } from "@/context/AuthContext";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { router, Tabs, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { session, isLoading } = useAuth();
   const [hasNotifications, setHasNotifications] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
     if (!isLoading && (!session || session.role_name !== "Member")) {
       router.replace("../");
     }
-  }, [session, isLoading]);
+  }, [session, isLoading]));
 
   // Fetch notifications to determine if badge should show
-  useEffect(() => {
-    const profileId = session?.profile?.profile_id;
-    if (!profileId) return;
+  useFocusEffect(
+    useCallback(() => {
+      const profileId = session?.profile?.profile_id;
+      if (!profileId) return;
 
-    const checkNotifications = async () => {
-      try {
-        const data = await fetchNotifications(profileId);
-        setHasNotifications((data.notifications ?? []).length > 0);
-      } catch {
-        // Silently fail — badge just won't show
-      }
-    };
+      const checkNotifications = async () => {
+        try {
+          const data = await fetchUnreadNotifications(profileId);
+          setHasNotifications((data.notifications ?? []).length > 0);
+        } catch {
+          // Silently fail — badge just won't show
+        }
+      };
 
-    checkNotifications();
-  }, [session?.profile?.profile_id]);
+      checkNotifications();
+    }, [session?.profile?.profile_id])
+  );
 
   if (isLoading || !session) return null;
 
@@ -101,6 +102,7 @@ export default function TabLayout() {
       />
 
       {/* ── Hidden Screens ── */}
+      <Tabs.Screen name="edit-profile" options={{href: null}}/>
       <Tabs.Screen name="application-status" options={{ href: null }} />
       <Tabs.Screen name="apply-loan" options={{ href: null }} />
       <Tabs.Screen name="loan-calculator" options={{ href: null }} />

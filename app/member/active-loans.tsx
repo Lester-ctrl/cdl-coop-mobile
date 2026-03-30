@@ -29,6 +29,7 @@ const BLUE_LIGHT = "#EEF2FF";
 const GREEN = "#22C55E";
 const GREEN_LIGHT = "#F0FDF4";
 const PURPLE = "#7C3AED";
+const ITEMS_PER_PAGE = 10;
 
 type ActiveLoan = {
     loan_account_id: number;
@@ -101,8 +102,6 @@ function buildSchedule(loan: ActiveLoan, paidDates: string[]): AmortRow[] {
         const prinPaid = monthly - intPaid;
         balance = Math.max(0, balance - prinPaid);
 
-        // Due month is the same month as release + (i - 1),
-        // e.g. month 1 is due in the release month itself
         const dueDate = new Date(releaseDate);
         dueDate.setMonth(dueDate.getMonth() + (i - 1));
         const dueYearMonth = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}`;
@@ -127,8 +126,15 @@ export default function ActiveLoans() {
     const [selectedLoan, setSelectedLoan] = useState<ActiveLoan | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [paidDates, setPaidDates] = useState<PaidDates>({});
+    const [currentPage, setCurrentPage] = useState(1);
 
     const profile = session?.profile;
+
+    const totalPages = Math.ceil(activeLoans.length / ITEMS_PER_PAGE);
+    const paginatedLoans = activeLoans.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const [fontsLoaded] = useFonts({
         Poppins_400Regular,
@@ -139,12 +145,13 @@ export default function ActiveLoans() {
     });
 
     useFocusEffect(
-        useCallback(()=>{
+        useCallback(() => {
             const fetchActiveLoans = async () => {
                 try {
                     const res = await getActiveLoans(profile?.profile_id);
                     setActiveLoans(res.activeLoans ?? []);
                     setPaidDates(res.paidDates ?? {});
+                    setCurrentPage(1);
                 } catch (error) {
                     console.log(error);
                 } finally {
@@ -176,7 +183,6 @@ export default function ActiveLoans() {
 
     const amortSchedule = useMemo(() => {
         if (!selectedLoan) return [];
-        // paidDates keys come back as strings from the API, so coerce to string
         const dates = paidDates[String(selectedLoan.loan_account_id)] ?? [];
         return buildSchedule(selectedLoan, dates);
     }, [selectedLoan, paidDates]);
@@ -216,6 +222,7 @@ export default function ActiveLoans() {
 
                     {/* Table Header */}
                     <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderText, { width: 36 }]}>#</Text>
                         <Text style={[styles.tableHeaderText, { flex: 1.4 }]}>Release Date</Text>
                         <Text style={[styles.tableHeaderText, { flex: 1, textAlign: "right" }]}>Principal</Text>
                     </View>
@@ -235,33 +242,71 @@ export default function ActiveLoans() {
                             <Text style={styles.emptyDesc}>You don't have any active loan accounts at the moment.</Text>
                         </View>
                     ) : (
-                        activeLoans.map((item, index) => (
-                            <TouchableOpacity
-                                key={item.loan_account_id}
-                                onPress={() => handleRowPress(item)}
-                                activeOpacity={0.7}
-                                style={[
-                                    styles.tableRow,
-                                    index % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                    index === activeLoans.length - 1 && styles.rowLast,
-                                ]}
-                            >
-                                <View style={[styles.rowLeft, { flex: 1.4 }]}>
-                                    <View style={styles.statusDot} />
-                                    <View>
-                                        <Text style={styles.dateText}>{formatDate(item.release_date)}</Text>
-                                        <Text style={styles.loanIdText}>#{item.loan_account_id}</Text>
-                                    </View>
+                        <>
+                            {paginatedLoans.map((item, index) => {
+                                const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                                return (
+                                    <TouchableOpacity
+                                        key={item.loan_account_id}
+                                        onPress={() => handleRowPress(item)}
+                                        activeOpacity={0.7}
+                                        style={[
+                                            styles.tableRow,
+                                            index % 2 === 0 ? styles.rowEven : styles.rowOdd,
+                                            index === paginatedLoans.length - 1 && styles.rowLast,
+                                        ]}
+                                    >
+                                        <Text style={styles.rowNumber}>{globalIndex}</Text>
+                                        <View style={[styles.rowLeft, { flex: 1.4 }]}>
+                                            <View style={styles.statusDot} />
+                                            <View>
+                                                <Text style={styles.dateText}>{formatDate(item.release_date)}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={[styles.rowRight, { flex: 1 }]}>
+                                            <Text style={styles.principalText}>₱{fmt(item.principal_amount)}</Text>
+                                            <View style={styles.activeBadge}>
+                                                <Text style={styles.activeBadgeText}>Active</Text>
+                                            </View>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginLeft: 6 }} />
+                                    </TouchableOpacity>
+                                );
+                            })}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <View style={styles.pagination}>
+                                    <TouchableOpacity
+                                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                                    </TouchableOpacity>
+
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <TouchableOpacity
+                                            key={page}
+                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
+                                            onPress={() => setCurrentPage(page)}
+                                        >
+                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
+                                                {page}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+
+                                    <TouchableOpacity
+                                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                                    </TouchableOpacity>
                                 </View>
-                                <View style={[styles.rowRight, { flex: 1 }]}>
-                                    <Text style={styles.principalText}>₱{fmt(item.principal_amount)}</Text>
-                                    <View style={styles.activeBadge}>
-                                        <Text style={styles.activeBadgeText}>Active</Text>
-                                    </View>
-                                </View>
-                                <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginLeft: 6 }} />
-                            </TouchableOpacity>
-                        ))
+                            )}
+                        </>
                     )}
                 </View>
             </ScrollView>
@@ -283,11 +328,10 @@ export default function ActiveLoans() {
                             {/* Modal Header */}
                             <View style={styles.modalHeader}>
                                 <View style={styles.modalIconBox}>
-                                    <Ionicons name="wallet-outline" size={20} color={BLUE} />
+                                    <Ionicons name="wallet-outline" size={20} color="#3A8E0D" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.modalTitle}>Loan Details</Text>
-                                    <Text style={styles.modalSubtitle}>Account #{selectedLoan?.loan_account_id}</Text>
                                 </View>
                                 <View style={styles.activeBadgeLg}>
                                     <Text style={styles.activeBadgeLgText}>● Active</Text>
@@ -298,7 +342,7 @@ export default function ActiveLoans() {
 
                             {/* Principal Banner */}
                             <LinearGradient
-                                colors={["#1A56DB", "#3B82F6"]}
+                                colors={["#3A8E0D", "#3A8E0D"]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={styles.principalBanner}
@@ -547,6 +591,12 @@ const styles = StyleSheet.create({
     rowEven: { backgroundColor: "#FAFAFA" },
     rowOdd: { backgroundColor: "#FFFFFF" },
     rowLast: { marginBottom: 0 },
+    rowNumber: {
+        width: 36,
+        fontSize: 13,
+        fontFamily: "Poppins_600SemiBold",
+        color: "#9CA3AF",
+    },
     rowLeft: {
         flexDirection: "row",
         alignItems: "center",
@@ -567,12 +617,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_500Medium",
         color: "#1E293B",
     },
-    loanIdText: {
-        fontSize: 11,
-        fontFamily: "Poppins_400Regular",
-        color: "#9CA3AF",
-        marginTop: 1,
-    },
     principalText: {
         fontSize: 14,
         fontFamily: "Poppins_700Bold",
@@ -588,6 +632,40 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontFamily: "Poppins_600SemiBold",
         color: "#15803D",
+    },
+
+    // Pagination
+    pagination: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 16,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#F1F5F9",
+    },
+    pageButton: {
+        width: 46,
+        height: 46,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#F1F5F9",
+    },
+    pageButtonActive: {
+        backgroundColor: "#3A8E0D",
+    },
+    pageButtonDisabled: {
+        backgroundColor: "#F8FAFC",
+    },
+    pageButtonText: {
+        fontSize: 16,
+        fontFamily: "Poppins_700Bold",
+        color: "#374151",
+    },
+    pageButtonTextActive: {
+        color: "#FFFFFF",
     },
 
     // Empty / loading states
@@ -661,7 +739,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 12,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#efffe6",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -789,7 +867,7 @@ const styles = StyleSheet.create({
         color: "#374151",
     },
 
-    // Amort table — fixed-width columns so horizontal scroll works
+    // Amort table
     amortHeaderRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -818,8 +896,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_500Medium",
         color: "#374151",
     },
-
-    // Fixed-width columns — never use flex here or horizontal scroll breaks
     colMo: {
         width: 40,
         paddingLeft: 4,
@@ -861,7 +937,7 @@ const styles = StyleSheet.create({
 
     // Close Button
     closeButton: {
-        backgroundColor: BLUE,
+        backgroundColor: "#3A8E0D",
         borderRadius: 14,
         paddingVertical: 15,
         alignItems: "center",

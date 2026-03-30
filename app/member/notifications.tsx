@@ -1,8 +1,10 @@
-import { deleteNotification, fetchNotifications } from "@/api/notification";
+import { deleteNotification, fetchNotifications, markNotificationAsSeen } from "@/api/notification";
 import { useAuth } from "@/context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "expo-router";
 import { Trash2 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
@@ -15,11 +17,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const GREEN = "#22C55E";
+const ITEMS_PER_PAGE = 5;
+
 type Notification = {
     id: number;
     title: string;
     description: string;
     created_at: string;
+    status: "seen" | "unseen";   // New field from database
 };
 
 export default function NotificationsScreen() {
@@ -30,25 +36,35 @@ export default function NotificationsScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        if (!profile?.profile_id) return;
+    const totalPages = Math.ceil(notifications.length / ITEMS_PER_PAGE);
+    const paginatedNotifications = notifications.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
-        const loadNotifications = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await fetchNotifications(profile.profile_id);
-                setNotifications(data.notifications ?? []);
-            } catch (err) {
-                setError("Failed to load notifications.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadNotifications();
-    }, [profile?.profile_id]);
+    // Load notifications
+    useFocusEffect(
+        useCallback(()=>{
+            if (!profile?.profile_id) return;
+            const loadNotifications = async () => {
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const data = await fetchNotifications(profile.profile_id);
+                    setNotifications(data.notifications ?? []);
+                    setCurrentPage(1);
+                } catch (err) {
+                    setError("Failed to load notifications.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadNotifications();
+        }, [profile?.profile_id])
+    );
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -59,13 +75,45 @@ export default function NotificationsScreen() {
         });
     };
 
+    // Mark as seen and open modal
+    const handleNotificationPress = async (notif: Notification) => {
+        if (notif.status === "unseen") {
+            try {
+                // Update backend
+                await markNotificationAsSeen(notif.id);
+                
+                // Update local state
+                setNotifications(prev =>
+                    prev.map(n =>
+                        n.id === notif.id ? { ...n, status: "seen" } : n
+                    )
+                );
+            } catch (err) {
+                console.log("Failed to mark notification as seen");
+            }
+        }
+        
+        // Open modal
+        setSelectedNotification(notif);
+    };
+
+    const closeModal = () => {
+        setSelectedNotification(null);
+    };
+
     const confirmDelete = async () => {
         if (deleteTargetId === null) return;
         try {
             await deleteNotification(deleteTargetId);
-            setNotifications((prev) => prev.filter((n) => n.id !== deleteTargetId));
+            const updated = notifications.filter((n) => n.id !== deleteTargetId);
+            setNotifications(updated);
+
+            const newTotalPages = Math.ceil(updated.length / ITEMS_PER_PAGE);
+            if (currentPage > newTotalPages && newTotalPages > 0) {
+                setCurrentPage(newTotalPages);
+            }
         } catch (err) {
-            console.log("Error", "Failed to delete notification. Please try again.");
+            console.log("Error deleting notification");
         } finally {
             setDeleteTargetId(null);
         }
@@ -91,27 +139,114 @@ export default function NotificationsScreen() {
                     ) : notifications.length === 0 ? (
                         <Text style={styles.emptyText}>No notifications yet.</Text>
                     ) : (
-                        notifications.map((item) => (
-                            <View key={item.id} style={styles.notifCard}>
-                                <View style={styles.notifHeader}>
-                                    <Text style={styles.notifTitle}>{item.title}</Text>
-                                    <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
-                                </View>
-                                <View style={styles.notifFooter}>
-                                    <Text style={styles.notifDescription}>{item.description}</Text>
+                        <>
+                            {paginatedNotifications.map((item) => (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    style={[
+                                        styles.notifCard,
+                                        item.status === "unseen" && styles.unseenBorder
+                                    ]}
+                                    onPress={() => handleNotificationPress(item)}
+                                    activeOpacity={0.85}
+                                >
+                                    <View style={styles.notifHeader}>
+                                        <Text style={styles.notifTitle}>{item.title}</Text>
+                                        <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
+                                    </View>
+                                    <View style={styles.notifFooter}>
+                                        <Text 
+                                            style={styles.notifDescription}
+                                            numberOfLines={2}
+                                        >
+                                            {item.description}
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={(e) => {
+                                                e.stopPropagation(); // Prevent opening modal when deleting
+                                                setDeleteTargetId(item.id);
+                                            }}
+                                            style={styles.deleteButton}
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        >
+                                            <Trash2 size={22} color="#ef4444" strokeWidth={2} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <View style={styles.pagination}>
                                     <TouchableOpacity
-                                        onPress={() => setDeleteTargetId(item.id)}
-                                        style={styles.deleteButton}
-                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
                                     >
-                                        <Trash2 size={22} color="#ef4444" strokeWidth={2} />
+                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                                    </TouchableOpacity>
+
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <TouchableOpacity
+                                            key={page}
+                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
+                                            onPress={() => setCurrentPage(page)}
+                                        >
+                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
+                                                {page}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+
+                                    <TouchableOpacity
+                                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
                                     </TouchableOpacity>
                                 </View>
-                            </View>
-                        ))
+                            )}
+                        </>
                     )}
                 </View>
             </ScrollView>
+
+            {/* Notification Detail Modal */}
+            <Modal
+                visible={!!selectedNotification}
+                transparent
+                animationType="slide"
+                onRequestClose={closeModal}
+            >
+                <View style={styles.modalOverlay}>
+                    <Pressable style={styles.modalBackdrop} onPress={closeModal} />
+                    <View style={styles.detailModal}>
+                        <View style={styles.modalHandle} />
+
+                        {selectedNotification && (
+                            <>
+                                <Text style={styles.detailTitle}>{selectedNotification.title}</Text>
+                                <Text style={styles.detailDate}>
+                                    {formatDate(selectedNotification.created_at)}
+                                </Text>
+                                <ScrollView style={styles.detailContent}>
+                                    <Text style={styles.detailDescription}>
+                                        {selectedNotification.description}
+                                    </Text>
+                                </ScrollView>
+
+                                <TouchableOpacity 
+                                    style={styles.closeDetailButton} 
+                                    onPress={closeModal}
+                                >
+                                    <Text style={styles.closeDetailButtonText}>Close</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal
@@ -173,9 +308,7 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
     },
-    loader: {
-        marginTop: 40,
-    },
+    loader: { marginTop: 40 },
     errorText: {
         textAlign: "center",
         color: "#ef4444",
@@ -190,6 +323,8 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "600",
     },
+
+    // Notification Card with Green Border for Unseen
     notifCard: {
         backgroundColor: "#ffffff",
         borderRadius: 14,
@@ -200,7 +335,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
+        borderLeftWidth: 4,
+        borderLeftColor: "transparent",
     },
+    unseenBorder: {
+        borderLeftColor: GREEN,   // Green left border for unseen
+    },
+
     notifHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -235,14 +376,99 @@ const styles = StyleSheet.create({
         padding: 4,
     },
 
-    // Modal styles
+    // Pagination (unchanged)
+    pagination: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 8,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: "#F1F5F9",
+    },
+    pageButton: {
+        width: 46,
+        height: 46,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#F1F5F9",
+    },
+    pageButtonActive: {
+        backgroundColor: "#3A8E0D",
+    },
+    pageButtonDisabled: {
+        backgroundColor: "#F8FAFC",
+    },
+    pageButtonText: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#374151",
+    },
+    pageButtonTextActive: {
+        color: "#FFFFFF",
+    },
+
+    // Detail Modal
     modalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 28,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        justifyContent: "flex-end",
     },
+    modalBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    detailModal: {
+        backgroundColor: "#FFFFFF",
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingHorizontal: 24,
+        paddingBottom: 36,
+        paddingTop: 12,
+        maxHeight: "85%",
+    },
+    modalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: "#E2E8F0",
+        borderRadius: 2,
+        alignSelf: "center",
+        marginBottom: 20,
+    },
+    detailTitle: {
+        fontSize: 22,
+        fontWeight: "700",
+        color: "#1e293b",
+        marginBottom: 8,
+    },
+    detailDate: {
+        fontSize: 14,
+        color: "#94a3b8",
+        marginBottom: 20,
+    },
+    detailContent: {
+        maxHeight: 400,
+        marginBottom: 20,
+    },
+    detailDescription: {
+        fontSize: 16,
+        lineHeight: 24,
+        color: "#374151",
+    },
+    closeDetailButton: {
+        backgroundColor: "#3A8E0D",
+        borderRadius: 14,
+        paddingVertical: 15,
+        alignItems: "center",
+    },
+    closeDetailButtonText: {
+        color: "#FFFFFF",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
+    // Delete Modal (unchanged)
     modalCard: {
         backgroundColor: "#ffffff",
         borderRadius: 20,

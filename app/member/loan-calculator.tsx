@@ -154,7 +154,7 @@ export default function LoanCalculator() {
     setErrorMsg(null);
 
     const P = parseFloat(loanAmount);
-    const r = parseFloat(interestRate) / 100; // monthly rate
+    const r = loan.key === "emergency" ? 0 : loan.maxRate / 100;
     const n = parseInt(loanTerm);
 
     let monthly: number;
@@ -200,10 +200,8 @@ export default function LoanCalculator() {
   const P = parseFloat(loanAmount) || 0;
   const n = parseInt(loanTerm) || 0;
   const totalPayment = monthlyPayment !== null ? monthlyPayment * n : null;
-  const tableRows = loan.key === "emergency" ? amortization : amortization.slice(0, 12);
-  const tableTitle = loan.key === "emergency"
-    ? "Amortization Schedule"
-    : "Amortization Schedule (First Year)";
+  const tableRows = amortization;
+  const tableTitle = "Amortization Schedule";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
@@ -338,21 +336,24 @@ export default function LoanCalculator() {
             />
           </View>
 
-          {/* Interest Rate — hidden for emergency */}
+          {/* Interest Rate — hidden for emergency, locked for others */}
           {loan.key !== "emergency" && (
             <>
-              <Text style={styles.fieldLabel}>Monthly Interest Rate (%)  ·  Max {loan.maxRate}%</Text>
-              <View style={styles.inputRow}>
+              <Text style={styles.fieldLabel}>Monthly Interest Rate (%)</Text>
+              <View style={[styles.inputRow, styles.inputRowLocked]}>
                 <View style={styles.inputPrefix}>
                   <Text style={styles.inputPrefixText}>%</Text>
                 </View>
                 <TextInput
-                  style={styles.input}
-                  value={interestRate}
-                  onChangeText={setInterestRate}
-                  keyboardType="numeric"
+                  style={[styles.input, styles.inputLocked]}
+                  value={String(loan.maxRate)}
+                  editable={false}
                   placeholderTextColor="#9CA3AF"
                 />
+                <View style={styles.lockBadge}>
+                  <Ionicons name="lock-closed" size={12} color="#6B7280" />
+                  <Text style={styles.lockBadgeText}>Fixed</Text>
+                </View>
               </View>
             </>
           )}
@@ -427,17 +428,20 @@ export default function LoanCalculator() {
               <Text style={styles.summaryHighlightLabel}>Monthly Payment</Text>
               <Text style={styles.summaryHighlightValue}>₱{fmt(monthlyPayment)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total Interest</Text>
-              <Text style={styles.summaryValue}>₱{totalInterest !== null ? fmt(totalInterest) : "—"}</Text>
-            </View>
-
+            <View style={styles.summaryDivider} />
+            <Text style={styles.summaryTitle}>Total Summary</Text>
             <View style={styles.summaryDivider} />
 
             <View style={styles.summaryRow}>
               <Text style={styles.summaryTotalLabel}>Total Payment</Text>
               <Text style={styles.summaryTotalValue}>
                 ₱{totalPayment !== null ? fmt(totalPayment) : "—"}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryInterest}>Total Interest</Text>
+              <Text style={styles.summaryInterestValue}>
+                ₱{totalInterest !== null ? fmt(totalInterest) : "—"}
               </Text>
             </View>
           </View>
@@ -719,7 +723,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   calcButton: {
-    backgroundColor: BLUE,
+    backgroundColor: "#3A8E0D",
     borderRadius: 14,
     paddingVertical: 16,
     flexDirection: "row",
@@ -750,7 +754,7 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontSize: 17,
     fontFamily: "Poppins_700Bold",
-    marginBottom: 14,
+    marginBottom: 8,
   },
   summaryDivider: {
     height: 1,
@@ -792,6 +796,16 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontSize: 16,
     fontFamily: "Poppins_800ExtraBold",
+  },
+  summaryInterest: {
+    color: "#F57C00",
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold"
+  },
+  summaryInterestValue: {
+    color: "#F57C00",
+    fontSize: 16,
+    fontFamily: "Poppins_800ExtraBold"
   },
 
   /* ── Amortization Schedule ── */
@@ -854,5 +868,27 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     lineHeight: 18,
     flex: 1,
+  },
+  inputRowLocked: {
+  backgroundColor: "#F3F4F6",
+  borderColor: "#E5E7EB",
+  },
+  inputLocked: {
+    color: "#6B7280",
+  },
+  lockBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginRight: 10,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 8,
+  },
+  lockBadgeText: {
+    color: "#6B7280",
+    fontSize: 11,
+    fontFamily: "Poppins_600SemiBold",
   },
 });

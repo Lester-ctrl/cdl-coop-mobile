@@ -1,7 +1,7 @@
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export async function fetchNotifications(profile_id: any){
-    const response = await fetch(`${BASE_URL}/member/fetch-notifications`, {
+    const response = await fetch(`${BASE_URL}/api/member/fetch-notifications`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -14,6 +14,21 @@ export async function fetchNotifications(profile_id: any){
     return data;
 }
 
+export async function fetchUnreadNotifications(profile_id: any){
+    const response = await fetch(`${BASE_URL}/api/member/fetch-unread-notifications`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ profile_id }),
+    });
+
+    const data = await response.json();
+    console.log(data);
+    return data;
+}
+
 export async function deleteNotification(notif_id: any){
     const response = await fetch(`${BASE_URL}/member/delete-notification`, {
         method: "POST",
@@ -22,6 +37,20 @@ export async function deleteNotification(notif_id: any){
             "Accept": "application/json"
         },
         body: JSON.stringify({ notif_id }),
+    });
+
+    const data = await response.json();
+    return data;
+}
+
+export async function markNotificationAsSeen (notif_id: any){
+    const response = await fetch(`${BASE_URL}/member/mark-notification-seen`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept" : "application/json"
+        },
+        body: JSON.stringify({notif_id}),
     });
 
     const data = await response.json();
