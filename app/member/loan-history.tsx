@@ -32,6 +32,8 @@ const PURPLE = "#7C3AED";
 const GRAY = "#6B7280";
 const GRAY_LIGHT = "#F3F4F6";
 
+const ITEMS_PER_PAGE = 10;
+
 type Loan = {
     loan_account_id: number;
     profile_id: number;
@@ -42,7 +44,7 @@ type Loan = {
     maturity_date: string;
     monthly_amortization: number;
     balance: number;
-    status: string; // "Active" | "Completed" | etc.
+    status: string;
 };
 
 type AmortRow = {
@@ -142,8 +144,15 @@ export default function LoanHistory() {
     const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [paidDates, setPaidDates] = useState<PaidDates>({});
+    const [currentPage, setCurrentPage] = useState(1);
 
     const profile = session?.profile;
+
+    const totalPages = Math.ceil(loans.length / ITEMS_PER_PAGE);
+    const paginatedLoans = loans.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const [fontsLoaded] = useFonts({
         Poppins_400Regular,
@@ -154,12 +163,13 @@ export default function LoanHistory() {
     });
 
     useFocusEffect(
-        useCallback(()=>{
+        useCallback(() => {
             const fetchLoanHistory = async () => {
                 try {
                     const res = await getLoanHistory(profile?.profile_id);
                     setLoans(res.loans ?? []);
                     setPaidDates(res.paidDates ?? {});
+                    setCurrentPage(1);
                 } catch (error) {
                     console.log(error);
                 } finally {
@@ -252,13 +262,14 @@ export default function LoanHistory() {
                         </View>
                     </View>
 
-                    {/* Table Header */}
+                    {/* Table Header - Added # column */}
                     <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderText, { width: 36 }]}>#</Text>
                         <Text style={[styles.tableHeaderText, { flex: 1.4 }]}>Release Date</Text>
                         <Text style={[styles.tableHeaderText, { flex: 1, textAlign: "right" }]}>Principal</Text>
                     </View>
 
-                    {/* Rows */}
+                    {/* Loading / Empty / Content */}
                     {loading ? (
                         <View style={styles.centerBox}>
                             <ActivityIndicator size="small" color={BLUE} />
@@ -273,42 +284,79 @@ export default function LoanHistory() {
                             <Text style={styles.emptyDesc}>You don't have any loan records yet.</Text>
                         </View>
                     ) : (
-                        loans.map((item, index) => (
-                            <TouchableOpacity
-                                key={item.loan_account_id}
-                                onPress={() => handleRowPress(item)}
-                                activeOpacity={0.7}
-                                style={[
-                                    styles.tableRow,
-                                    index % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                    index === loans.length - 1 && styles.rowLast,
-                                ]}
-                            >
-                                {/* Date + status dot */}
-                                <View style={[styles.rowLeft, { flex: 1.4 }]}>
-                                    <View style={[
-                                        styles.statusDot,
-                                        { backgroundColor: isActive(item.status) ? GREEN : GRAY },
-                                    ]} />
-                                    <View>
-                                        <Text style={styles.dateText}>{formatDate(item.release_date)}</Text>
-                                        <Text style={styles.loanIdText}>#{item.loan_account_id}</Text>
-                                    </View>
-                                </View>
+                        <>
+                            {paginatedLoans.map((item, index) => {
+                                const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                                return (
+                                    <TouchableOpacity
+                                        key={item.loan_account_id}
+                                        onPress={() => handleRowPress(item)}
+                                        activeOpacity={0.7}
+                                        style={[
+                                            styles.tableRow,
+                                            index % 2 === 0 ? styles.rowEven : styles.rowOdd,
+                                            index === paginatedLoans.length - 1 && styles.rowLast,
+                                        ]}
+                                    >
+                                        <Text style={styles.rowNumber}>{globalIndex}</Text>
 
-                                {/* Principal + status badge */}
-                                <View style={[styles.rowRight, { flex: 1 }]}>
-                                    <Text style={styles.principalText}>₱{fmt(item.principal_amount)}</Text>
-                                    <StatusBadgeSmall status={item.status} />
+                                        <View style={[styles.rowLeft, { flex: 1.4 }]}>
+                                            <View style={[
+                                                styles.statusDot,
+                                                { backgroundColor: isActive(item.status) ? GREEN : GRAY },
+                                            ]} />
+                                            <View>
+                                                <Text style={styles.dateText}>{formatDate(item.release_date)}</Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={[styles.rowRight, { flex: 1 }]}>
+                                            <Text style={styles.principalText}>₱{fmt(item.principal_amount)}</Text>
+                                            <StatusBadgeSmall status={item.status} />
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginLeft: 6 }} />
+                                    </TouchableOpacity>
+                                );
+                            })}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <View style={styles.pagination}>
+                                    <TouchableOpacity
+                                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                                    </TouchableOpacity>
+
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <TouchableOpacity
+                                            key={page}
+                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
+                                            onPress={() => setCurrentPage(page)}
+                                        >
+                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
+                                                {page}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+
+                                    <TouchableOpacity
+                                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                                    </TouchableOpacity>
                                 </View>
-                                <Ionicons name="chevron-forward" size={16} color="#CBD5E1" style={{ marginLeft: 6 }} />
-                            </TouchableOpacity>
-                        ))
+                            )}
+                        </>
                     )}
                 </View>
             </ScrollView>
 
-            {/* ── Detail Modal ── */}
+            {/* Detail Modal - Unchanged */}
             <Modal
                 visible={modalVisible}
                 transparent
@@ -321,17 +369,14 @@ export default function LoanHistory() {
                         <View style={styles.modalHandle} />
 
                         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-
                             {/* Modal Header */}
                             <View style={styles.modalHeader}>
                                 <View style={styles.modalIconBox}>
-                                    <Ionicons name="wallet-outline" size={20} color={BLUE} />
+                                    <Ionicons name="wallet-outline" size={20} color="#3A8E0D" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.modalTitle}>Loan Details</Text>
-                                    <Text style={styles.modalSubtitle}>Account #{selectedLoan?.loan_account_id}</Text>
                                 </View>
-                                {/* Dynamic badge — green for Active, gray for Completed */}
                                 <View style={[
                                     styles.modalStatusBadge,
                                     isActive(selectedLoan?.status ?? "")
@@ -351,7 +396,7 @@ export default function LoanHistory() {
 
                             {/* Principal Banner */}
                             <LinearGradient
-                                colors={["#1A56DB", "#3B82F6"]}
+                                colors={["#3A8E0D", "#3A8E0D"]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={styles.principalBanner}
@@ -402,7 +447,7 @@ export default function LoanHistory() {
                                 />
                             </View>
 
-                            {/* ── Amortization Table ── */}
+                            {/* Amortization Table */}
                             {amortSchedule.length > 0 && (
                                 <View style={styles.amortCard}>
                                     <View style={styles.amortCardHeader}>
@@ -421,7 +466,6 @@ export default function LoanHistory() {
                                         bounces={false}
                                     >
                                         <View>
-                                            {/* Table header */}
                                             <View style={styles.amortHeaderRow}>
                                                 <Text style={[styles.amortHeaderCell, styles.colMo]}>Mo.</Text>
                                                 <Text style={[styles.amortHeaderCell, styles.colAmount]}>Payment</Text>
@@ -433,7 +477,6 @@ export default function LoanHistory() {
                                                 </Text>
                                             </View>
 
-                                            {/* Table rows */}
                                             {amortSchedule.map((row, i) => (
                                                 <View
                                                     key={row.month}
@@ -483,7 +526,6 @@ export default function LoanHistory() {
                             <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal} activeOpacity={0.85}>
                                 <Text style={styles.closeButtonText}>Close</Text>
                             </TouchableOpacity>
-
                         </ScrollView>
                     </View>
                 </View>
@@ -498,7 +540,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#F5F6FA",
     },
 
-    // Hero
+    // Hero styles (unchanged)
     hero: {
         padding: 28,
         paddingBottom: 28,
@@ -537,7 +579,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 
-    // Hero summary pills
     heroPills: {
         flexDirection: "row",
         backgroundColor: "rgba(255,255,255,0.15)",
@@ -607,7 +648,7 @@ const styles = StyleSheet.create({
         color: "#6B7280",
     },
 
-    // Loan list table
+    // Table Header & Rows
     tableHeader: {
         flexDirection: "row",
         backgroundColor: "#F1F5F9",
@@ -633,6 +674,15 @@ const styles = StyleSheet.create({
     rowEven: { backgroundColor: "#FAFAFA" },
     rowOdd: { backgroundColor: "#FFFFFF" },
     rowLast: { marginBottom: 0 },
+
+    // Numbering (New)
+    rowNumber: {
+        width: 36,
+        fontSize: 13,
+        fontFamily: "Poppins_600SemiBold",
+        color: "#9CA3AF",
+    },
+
     rowLeft: {
         flexDirection: "row",
         alignItems: "center",
@@ -681,6 +731,40 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_600SemiBold",
     },
 
+    // Pagination (Matched with active-loans.tsx)
+    pagination: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 16,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#F1F5F9",
+    },
+    pageButton: {
+        width: 46,
+        height: 46,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#F1F5F9",
+    },
+    pageButtonActive: {
+        backgroundColor: "#3A8E0D",
+    },
+    pageButtonDisabled: {
+        backgroundColor: "#F8FAFC",
+    },
+    pageButtonText: {
+        fontSize: 16,
+        fontFamily: "Poppins_700Bold",
+        color: "#374151",
+    },
+    pageButtonTextActive: {
+        color: "#FFFFFF",
+    },
+
     // Empty / loading
     centerBox: {
         paddingVertical: 32,
@@ -716,7 +800,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
 
-    // Modal
+    // Modal styles (unchanged)
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.45)",
@@ -752,7 +836,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 12,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: "#f1ffe9",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -788,7 +872,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
 
-    // Principal Banner
     principalBanner: {
         borderRadius: 16,
         padding: 18,
@@ -808,7 +891,6 @@ const styles = StyleSheet.create({
         letterSpacing: -0.5,
     },
 
-    // Stat boxes
     statRow: {
         flexDirection: "row",
         gap: 10,
@@ -832,7 +914,6 @@ const styles = StyleSheet.create({
         color: "#111827",
     },
 
-    // Detail rows
     detailsContainer: {
         gap: 8,
         marginBottom: 24,
@@ -857,7 +938,6 @@ const styles = StyleSheet.create({
         color: "#1E293B",
     },
 
-    // Amortization card
     amortCard: {
         backgroundColor: "#F8FAFC",
         borderRadius: 16,
@@ -884,7 +964,6 @@ const styles = StyleSheet.create({
         color: "#374151",
     },
 
-    // Amort table
     amortHeaderRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -950,9 +1029,8 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_600SemiBold",
     },
 
-    // Close Button
     closeButton: {
-        backgroundColor: BLUE,
+        backgroundColor: "#3A8E0D",
         borderRadius: 14,
         paddingVertical: 15,
         alignItems: "center",
@@ -963,7 +1041,6 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
     },
 
-    // Disclaimer
     disclaimer: {
         flexDirection: "row",
         alignItems: "flex-start",

@@ -44,7 +44,7 @@ export async function SendLoanApplication(payload: any) {
         formData.append("collateral_document", fileData);
     }
 
-    const response = await fetch(`${BASE_URL}/send-application-form`, {
+    const response = await fetch(`${BASE_URL}/api/send-application-form`, {
         method: "POST",
         headers: {
             Accept: "application/json"
@@ -58,11 +58,11 @@ export async function SendLoanApplication(payload: any) {
         throw new Error(json.error || json.message || "Loan application failed!");
     }
 
-    return json;
+    return json;  
 }
 
 export async function FetchPendingApplications(memberId: any) {
-    const response = await fetch(`${BASE_URL}/member/fetch-loan-applications`, {
+    const response = await fetch(`${BASE_URL}/api/member/fetch-loan-applications`, {
         method: "POST", 
         headers: {
             "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export async function FetchPendingApplications(memberId: any) {
 }
 
 export async function cancelApplication(loanApplicationId: any){
-    const response = await fetch(`${BASE_URL}/cancel-loan-applications`, {
+    const response = await fetch(`${BASE_URL}/api/cancel-loan-applications`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

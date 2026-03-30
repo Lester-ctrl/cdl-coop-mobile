@@ -1,7 +1,7 @@
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export async function getActiveLoans(pid: any){
-    const response = await fetch(`${BASE_URL}/member/active-loans`, {
+    const response = await fetch(`${BASE_URL}/api/member/active-loans`, {
         method: "post", 
         headers: {
             "Content-Type": "application/json",
