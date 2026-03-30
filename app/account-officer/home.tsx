@@ -2,6 +2,9 @@ import {
   getActiveMembers,
   getCollections,
   getLoanDisbursement,
+  getActiveLoans,
+  getPendingLoanApplications,
+  getDelinquentMembers,
 } from "@/api/accountofficer/widgets";
 import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -40,10 +43,11 @@ export default function AccountOfficerDashboard() {
 
   // State for dynamic stats
   const [activeMembers, setActiveMembers] = useState<number | null>(null);
-  const [loanDisbursement, setLoanDisbursements] = useState<number | null>(
-    null,
-  );
+  const [loanDisbursement, setLoanDisbursements] = useState<number | null>( null,);
   const [collections, setCollections] = useState<number | null>(null);
+  const [activeLoans, setActiveLoans] = useState<number | null>(null);
+  const [pendingApplications, setPendingApplications] = useState<number | null>(null);
+  const [delinquentMembers, setDelinquentMembers] = useState<number | null>(null);
 
   // Fetch Active Members
   useEffect(() => {
@@ -86,6 +90,49 @@ export default function AccountOfficerDashboard() {
     };
     fetchCollections();
   }, []);
+
+  // Fetch Active Loans
+  useEffect(() => {
+    const fetchActiveLoans = async () => {
+      try {
+        const data = await getActiveLoans();
+        setActiveLoans(data.active_loans);
+      } catch (err) {
+        console.error("Error fetching active loans:", err);
+        setActiveLoans(null);
+      }
+    };
+    fetchActiveLoans();
+  }, []);
+
+    // Fetch Pending Loan Applications
+
+    useEffect(() => {
+      const fetchPendingApplications = async () => {
+        try {
+          const data = await getPendingLoanApplications();
+          setPendingApplications(data.pending_loans);
+        } catch (err) {
+          console.error("Error fetching pending applications:", err);
+          setPendingApplications(null);
+        }
+      };
+      fetchPendingApplications();
+    }, []);
+
+    // Fetch Delinquent Members
+    useEffect(() => {
+      const fetchDelinquentMembers = async () => {
+        try {
+          const data = await getDelinquentMembers();
+          setDelinquentMembers(data.delinquent_members);
+        } catch (err) {
+          console.error("Error fetching delinquent members:", err);
+          setDelinquentMembers(null);
+        }
+      };
+      fetchDelinquentMembers();
+    }, []);
 
   const userName = session?.profile?.first_name ?? "Account Officer";
 
@@ -131,7 +178,7 @@ export default function AccountOfficerDashboard() {
     },
     {
       label: "Active Loan Accounts",
-      value: "₱8,000",
+      value: activeLoans != null ? activeLoans : "…",
       icon: "wallet-outline",
       color: "#1c3faa",
       bg: "#dbeafe",
@@ -146,7 +193,7 @@ export default function AccountOfficerDashboard() {
 
     {
       label: "Pending Applications",
-      value: "3",
+      value: pendingApplications != null ? pendingApplications : "…",
       icon: "document-text-outline",
       color: "#f59e42",
       bg: "#fef9c3",
@@ -154,7 +201,7 @@ export default function AccountOfficerDashboard() {
 
     {
       label: "Delinquent Members",
-      value: "5",
+      value: delinquentMembers != null ? delinquentMembers : "…",
       icon: "alert-circle-outline",
       color: "#b4321e",
       bg: "#fc2d2664",
