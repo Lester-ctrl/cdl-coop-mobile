@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router"; // <-- use hook
+import { useRouter } from "expo-router";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import {
   ScrollView,
@@ -10,14 +10,16 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  TextInput,
 } from "react-native";
 import { getActiveMembers, getMemberDetails } from "@/api/accountofficer/member";
 
 export default function LoanOfficerLoanManagement() {
-  const router = useRouter(); // <-- initialize router
+  const router = useRouter();
 
   // State
   const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,6 +27,8 @@ export default function LoanOfficerLoanManagement() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberError, setMemberError] = useState(null);
+
+  const [searchText, setSearchText] = useState("");
 
   // Function to get status color
   const getStatusColor = (status) => {
@@ -46,6 +50,7 @@ export default function LoanOfficerLoanManagement() {
       try {
         const data = await getActiveMembers();
         setMembers(data.active_members);
+        setFilteredMembers(data.active_members);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -54,6 +59,18 @@ export default function LoanOfficerLoanManagement() {
     }
     fetchMembers();
   }, []);
+
+  // Filter members by search
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setFilteredMembers(members);
+    } else {
+      const filtered = members.filter((m) =>
+        m.full_name.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredMembers(filtered);
+    }
+  }, [searchText, members]);
 
   // Fetch member details when clicked
   const handleMemberPress = async (memberId) => {
@@ -71,7 +88,6 @@ export default function LoanOfficerLoanManagement() {
     }
   };
 
-  // Loading & Error States
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -89,34 +105,31 @@ export default function LoanOfficerLoanManagement() {
     );
   }
 
-  // Main Render
   return (
     <ScrollView contentContainerStyle={styles.container}>
-    
-
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Accounts Management</Text>
         <Text style={styles.subtitle}>
           View, update, and manage member accounts.
         </Text>
-      
       </View>
-        {/* BACK BUTTON */}
-  
-   <TouchableOpacity
-  style={styles.backBtn}
-  onPress={() => router.push("/account-officer/accounts")}
->
-  <FontAwesome6 name="arrow-left" size={20} color="#fff" />
-</TouchableOpacity>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by full_name.."
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
       {/* Members Table */}
       <View style={styles.card}>
-        
         <Text style={[styles.title, { color: "#0d942af7", textAlign: "center" }]}>
           Active Members
         </Text>
-        
 
         <View style={styles.tableRowHeader}>
           <Text style={[styles.cell, styles.headerCell]}>ID</Text>
@@ -125,7 +138,7 @@ export default function LoanOfficerLoanManagement() {
           <Text style={[styles.cell, styles.headerCell]}>Status</Text>
         </View>
 
-        {members.map((member) => (
+        {filteredMembers.map((member) => (
           <View style={styles.tableRow} key={member.id}>
             <Text style={styles.cell}>{member.id}</Text>
 
@@ -139,12 +152,7 @@ export default function LoanOfficerLoanManagement() {
             </TouchableOpacity>
 
             <Text style={styles.cell}>{member.branch_name || "N/A"}</Text>
-            <Text
-              style={[
-                styles.cell,
-                { color: getStatusColor(member.status), fontWeight: "600" },
-              ]}
-            >
+            <Text style={[styles.cell, { color: getStatusColor(member.status), fontWeight: "600" }]}>
               {member.status}
             </Text>
           </View>
@@ -179,20 +187,14 @@ export default function LoanOfficerLoanManagement() {
                 <Text>Email: {selectedMember.email || "N/A"}</Text>
                 <Text>Contact: {selectedMember.contact_no || "N/A"}</Text>
                 <Text>Membership Type: {selectedMember.membership_type || "N/A"}</Text>
-                <Text
-                  style={{
-                    color: getStatusColor(selectedMember.status),
-                    fontWeight: "600",
-                  }}
-                >
+                <Text style={{ color: getStatusColor(selectedMember.status), fontWeight: "600" }}>
                   Status: {selectedMember.status}
                 </Text>
                 <Text>
                   Share Capital Balance:{" "}
-                  {new Intl.NumberFormat("en-PH", {
-                    style: "currency",
-                    currency: "PHP",
-                  }).format(selectedMember.share_capital_balance)}
+                  {new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
+                    selectedMember.share_capital_balance
+                  )}
                 </Text>
               </View>
             )}
@@ -205,10 +207,7 @@ export default function LoanOfficerLoanManagement() {
 
 // Styles
 const styles = StyleSheet.create({
-  container: { 
-    padding: 0,
-     backgroundColor: "#f3f6fb" 
-    },
+  container: { padding: 0, backgroundColor: "#f3f6fb" },
   backBtn: {
     position: "absolute",
     top: 120,
@@ -225,24 +224,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#099a1c",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginBottom: 80,
+    marginBottom: 20,
     alignItems: "center",
   },
   card: {
-
-     width: "90%",
-     backgroundColor: "#fff", 
-      alignSelf: "center",
-     borderRadius: 20,
-      padding: 20,
-      shadowColor: "#1c3faa",
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
-      elevation: 8,
-        marginBottom: 40,
-    
-     },
+    width: "90%",
+    backgroundColor: "#fff",
+    alignSelf: "center",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#1c3faa",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+    marginBottom: 40,
+  },
   title: {
     top: -15,
     fontSize: 30,
@@ -278,4 +275,24 @@ const styles = StyleSheet.create({
   modalContent: { width: "90%", backgroundColor: "#fff", borderRadius: 20, padding: 20 },
   closeButton: { backgroundColor: "#1c3faa", padding: 10, borderRadius: 12, alignSelf: "flex-end", marginBottom: 15 },
   modalTitle: { fontSize: 22, fontWeight: "700", marginBottom: 10 },
+
+  // Search Bar
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#000",
+  },
 });

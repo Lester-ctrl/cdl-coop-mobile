@@ -1,3 +1,4 @@
+// --- SAME IMPORTS ---
 import { deleteNotification, fetchNotifications, markNotificationAsSeen } from "@/api/notification";
 import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,12 +26,12 @@ type Notification = {
     title: string;
     description: string;
     created_at: string;
-    status: "seen" | "unseen";   // New field from database
+    status: "seen" | "unseen";
 };
 
 export default function NotificationsScreen() {
-  const { session } = useAuth();
-  const profile = session?.profile;
+    const { session } = useAuth();
+    const profile = session?.profile;
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,14 +46,12 @@ export default function NotificationsScreen() {
         currentPage * ITEMS_PER_PAGE
     );
 
-    // Load notifications
     useFocusEffect(
-        useCallback(()=>{
+        useCallback(() => {
             if (!profile?.profile_id) return;
-            const loadNotifications = async () => {
+            const load = async () => {
                 try {
                     setLoading(true);
-                    setError(null);
                     const data = await fetchNotifications(profile.profile_id);
                     setNotifications(data.notifications ?? []);
                     setCurrentPage(1);
@@ -62,77 +61,59 @@ export default function NotificationsScreen() {
                     setLoading(false);
                 }
             };
-            loadNotifications();
+            load();
         }, [profile?.profile_id])
     );
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-PH", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+    const formatDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("en-PH", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+    };
 
-    // Mark as seen and open modal
     const handleNotificationPress = async (notif: Notification) => {
         if (notif.status === "unseen") {
-            try {
-                // Update backend
-                await markNotificationAsSeen(notif.id);
-                
-                // Update local state
-                setNotifications(prev =>
-                    prev.map(n =>
-                        n.id === notif.id ? { ...n, status: "seen" } : n
-                    )
-                );
-            } catch (err) {
-                console.log("Failed to mark notification as seen");
-            }
+            await markNotificationAsSeen(notif.id);
+
+            setNotifications(prev =>
+                prev.map(n => (n.id === notif.id ? { ...n, status: "seen" } : n))
+            );
         }
-        
-        // Open modal
         setSelectedNotification(notif);
     };
 
-    const closeModal = () => {
-        setSelectedNotification(null);
-    };
+    const closeModal = () => setSelectedNotification(null);
 
     const confirmDelete = async () => {
-        if (deleteTargetId === null) return;
-        try {
-            await deleteNotification(deleteTargetId);
-            const updated = notifications.filter((n) => n.id !== deleteTargetId);
-            setNotifications(updated);
+        if (!deleteTargetId) return;
 
-            const newTotalPages = Math.ceil(updated.length / ITEMS_PER_PAGE);
-            if (currentPage > newTotalPages && newTotalPages > 0) {
-                setCurrentPage(newTotalPages);
-            }
-        } catch (err) {
-            console.log("Error deleting notification");
-        } finally {
-            setDeleteTargetId(null);
+        await deleteNotification(deleteTargetId);
+
+        const updated = notifications.filter(n => n.id !== deleteTargetId);
+        setNotifications(updated);
+
+        const newTotal = Math.ceil(updated.length / ITEMS_PER_PAGE);
+        if (currentPage > newTotal && newTotal > 0) {
+            setCurrentPage(newTotal);
         }
+
+        setDeleteTargetId(null);
     };
 
-  return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#3A8E0D" }}
-      edges={["top"]}
-    >
-      <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#51b61a", "#48a019", "#3A8E0D"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
-          <Text style={styles.heroTitle}>Notifications</Text>
-        </LinearGradient>
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
+            <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+                <LinearGradient
+                    colors={["#51b61a", "#48a019", "#3A8E0D"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.hero}
+                >
+                    <Text style={styles.heroTitle}>Notifications</Text>
+                </LinearGradient>
 
                 <View style={styles.content}>
                     {loading ? (
@@ -143,34 +124,34 @@ export default function NotificationsScreen() {
                         <Text style={styles.emptyText}>No notifications yet.</Text>
                     ) : (
                         <>
-                            {paginatedNotifications.map((item) => (
+                            {paginatedNotifications.map(item => (
                                 <TouchableOpacity
                                     key={item.id}
                                     style={[
                                         styles.notifCard,
-                                        item.status === "unseen" && styles.unseenBorder
+                                        item.status === "unseen" && styles.unseenBorder,
                                     ]}
                                     onPress={() => handleNotificationPress(item)}
                                     activeOpacity={0.85}
                                 >
                                     <View style={styles.notifHeader}>
                                         <Text style={styles.notifTitle}>{item.title}</Text>
-                                        <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
+                                        <Text style={styles.notifDate}>
+                                            {formatDate(item.created_at)}
+                                        </Text>
                                     </View>
+
                                     <View style={styles.notifFooter}>
-                                        <Text 
-                                            style={styles.notifDescription}
-                                            numberOfLines={2}
-                                        >
+                                        <Text style={styles.notifDescription} numberOfLines={2}>
                                             {item.description}
                                         </Text>
+
                                         <TouchableOpacity
-                                            onPress={(e) => {
-                                                e.stopPropagation(); // Prevent opening modal when deleting
+                                            onPress={e => {
+                                                e.stopPropagation();
                                                 setDeleteTargetId(item.id);
                                             }}
                                             style={styles.deleteButton}
-                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                         >
                                             <Trash2 size={22} color="#ef4444" strokeWidth={2} />
                                         </TouchableOpacity>
@@ -182,69 +163,102 @@ export default function NotificationsScreen() {
                             {totalPages > 1 && (
                                 <View style={styles.pagination}>
                                     <TouchableOpacity
-                                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
-                                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        style={[
+                                            styles.pageButton,
+                                            currentPage === 1 && styles.pageButtonDisabled,
+                                        ]}
+                                        onPress={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
                                     >
-                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                                        <Ionicons
+                                            name="chevron-back"
+                                            size={16}
+                                            color={
+                                                currentPage === 1 ? "#D1D5DB" : "#3A8E0D"
+                                            }
+                                        />
                                     </TouchableOpacity>
 
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    {Array.from({ length: totalPages }).map((_, i) => (
                                         <TouchableOpacity
-                                            key={page}
-                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
-                                            onPress={() => setCurrentPage(page)}
+                                            key={i + 1}
+                                            style={[
+                                                styles.pageButton,
+                                                currentPage === i + 1 &&
+                                                    styles.pageButtonActive,
+                                            ]}
+                                            onPress={() => setCurrentPage(i + 1)}
                                         >
-                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
-                                                {page}
+                                            <Text
+                                                style={[
+                                                    styles.pageButtonText,
+                                                    currentPage === i + 1 &&
+                                                        styles.pageButtonTextActive,
+                                                ]}
+                                            >
+                                                {i + 1}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
 
                                     <TouchableOpacity
-                                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
-                                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        style={[
+                                            styles.pageButton,
+                                            currentPage === totalPages &&
+                                                styles.pageButtonDisabled,
+                                        ]}
+                                        onPress={() =>
+                                            setCurrentPage(p =>
+                                                Math.min(totalPages, p + 1)
+                                            )
+                                        }
                                         disabled={currentPage === totalPages}
                                     >
-                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                                        <Ionicons
+                                            name="chevron-forward"
+                                            size={16}
+                                            color={
+                                                currentPage === totalPages
+                                                    ? "#D1D5DB"
+                                                    : "#3A8E0D"
+                                            }
+                                        />
                                     </TouchableOpacity>
                                 </View>
                             )}
                         </>
                     )}
                 </View>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            </ScrollView>
+
+            {/* SAFE AREA FIX */}
+            <SafeAreaView style={{ backgroundColor: "#3A8E0D" }} />
 
             {/* Notification Detail Modal */}
-            <Modal
-                visible={!!selectedNotification}
-                transparent
-                animationType="slide"
-                onRequestClose={closeModal}
-            >
+            <Modal visible={!!selectedNotification} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <Pressable style={styles.modalBackdrop} onPress={closeModal} />
+
                     <View style={styles.detailModal}>
                         <View style={styles.modalHandle} />
 
                         {selectedNotification && (
                             <>
-                                <Text style={styles.detailTitle}>{selectedNotification.title}</Text>
+                                <Text style={styles.detailTitle}>
+                                    {selectedNotification.title}
+                                </Text>
                                 <Text style={styles.detailDate}>
                                     {formatDate(selectedNotification.created_at)}
                                 </Text>
+
                                 <ScrollView style={styles.detailContent}>
                                     <Text style={styles.detailDescription}>
                                         {selectedNotification.description}
                                     </Text>
                                 </ScrollView>
 
-                                <TouchableOpacity 
-                                    style={styles.closeDetailButton} 
+                                <TouchableOpacity
+                                    style={styles.closeDetailButton}
                                     onPress={closeModal}
                                 >
                                     <Text style={styles.closeDetailButtonText}>Close</Text>
@@ -255,22 +269,27 @@ export default function NotificationsScreen() {
                 </View>
             </Modal>
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Modal */}
             <Modal
                 visible={deleteTargetId !== null}
                 transparent
                 animationType="fade"
                 onRequestClose={() => setDeleteTargetId(null)}
             >
-                <Pressable style={styles.modalOverlay} onPress={() => setDeleteTargetId(null)}>
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setDeleteTargetId(null)}
+                >
                     <Pressable style={styles.modalCard} onPress={() => {}}>
                         <View style={styles.modalIconWrapper}>
-                            <Trash2 size={28} color="#ef4444" strokeWidth={2} />
+                            <Trash2 size={28} color="#ef4444" />
                         </View>
+
                         <Text style={styles.modalTitle}>Delete Notification</Text>
                         <Text style={styles.modalMessage}>
-                            Are you sure you want to delete this notification? This action cannot be undone.
+                            Are you sure you want to delete this notification?
                         </Text>
+
                         <View style={styles.modalActions}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
@@ -278,6 +297,7 @@ export default function NotificationsScreen() {
                             >
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={styles.confirmButton}
                                 onPress={confirmDelete}
@@ -291,6 +311,8 @@ export default function NotificationsScreen() {
         </SafeAreaView>
     );
 }
+
+// --- SAME STYLES BELOW ---
 
 const styles = StyleSheet.create({
     root: {

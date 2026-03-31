@@ -1,4 +1,4 @@
-import { fetchNotifications } from "@/api/notification"; // ✏️ same path as your notifications screen
+ // ✏️ same path as your notifications screen
 import { useAuth } from "@/context/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -80,9 +80,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="accounts"
+        name="members"
         options={{
-          title: "Accounts",
+          title: "members",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size ?? 24} color={color} />
           ),
@@ -108,7 +108,9 @@ export default function TabLayout() {
       />
 
       {/* ── Hidden Screens ── */}
-      <Tabs.Screen name="members" options={{ href: null }} />
+
+      
+      <Tabs.Screen name="accounts" options={{ href: null }} />
       <Tabs.Screen name="payments-collections" options={{ href: null }} />
       <Tabs.Screen name="news-events-promos" options={{ href: null }} />
       <Tabs.Screen name="reports-statement" options={{ href: null }} />

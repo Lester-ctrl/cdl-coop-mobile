@@ -70,7 +70,7 @@ export default function Accounts() {
           
         ))}
          {/* Reports Section */}
-      <View style={{ marginTop: 30 }}>
+      {/* <View style={{ marginTop: 30 }}>
         <Text style={styles.sectionTitle}>Member</Text>
 
         <TouchableOpacity
@@ -83,7 +83,7 @@ export default function Accounts() {
           </View>
           <Text style={styles.gridText}>Member</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
       </View>
     </ScrollView>
   );
