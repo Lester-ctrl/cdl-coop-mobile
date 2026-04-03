@@ -1,27 +1,29 @@
 import { editProfile } from "@/api/edit-profile";
 import { useAuth } from "@/context/AuthContext";
 import {
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const GREEN = "#3A8E0D";
@@ -56,6 +58,11 @@ export default function EditProfilePage() {
   const profile = session?.profile;
   const user = session?.user;
 
+  const rawAvatar = user?.image_path || null;
+  const existingAvatarUrl = rawAvatar
+    ? `${process.env.EXPO_PUBLIC_BASE_URL}/${rawAvatar}`
+    : null;
+
   const [firstName, setFirstName]       = useState(profile?.first_name    ?? "");
   const [middleName, setMiddleName]     = useState(profile?.middle_name   ?? "");
   const [lastName, setLastName]         = useState(profile?.last_name     ?? "");
@@ -63,45 +70,84 @@ export default function EditProfilePage() {
   const [email, setEmail]               = useState(profile?.email         ?? "");
   const [mobileNumber, setMobileNumber] = useState(profile?.mobile_number ?? "");
   const [address, setAddress]           = useState(profile?.address       ?? "");
+  const [avatarUri, setAvatarUri]       = useState<string | null>(null); // local picked image
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   if (!fontsLoaded) return null;
 
+  const handlePickImage = async () => {
+    // Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      setError("Permission to access photos is required.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      setAvatarUri(result.assets[0].uri);
+      setError(null);
+    }
+  };
+
   const handleSave = async () => {
     setError(null);
     setLoading(true);
 
     try {
-        const res = await editProfile({
-            profile_id: profile?.profile_id,
-            first_name:    firstName,
-            middle_name:   middleName,
-            last_name:     lastName,
-            birthdate,
-            email,
-            mobile_number: mobileNumber,
-            address,
-        });
+      // Build a FormData payload so we can attach the image if one was picked
+      const formData = new FormData();
+      formData.append("profile_id", String(profile?.profile_id ?? ""));
+      formData.append("first_name",    firstName);
+      formData.append("middle_name",   middleName);
+      formData.append("last_name",     lastName);
+      formData.append("birthdate",     birthdate);
+      formData.append("email",         email);
+      formData.append("mobile_number", mobileNumber);
+      formData.append("address",       address);
 
-        // await saveSession({
-        //     ...session,
-        //     profile: res.data,
-        // });
+      if (avatarUri) {
+        const filename = avatarUri.split("/").pop() ?? "avatar.jpg";
+        const ext      = filename.split(".").pop()?.toLowerCase() ?? "jpg";
+        const mimeType = ext === "png" ? "image/png" : "image/jpeg";
 
-        setSuccess(true);
-        setTimeout(() => {
-            setSuccess(false);
-            router.replace("/member/profile"); // adjust path to your profile page
-        }, 1500);
+        formData.append("image", {
+          uri:  avatarUri,
+          name: filename,
+          type: mimeType,
+        } as any);
+      }
 
+      const res = await editProfile(formData);
+
+      await saveSession({
+        user:      res.user ?? session!.user,  // <-- updated user with new image_path
+        role_name: session!.role_name,
+        profile:   res.data,
+      });
+
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        router.replace("/member/profile");
+      }, 1500);
     } catch (err: any) {
-        setError(err.message ?? "Something went wrong.");
+      setError(err.message ?? "Something went wrong.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
+
+  // Decide which avatar source to show: newly picked > existing > fallback
+  const displayAvatar = avatarUri ?? existingAvatarUrl;
 
   return (
     <SafeAreaView style={styles.root}>
@@ -123,6 +169,32 @@ export default function EditProfilePage() {
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <View style={{ width: 34 }} />
         </View>
+
+        {/* Avatar picker */}
+        <TouchableOpacity
+          style={styles.avatarWrapper}
+          onPress={handlePickImage}
+          activeOpacity={0.8}
+        >
+          {displayAvatar ? (
+            <Image
+              source={{ uri: displayAvatar }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Ionicons name="person" size={44} color={BLUE} />
+            </View>
+          )}
+
+          {/* Camera badge */}
+          <View style={styles.cameraBadge}>
+            <Ionicons name="camera" size={14} color="#fff" />
+          </View>
+        </TouchableOpacity>
+
+        <Text style={styles.changePhotoHint}>Tap to change photo</Text>
       </LinearGradient>
 
       <KeyboardAvoidingView
@@ -314,13 +386,18 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 16,
-    paddingBottom: 20,
+    paddingBottom: 28,
     paddingHorizontal: 16,
+    alignItems: "center",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    alignSelf: "stretch",
+    marginBottom: 20,
   },
   headerBtn: {
     width: 34,
@@ -335,6 +412,50 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: "Poppins_700Bold",
   },
+
+  /* Avatar */
+  avatarWrapper: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    overflow: "visible", // let badge escape
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.85)",
+    backgroundColor: ACTIVE_BG,
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  avatarFallback: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#EEF3FB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: BLUE,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  changePhotoHint: {
+    marginTop: 10,
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 12,
+    fontFamily: "Poppins_400Regular",
+  },
+
   scroll: {
     paddingHorizontal: 16,
     paddingBottom: 48,

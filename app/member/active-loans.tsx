@@ -181,6 +181,19 @@ export default function ActiveLoans() {
         setSelectedLoan(null);
     };
 
+    const getPaginationItems = (current: number, total: number): (number | string)[] => {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        if (current <= 3) {
+            return [1, 2, 3, "...", total];
+        }
+        if (current >= total - 2) {
+            return [1, "...", total - 2, total - 1, total];
+        }
+        return [1, "...", current - 1, current, current + 1, "...", total];
+    };
+
     const amortSchedule = useMemo(() => {
         if (!selectedLoan) return [];
         const dates = paidDates[String(selectedLoan.loan_account_id)] ?? [];
@@ -285,17 +298,23 @@ export default function ActiveLoans() {
                                         <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
                                     </TouchableOpacity>
 
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                        <TouchableOpacity
-                                            key={page}
-                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
-                                            onPress={() => setCurrentPage(page)}
-                                        >
-                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
-                                                {page}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
+                                    {getPaginationItems(currentPage, totalPages).map((item, index) =>
+                                        item === "..." ? (
+                                            <View key={`ellipsis-${index}`} style={styles.pageEllipsis}>
+                                                <Text style={styles.pageEllipsisText}>...</Text>
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity
+                                                key={item}
+                                                style={[styles.pageButton, currentPage === item && styles.pageButtonActive]}
+                                                onPress={() => setCurrentPage(item as number)}
+                                            >
+                                                <Text style={[styles.pageButtonText, currentPage === item && styles.pageButtonTextActive]}>
+                                                    {item}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )
+                                    )}
 
                                     <TouchableOpacity
                                         style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
@@ -960,5 +979,17 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins_400Regular",
         color: "#9CA3AF",
         lineHeight: 16,
+    },
+    pageEllipsis: {
+        width: 32,
+        height: 46,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    pageEllipsisText: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#94A3B8",
+        letterSpacing: 1,
     },
 });

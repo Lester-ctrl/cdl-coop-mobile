@@ -25,7 +25,7 @@ type Notification = {
     title: string;
     description: string;
     created_at: string;
-    status: "seen" | "unseen";   // New field from database
+    status: "seen" | "unseen";
 };
 
 export default function NotificationsScreen() {
@@ -45,7 +45,6 @@ export default function NotificationsScreen() {
         currentPage * ITEMS_PER_PAGE
     );
 
-    // Load notifications
     useFocusEffect(
         useCallback(()=>{
             if (!profile?.profile_id) return;
@@ -75,14 +74,10 @@ export default function NotificationsScreen() {
     });
   };
 
-    // Mark as seen and open modal
     const handleNotificationPress = async (notif: Notification) => {
         if (notif.status === "unseen") {
             try {
-                // Update backend
                 await markNotificationAsSeen(notif.id);
-                
-                // Update local state
                 setNotifications(prev =>
                     prev.map(n =>
                         n.id === notif.id ? { ...n, status: "seen" } : n
@@ -92,8 +87,6 @@ export default function NotificationsScreen() {
                 console.log("Failed to mark notification as seen");
             }
         }
-        
-        // Open modal
         setSelectedNotification(notif);
     };
 
@@ -119,6 +112,19 @@ export default function NotificationsScreen() {
         }
     };
 
+    const getPaginationItems = (current: number, total: number): (number | string)[] => {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        if (current <= 3) {
+            return [1, 2, 3, "...", total];
+        }
+        if (current >= total - 2) {
+            return [1, "...", total - 2, total - 1, total];
+        }
+        return [1, "...", current - 1, current, current + 1, "...", total];
+    };
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "#3A8E0D" }}
@@ -134,162 +140,163 @@ export default function NotificationsScreen() {
           <Text style={styles.heroTitle}>Notifications</Text>
         </LinearGradient>
 
-                <View style={styles.content}>
-                    {loading ? (
-                        <ActivityIndicator size="large" color="#3A8E0D" style={styles.loader} />
-                    ) : error ? (
-                        <Text style={styles.errorText}>{error}</Text>
-                    ) : notifications.length === 0 ? (
-                        <Text style={styles.emptyText}>No notifications yet.</Text>
-                    ) : (
-                        <>
-                            {paginatedNotifications.map((item) => (
-                                <TouchableOpacity
-                                    key={item.id}
-                                    style={[
-                                        styles.notifCard,
-                                        item.status === "unseen" && styles.unseenBorder
-                                    ]}
-                                    onPress={() => handleNotificationPress(item)}
-                                    activeOpacity={0.85}
-                                >
-                                    <View style={styles.notifHeader}>
-                                        <Text style={styles.notifTitle}>{item.title}</Text>
-                                        <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
-                                    </View>
-                                    <View style={styles.notifFooter}>
-                                        <Text 
-                                            style={styles.notifDescription}
-                                            numberOfLines={2}
-                                        >
-                                            {item.description}
-                                        </Text>
-                                        <TouchableOpacity
-                                            onPress={(e) => {
-                                                e.stopPropagation(); // Prevent opening modal when deleting
-                                                setDeleteTargetId(item.id);
-                                            }}
-                                            style={styles.deleteButton}
-                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                        >
-                                            <Trash2 size={22} color="#ef4444" strokeWidth={2} />
-                                        </TouchableOpacity>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
+        <View style={styles.content}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#3A8E0D" style={styles.loader} />
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : notifications.length === 0 ? (
+            <Text style={styles.emptyText}>No notifications yet.</Text>
+          ) : (
+            <>
+              {paginatedNotifications.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.notifCard,
+                    item.status === "unseen" && styles.unseenBorder
+                  ]}
+                  onPress={() => handleNotificationPress(item)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.notifHeader}>
+                    <Text style={styles.notifTitle}>{item.title}</Text>
+                    <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
+                  </View>
+                  <View style={styles.notifFooter}>
+                    <Text
+                      style={styles.notifDescription}
+                      numberOfLines={2}
+                    >
+                      {item.description}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setDeleteTargetId(item.id);
+                      }}
+                      style={styles.deleteButton}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Trash2 size={22} color="#ef4444" strokeWidth={2} />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))}
 
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <View style={styles.pagination}>
-                                    <TouchableOpacity
-                                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
-                                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                    >
-                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
-                                    </TouchableOpacity>
+              {totalPages > 1 && (
+                <View style={styles.pagination}>
+                    <TouchableOpacity
+                        style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                        onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                    </TouchableOpacity>
 
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                        <TouchableOpacity
-                                            key={page}
-                                            style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
-                                            onPress={() => setCurrentPage(page)}
-                                        >
-                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
-                                                {page}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-
-                                    <TouchableOpacity
-                                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
-                                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </>
+                    {getPaginationItems(currentPage, totalPages).map((item, index) =>
+                        item === "..." ? (
+                            <View key={`ellipsis-${index}`} style={styles.pageEllipsis}>
+                                <Text style={styles.pageEllipsisText}>...</Text>
+                            </View>
+                        ) : (
+                            <TouchableOpacity
+                                key={item}
+                                style={[styles.pageButton, currentPage === item && styles.pageButtonActive]}
+                                onPress={() => setCurrentPage(item as number)}
+                            >
+                                <Text style={[styles.pageButtonText, currentPage === item && styles.pageButtonTextActive]}>
+                                    {item}
+                                </Text>
+                            </TouchableOpacity>
+                        )
                     )}
+
+                    <TouchableOpacity
+                        style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                        onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                    >
+                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                    </TouchableOpacity>
                 </View>
-              </View>
-            ))
+            )}
+            </>
           )}
         </View>
       </ScrollView>
 
-            {/* Notification Detail Modal */}
-            <Modal
-                visible={!!selectedNotification}
-                transparent
-                animationType="slide"
-                onRequestClose={closeModal}
-            >
-                <View style={styles.modalOverlay}>
-                    <Pressable style={styles.modalBackdrop} onPress={closeModal} />
-                    <View style={styles.detailModal}>
-                        <View style={styles.modalHandle} />
+      {/* Notification Detail Modal */}
+      <Modal
+        visible={!!selectedNotification}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={closeModal} />
+          <View style={styles.detailModal}>
+            <View style={styles.modalHandle} />
 
-                        {selectedNotification && (
-                            <>
-                                <Text style={styles.detailTitle}>{selectedNotification.title}</Text>
-                                <Text style={styles.detailDate}>
-                                    {formatDate(selectedNotification.created_at)}
-                                </Text>
-                                <ScrollView style={styles.detailContent}>
-                                    <Text style={styles.detailDescription}>
-                                        {selectedNotification.description}
-                                    </Text>
-                                </ScrollView>
+            {selectedNotification && (
+              <>
+                <Text style={styles.detailTitle}>{selectedNotification.title}</Text>
+                <Text style={styles.detailDate}>
+                  {formatDate(selectedNotification.created_at)}
+                </Text>
+                <ScrollView style={styles.detailContent}>
+                  <Text style={styles.detailDescription}>
+                    {selectedNotification.description}
+                  </Text>
+                </ScrollView>
 
-                                <TouchableOpacity 
-                                    style={styles.closeDetailButton} 
-                                    onPress={closeModal}
-                                >
-                                    <Text style={styles.closeDetailButtonText}>Close</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
-                    </View>
-                </View>
-            </Modal>
+                <TouchableOpacity
+                  style={styles.closeDetailButton}
+                  onPress={closeModal}
+                >
+                  <Text style={styles.closeDetailButtonText}>Close</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
 
-            {/* Delete Confirmation Modal */}
-            <Modal
-                visible={deleteTargetId !== null}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setDeleteTargetId(null)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setDeleteTargetId(null)}>
-                    <Pressable style={styles.modalCard} onPress={() => {}}>
-                        <View style={styles.modalIconWrapper}>
-                            <Trash2 size={28} color="#ef4444" strokeWidth={2} />
-                        </View>
-                        <Text style={styles.modalTitle}>Delete Notification</Text>
-                        <Text style={styles.modalMessage}>
-                            Are you sure you want to delete this notification? This action cannot be undone.
-                        </Text>
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setDeleteTargetId(null)}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.confirmButton}
-                                onPress={confirmDelete}
-                            >
-                                <Text style={styles.confirmButtonText}>Delete</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Pressable>
-                </Pressable>
-            </Modal>
-        </SafeAreaView>
-    );
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteTargetId !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteTargetId(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setDeleteTargetId(null)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalIconWrapper}>
+              <Trash2 size={28} color="#ef4444" strokeWidth={2} />
+            </View>
+            <Text style={styles.modalTitle}>Delete Notification</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to delete this notification? This action cannot be undone.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDeleteTargetId(null)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.confirmButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -330,8 +337,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "600",
     },
-
-    // Notification Card with Green Border for Unseen
     notifCard: {
         backgroundColor: "#ffffff",
         borderRadius: 14,
@@ -346,9 +351,8 @@ const styles = StyleSheet.create({
         borderLeftColor: "transparent",
     },
     unseenBorder: {
-        borderLeftColor: GREEN,   // Green left border for unseen
+        borderLeftColor: GREEN,
     },
-
     notifHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -382,8 +386,6 @@ const styles = StyleSheet.create({
     deleteButton: {
         padding: 4,
     },
-
-    // Pagination (unchanged)
     pagination: {
         flexDirection: "row",
         alignItems: "center",
@@ -416,8 +418,6 @@ const styles = StyleSheet.create({
     pageButtonTextActive: {
         color: "#FFFFFF",
     },
-
-    // Detail Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.45)",
@@ -474,8 +474,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-
-    // Delete Modal (unchanged)
     modalCard: {
         backgroundColor: "#ffffff",
         borderRadius: 20,
@@ -536,5 +534,17 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "600",
         color: "#ffffff",
+    },
+    pageEllipsis: {
+        width: 32,
+        height: 46,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    pageEllipsisText: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#94A3B8",
+        letterSpacing: 1,
     },
 });

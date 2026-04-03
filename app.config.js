@@ -37,7 +37,8 @@ export default {
           dark: { backgroundColor: "#000000" },
         },
       ],
-      "expo-font"
+      "expo-font",
+      ["expo-image-picker", { "photosPermission": "Allow access to upload a profile photo." }]
     ],
 
     experiments: {

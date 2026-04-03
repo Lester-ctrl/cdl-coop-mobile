@@ -1,29 +1,21 @@
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
-export async function editProfile(formData: {
-    profile_id: number | undefined;
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    birthdate: string;
-    email: string;
-    mobile_number: string;
-    address: string;
-}) {
+export async function editProfile(formData: FormData) {
   const response = await fetch(`${BASE_URL}/api/edit-profile`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       "Accept": "application/json",
+      // Note: Do NOT set Content-Type manually — fetch will automatically
+      // set it to multipart/form-data with the correct boundary when given FormData.
     },
-    body: JSON.stringify(formData),
+    body: formData,
   });
 
   const data = await response.json();
 
   if (!response.ok) {
     throw new Error(data.error || data.message || "Update failed.");
-  }
+  } 
 
   return data;
 }

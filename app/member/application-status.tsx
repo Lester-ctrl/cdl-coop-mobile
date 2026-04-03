@@ -142,6 +142,19 @@ export default function ApplicationStatus() {
         }
     };
 
+    const getPaginationItems = (current: number, total: number): (number | string)[] => {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        if (current <= 3) {
+            return [1, 2, 3, "...", total];
+        }
+        if (current >= total - 2) {
+            return [1, "...", total - 2, total - 1, total];
+        }
+        return [1, "...", current - 1, current, current + 1, "...", total];
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
             <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
@@ -193,36 +206,42 @@ export default function ApplicationStatus() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <View style={styles.pagination}>
-                            <TouchableOpacity
-                                style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
-                                onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                            >
-                                <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
-                            </TouchableOpacity>
+                    <View style={styles.pagination}>
+                        <TouchableOpacity
+                            style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                            onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                        </TouchableOpacity>
 
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        {getPaginationItems(currentPage, totalPages).map((item, index) =>
+                            item === "..." ? (
+                                <View key={`ellipsis-${index}`} style={styles.pageEllipsis}>
+                                    <Text style={styles.pageEllipsisText}>...</Text>
+                                </View>
+                            ) : (
                                 <TouchableOpacity
-                                    key={page}
-                                    style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
-                                    onPress={() => setCurrentPage(page)}
+                                    key={item}
+                                    style={[styles.pageButton, currentPage === item && styles.pageButtonActive]}
+                                    onPress={() => setCurrentPage(item as number)}
                                 >
-                                    <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
-                                        {page}
+                                    <Text style={[styles.pageButtonText, currentPage === item && styles.pageButtonTextActive]}>
+                                        {item}
                                     </Text>
                                 </TouchableOpacity>
-                            ))}
+                            )
+                        )}
 
-                            <TouchableOpacity
-                                style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
-                                onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                            >
-                                <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                        <TouchableOpacity
+                            style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                            onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                        </TouchableOpacity>
+                    </View>
+                )}
                 </View>
             </ScrollView>
 
@@ -690,5 +709,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Poppins_600SemiBold",
         color: "#FFFFFF",
+    },
+    pageEllipsis: {
+        width: 32,
+        height: 46,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    pageEllipsisText: {
+        fontSize: 14,
+        fontFamily: "Poppins_600SemiBold",
+        color: "#94A3B8",
+        letterSpacing: 1,
     },
 });
