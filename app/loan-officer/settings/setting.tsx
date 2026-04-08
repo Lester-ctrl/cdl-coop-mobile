@@ -4,12 +4,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import {
-    Alert,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function LoanOfficerSettings() {
@@ -32,7 +32,7 @@ export default function LoanOfficerSettings() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        colors={["#065f46", "#10b981", "#6ee7b7"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -50,7 +50,7 @@ export default function LoanOfficerSettings() {
           onPress={() => router.push("/loan-officer/profiles/profile")}
         >
           <View style={styles.iconCircle}>
-            <Ionicons name="person-outline" size={22} color="#2563EB" />
+            <Ionicons name="person-outline" size={22} color="#10b981" />
           </View>
           <Text style={styles.itemText}>Profile</Text>
           <Ionicons
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#e0e7ff",
+    backgroundColor: "#d1fae5",
     alignItems: "center",
     justifyContent: "center",
   },

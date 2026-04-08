@@ -2,7 +2,7 @@ const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export async function editProfile(profileId: string, data: any) {
   const response = await fetch(
-    `${BASE_URL}/loan-officer/profile/${profileId}`,
+    `${BASE_URL}/api/loan-officer/profile/${profileId}`,
     {
       method: "PUT",
       credentials: "include",

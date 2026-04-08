@@ -35,7 +35,7 @@ const SAMPLE_NOTIFICATIONS: Notification[] = [
     timestamp: "5 hours ago",
     read: false,
     icon: "download",
-    color: "#3b82f6",
+    color: "#10b981",
   },
   // {
   //   id: "3",
