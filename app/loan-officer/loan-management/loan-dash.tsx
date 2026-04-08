@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
@@ -62,12 +62,6 @@ export default function LoanManagementDashboard() {
           >
             <Ionicons name={card.icon as any} size={32} color={card.color} />
             <Text style={styles.cardLabel}>{card.label}</Text>
-            <MaterialIcons
-              name="arrow-forward-ios"
-              size={18}
-              color="#64748B"
-              style={{ marginTop: 8 }}
-            />
           </TouchableOpacity>
         ))}
       </View>
