@@ -132,7 +132,6 @@ export default function LoanOfficerLoanManagement() {
         </Text>
 
         <View style={styles.tableRowHeader}>
-          <Text style={[styles.cell, styles.headerCell]}>ID</Text>
           <Text style={[styles.cell, styles.headerCell]}>Full Name</Text>
           <Text style={[styles.cell, styles.headerCell]}>Branch Name</Text>
           <Text style={[styles.cell, styles.headerCell]}>Status</Text>
@@ -140,7 +139,7 @@ export default function LoanOfficerLoanManagement() {
 
         {filteredMembers.map((member) => (
           <View style={styles.tableRow} key={member.id}>
-            <Text style={styles.cell}>{member.id}</Text>
+            
 
             <TouchableOpacity
               style={styles.cell}
@@ -181,7 +180,6 @@ export default function LoanOfficerLoanManagement() {
             {selectedMember && !memberLoading && (
               <View>
                 <Text style={styles.modalTitle}>{selectedMember.full_name}</Text>
-                <Text>ID: {selectedMember.id}</Text>
                 <Text>Member No: {selectedMember.member_no || "N/A"}</Text>
                 <Text>Branch: {selectedMember.branch_name}</Text>
                 <Text>Email: {selectedMember.email || "N/A"}</Text>
