@@ -1,7 +1,8 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -10,24 +11,26 @@ import {
   View,
 } from "react-native";
 
-const stats = [
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
+
+const defaultStats = [
   {
-    label: "Active Loans",
-    value: "3",
+    label: "Approved Loans",
+    value: "0",
     icon: "card-outline",
     bg: "#DCFCE7",
     color: "#16A34A",
   },
   {
     label: "Partial Payments",
-    value: "3",
+    value: "0",
     icon: "wallet-outline",
     bg: "#DCFCE7",
     color: "#16A34A",
   },
   {
     label: "Pending Apps",
-    value: "5",
+    value: "0",
     icon: "document-text-outline",
     bg: "#FEF9C3",
     color: "#F59E42",
@@ -70,7 +73,82 @@ const sections = [
   },
 ] as const;
 
+const getToken = async (): Promise<string | null> => {
+  try {
+    const stored = await AsyncStorage.getItem("session");
+    if (!stored) return null;
+    return JSON.parse(stored)?.token ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export default function LoanOfficerDashboard() {
+  const [stats, setStats] = useState(defaultStats);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch(
+        `${BASE_URL}/api/loan-applications?per_page=200`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        },
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch loan applications");
+
+      const data = await res.json();
+      const loanAppList = data.data || [];
+
+      // Count active loans (Approved status with active loan account)
+      const activeLoansCount = loanAppList.filter(
+        (loan: any) =>
+          loan.status === "Approved" && loan.loanAccount?.status === "Active",
+      ).length;
+
+      // Count pending applications
+      const pendingAppsCount = loanAppList.filter(
+        (loan: any) => loan.status === "Pending",
+      ).length;
+
+      // Update stats
+      setStats([
+        {
+          label: "Approved Loans",
+          value: activeLoansCount.toString(),
+          icon: "card-outline",
+          bg: "#DCFCE7",
+          color: "#16A34A",
+        },
+        {
+          label: "Partial Payments",
+          value: "0",
+          icon: "wallet-outline",
+          bg: "#DCFCE7",
+          color: "#16A34A",
+        },
+        {
+          label: "Pending Apps",
+          value: pendingAppsCount.toString(),
+          icon: "document-text-outline",
+          bg: "#FEF9C3",
+          color: "#F59E42",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      // Keep default stats on error
+    }
+  };
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
