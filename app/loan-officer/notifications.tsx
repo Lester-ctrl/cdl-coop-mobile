@@ -138,7 +138,7 @@ export default function Notifications() {
           />
           <Text style={styles.emptyText}>No notifications</Text>
           <Text style={styles.emptySubtext}>
-            You're all caught up! Check back later.
+            Youre all caught up! Check back later.
           </Text>
         </View>
       )}

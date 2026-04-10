@@ -24,6 +24,7 @@ export interface SessionData {
   user: UserData;
   profile: Profile;
   role_name: string;
+  token: string;
 }
 
 interface AuthContextType {
