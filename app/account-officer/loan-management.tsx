@@ -3,14 +3,13 @@ import {
   ActivityIndicator,
   FlatList,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 const Base_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
@@ -20,13 +19,17 @@ export default function LoansScreen() {
   const [error, setError] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const navigation = useNavigation();
+  const router = useRouter(); // ✅ FIXED
 
   const fetchLoans = async () => {
     try {
       const response = await fetch(`${Base_URL}/loan/all`);
       const json = await response.json();
-      if (!response.ok) throw new Error(json.message || "Failed to fetch loans");
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to fetch loans");
+      }
+
       setLoans(json);
     } catch (err) {
       setError(err.message);
@@ -40,58 +43,107 @@ export default function LoansScreen() {
   }, []);
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "approved": return "green";
-      case "pending": return "orange";
-      case "rejected": return "red";
-      default: return "#555";
+    switch ((status || "").toLowerCase()) {
+      case "approved":
+        return "#16a34a";
+      case "pending":
+        return "#f59e0b";
+      case "rejected":
+        return "#ef4444";
+      default:
+        return "#6b7280";
     }
   };
 
   const filteredLoans = loans.filter((loan) =>
-    (loan.member_name || "").toLowerCase().includes(searchText.toLowerCase())
+    (loan.member_name || "")
+      .toLowerCase()
+      .includes(searchText.toLowerCase())
   );
 
   const renderLoan = ({ item }) => (
-    <View style={styles.row}>
-      <TouchableOpacity
-        style={[styles.cell, styles.link]}
-        onPress={() =>
-          navigation.navigate("loanedit", { loanId: item.loan_application_id })
-        }
-      >
-        <Text>{item.member_name}</Text>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() =>
+        router.push({
+          pathname: "/account-officer/loans_edit/loanedit",
+          params: { loanId: item.loan_application_id },
+        })
+      }
+    >
+      {/* HEADER */}
+      <View style={styles.cardHeader}>
+        <View>
+          <Text style={styles.name}>{item.member_name}</Text>
+          <Text style={styles.subtitle}>{item.loan_type}</Text>
+        </View>
 
-      <Text style={styles.cell}>{item.loan_type}</Text>
-      <Text style={styles.cell}>₱{item.amount_requested}</Text>
-      <Text style={[styles.cell, { color: getStatusColor(item.loan_status) }]}>
-        {item.loan_status}
-      </Text>
-      <Text style={styles.cell}>{item.term_months} mo</Text>
-      <Text style={styles.cell}>{item.release_date || "Pending"}</Text>
-    </View>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.loan_status) },
+          ]}
+        >
+          <Text style={styles.statusText}>
+            {item.loan_status?.toUpperCase()}
+          </Text>
+        </View>
+      </View>
+
+      {/* BODY */}
+      <View style={styles.cardBody}>
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>AMOUNT</Text>
+          <Text style={styles.value}>₱{item.amount_requested}</Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>TERM</Text>
+          <Text style={styles.value}>{item.term_months} Months</Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>RELEASE DATE</Text>
+          <Text style={styles.value}>
+            {item.release_date || "Pending"}
+          </Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>ID</Text>
+          <Text style={styles.value}>
+            #{item.loan_application_id}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
-  if (loading) return (
-    <View style={styles.center}>
-      <ActivityIndicator size="large" />
-      <Text>Loading...</Text>
-    </View>
-  );
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
-  if (error) return (
-    <View style={styles.center}>
-      <Text style={{ color: "red" }}>{error}</Text>
-    </View>
-  );
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Loan Management</Text>
       </View>
 
+      {/* SEARCH */}
       <TextInput
         style={styles.search}
         placeholder="Search member..."
@@ -99,37 +151,109 @@ export default function LoansScreen() {
         onChangeText={setSearchText}
       />
 
-      <ScrollView>
-        <View style={styles.table}>
-          <View style={styles.headerRow}>
-            <Text style={styles.cell}>Member</Text>
-            <Text style={styles.cell}>Type</Text>
-            <Text style={styles.cell}>Amount</Text>
-            <Text style={styles.cell}>Status</Text>
-            <Text style={styles.cell}>Term</Text>
-            <Text style={styles.cell}>Release</Text>
-          </View>
-
-          <FlatList
-            data={filteredLoans}
-            keyExtractor={(i) => i.loan_application_id.toString()}
-            renderItem={renderLoan}
-          />
-        </View>
-      </ScrollView>
+      {/* LIST */}
+      <FlatList
+        data={filteredLoans}
+        keyExtractor={(item) =>
+          item.loan_application_id.toString()
+        }
+        renderItem={renderLoan}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f3f6fb" },
-  header: { backgroundColor: "#099a1c", padding: 50, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
-  title: { color: "#fff", fontSize: 22, fontWeight: "bold", flex: 1, textAlign: "center", marginTop: -28 },
-  search: { backgroundColor: "#fff", margin: 15, padding: 10, borderRadius: 10 },
-  table: { margin: 10, backgroundColor: "#fff", borderRadius: 10 },
-  headerRow: { flexDirection: "row", backgroundColor: "#eee", padding: 10 },
-  row: { flexDirection: "row", padding: 10, borderBottomWidth: 1, borderColor: "#eee" },
-  cell: { flex: 1, textAlign: "center", fontSize: 12 },
-  link: { color: "blue", fontWeight: "bold" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  header: {
+    backgroundColor: "#099a1c",
+    padding: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: -28,
+  },
+
+  search: {
+    backgroundColor: "#fff",
+    margin: 15,
+    padding: 10,
+    borderRadius: 10,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginBottom: 12,
+    borderRadius: 16,
+    padding: 15,
+    elevation: 3,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111",
+  },
+
+  subtitle: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+
+  statusText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+
+  cardBody: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+
+  infoBox: {
+    width: "48%",
+    marginBottom: 10,
+  },
+
+  label: {
+    fontSize: 10,
+    color: "#888",
+    fontWeight: "600",
+  },
+
+  value: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#222",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

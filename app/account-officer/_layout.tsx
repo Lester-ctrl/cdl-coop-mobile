@@ -110,6 +110,9 @@ export default function TabLayout() {
       {/* ── Hidden Screens ── */}
 
       
+  
+
+      <Tabs.Screen name="loans_edit/loanedit" options={{ href: null }} />
       <Tabs.Screen name="loanedit" options={{ href: null }} />
       <Tabs.Screen name="accounts" options={{ href: null }} />
       <Tabs.Screen name="payments-collections" options={{ href: null }} />
