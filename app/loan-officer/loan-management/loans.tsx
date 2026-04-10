@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -6,6 +7,7 @@ import {
   Animated,
   Dimensions,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -21,12 +23,9 @@ import {
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface LoanApplication {
   loan_application_id: string;
   status: string;
-  collateral_status?: string;
   amount_requested?: number;
   term_months?: number;
   approved_at?: string | null;
@@ -50,8 +49,6 @@ interface PenaltyRule {
   id: number;
   name: string;
 }
-
-// ─── Custom Icons ────────────────────────────────────────────────────────────
 
 function VerticalEllipsis({
   size = 20,
@@ -179,7 +176,126 @@ function CloseIcon({
   );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── PDF Modal ────────────────────────────────────────────────────────────────
+
+function PdfModal({
+  visible,
+  url,
+  loanId,
+  onClose,
+}: {
+  visible: boolean;
+  url: string | null;
+  loanId: string;
+  onClose: () => void;
+}) {
+  const [opening, setOpening] = useState(false);
+
+  const handleOpen = async () => {
+    if (!url) return;
+    setOpening(true);
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Unable to open this URL on your device.");
+      }
+    } catch {
+      Alert.alert("Error", "Failed to open the PDF link.");
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={pdfStyles.overlay}>
+        <View style={pdfStyles.card}>
+          {/* Header row */}
+          <View style={pdfStyles.headerRow}>
+            <View style={pdfStyles.iconBox}>
+              <View style={pdfStyles.pdfIconRed}>
+                <Text style={pdfStyles.pdfIconText}>PDF</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={pdfStyles.closeBtn}
+            >
+              <CloseIcon size={20} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={pdfStyles.title}>Loan Form Ready</Text>
+          <Text style={pdfStyles.subtitle}>
+            Loan Application <Text style={pdfStyles.bold}>#{loanId}</Text>
+          </Text>
+
+          {/* URL display box - CLICKABLE LINK */}
+          <View style={pdfStyles.urlBox}>
+            <Text style={pdfStyles.urlLabel}>PDF Link</Text>
+            {url ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(url)}
+                activeOpacity={0.7}
+              >
+                <Text style={pdfStyles.urlText} selectable>
+                  {url}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={pdfStyles.urlText}>No PDF URL</Text>
+            )}
+          </View>
+
+          {/* Open in Browser button */}
+          {url && (
+            <TouchableOpacity
+              style={pdfStyles.browserBtn}
+              onPress={() => Linking.openURL(url)}
+              activeOpacity={0.8}
+            >
+              <Text style={pdfStyles.browserBtnText}>🌐 Open in Browser</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Open PDF button */}
+          <TouchableOpacity
+            style={[
+              pdfStyles.openBtn,
+              (!url || opening) && pdfStyles.openBtnDisabled,
+            ]}
+            onPress={handleOpen}
+            disabled={!url || opening}
+            activeOpacity={0.8}
+          >
+            {opening ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={pdfStyles.openBtnText}>⬇ Open / Download PDF</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Dismiss */}
+          <TouchableOpacity
+            style={pdfStyles.dismissBtn}
+            onPress={onClose}
+            activeOpacity={0.7}
+          >
+            <Text style={pdfStyles.dismissBtnText}>Dismiss</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 const getMemberName = (loan: LoanApplication): string => {
   const { first_name, last_name } = loan.member?.profile ?? {};
@@ -205,7 +321,15 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Cancelled: { bg: "#f1f5f9", text: "#475569" },
 };
 
-// ─── API calls ────────────────────────────────────────────────────────────────
+const getToken = async (): Promise<string | null> => {
+  try {
+    const stored = await AsyncStorage.getItem("session");
+    if (!stored) return null;
+    return JSON.parse(stored)?.token ?? null;
+  } catch {
+    return null;
+  }
+};
 
 const api = async (
   method: string,
@@ -213,11 +337,13 @@ const api = async (
   body?: Record<string, unknown>,
 ): Promise<{ ok: boolean; data?: unknown; message?: string }> => {
   try {
+    const token = await getToken();
     const res = await fetch(`${BASE_URL}/api${path}`, {
       method,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -249,15 +375,14 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
     | "reloan"
     | "reject"
     | "setPenalty"
-    | "releaseConfirm"
     | "approveConfirm"
     | "cancelConfirm"
     | "underReviewConfirm"
-    | "approveCollateralConfirm"
-    | "requestCorrectionConfirm"
   >(null);
 
-  // sub-form states
+  const [pdfModalVisible, setPdfModalVisible] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
   const [reloanAmount, setReloanAmount] = useState("");
   const [reloanTerm, setReloanTerm] = useState("");
   const [rejectReason, setRejectReason] = useState("");
@@ -314,20 +439,12 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
     }
   };
 
-  // ── Visibility guards ──────────────────────────────────────────────────
-
   const id = loan.loan_application_id;
   const status = loan.status;
-  const amount = parseFloat(String(loan.amount_requested ?? 0));
   const hasAccount = !!loan.loanAccount;
   const accountActive = loan.loanAccount?.status === "Active";
-  const collStatus = loan.collateral_status;
-  const pendingCoal = amount > 15000 && collStatus === "Pending Verification";
 
-  const showReleaseNow = status === "Approved" && !hasAccount;
   const showReloan = hasAccount && accountActive;
-  const showApproveCollateral = pendingCoal;
-  const showRequestCorrection = pendingCoal;
   const showSetPenalty = ["Pending", "Under Review", "Approved"].includes(
     status,
   );
@@ -336,7 +453,6 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
   const showReject = ["Pending", "Under Review"].includes(status);
   const showCancel = ["Pending", "Under Review"].includes(status);
 
-  // fetch penalty rules when needed
   const openSetPenalty = async () => {
     const res = await api("GET", "/penalty-rules?status=active");
     if (res.ok && Array.isArray((res.data as any)?.data)) {
@@ -345,32 +461,22 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
     setSubModal("setPenalty");
   };
 
-  // ── Action items list ─────────────────────────────────────────────────────
+  const handleDownloadForm = async () => {
+    const res = await api("GET", `/loan-applications/${id}/download-form`);
+    if (res.ok) {
+      setPdfUrl((res.data as any)?.pdf_url ?? null);
+      setPdfModalVisible(true);
+    } else {
+      Alert.alert("Error", res.message ?? "Failed to get PDF URL");
+    }
+  };
 
   const actions = [
-    {
-      label: "Release Now",
-      color: "#059669",
-      show: showReleaseNow,
-      onPress: () => setSubModal("releaseConfirm"),
-    },
     {
       label: "Reloan",
       color: "#d97706",
       show: showReloan,
       onPress: () => setSubModal("reloan"),
-    },
-    {
-      label: "Approve Collateral",
-      color: "#059669",
-      show: showApproveCollateral,
-      onPress: () => setSubModal("approveCollateralConfirm"),
-    },
-    {
-      label: "Request Correction",
-      color: "#dc2626",
-      show: showRequestCorrection,
-      onPress: () => setSubModal("requestCorrectionConfirm"),
     },
     {
       label: "Set Penalty Rule",
@@ -388,15 +494,7 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       label: "Download Loan Form",
       color: "#059669",
       show: true,
-      onPress: async () => {
-        const res = await api("GET", `/loan-applications/${id}/download-form`);
-        if (res.ok) {
-          const url = (res.data as any)?.pdf_url;
-          Alert.alert("PDF Ready", url ?? "URL not available");
-        } else {
-          Alert.alert("Error", res.message);
-        }
-      },
+      onPress: handleDownloadForm,
     },
     {
       label: "Approve",
@@ -418,56 +516,13 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
     },
   ].filter((a) => a.show);
 
-  // ── Sub-modals ─────────────────────────────────────────────────────────────
-
   const renderSubModal = () => {
     if (!subModal) return null;
 
-    // ── Release confirm ──────────────────────────────────────────────────────
-    if (subModal === "releaseConfirm") {
-      const releaseDate = new Date().toLocaleDateString("en-PH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const maturity = new Date();
-      maturity.setMonth(maturity.getMonth() + (loan.term_months ?? 0));
-      const maturityDate = maturity.toLocaleDateString("en-PH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      return (
-        <SubModal title="Release Now" onClose={() => setSubModal(null)}>
-          <Text style={sub.body}>Set release date to:</Text>
-          <Text style={sub.highlight}>{releaseDate}</Text>
-          <Text style={[sub.body, { marginTop: 8 }]}>Maturity date:</Text>
-          <Text style={sub.highlight}>{maturityDate}</Text>
-          <ConfirmRow
-            busy={busy}
-            onCancel={() => setSubModal(null)}
-            onConfirm={() =>
-              act(() =>
-                doAction(
-                  "POST",
-                  `/loan-applications/${id}/release`,
-                  undefined,
-                  "Loan account created and released successfully.",
-                ),
-              )
-            }
-          />
-        </SubModal>
-      );
-    }
-
-    // ── Reloan form ──────────────────────────────────────────────────────────
     if (subModal === "reloan") {
       const acct = loan.loanAccount;
       const paid = (acct?.principal_amount ?? 0) - (acct?.balance ?? 0);
       const required = (acct?.principal_amount ?? 0) * 0.5;
-
       return (
         <SubModal title="Reloan Application" onClose={() => setSubModal(null)}>
           <View style={sub.infoBox}>
@@ -524,63 +579,6 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       );
     }
 
-    // ── Approve Collateral confirm ────────────────────────────────────────────
-    if (subModal === "approveCollateralConfirm") {
-      return (
-        <SubModal title="Approve Collateral" onClose={() => setSubModal(null)}>
-          <Text style={sub.body}>
-            Approve the collateral for loan application{" "}
-            <Text style={sub.bold}>#{id}</Text>?
-          </Text>
-          <ConfirmRow
-            busy={busy}
-            label="Approve"
-            confirmColor="#059669"
-            onCancel={() => setSubModal(null)}
-            onConfirm={() =>
-              act(() =>
-                doAction(
-                  "POST",
-                  `/loan-applications/${id}/approve-collateral`,
-                  undefined,
-                  "Collateral approved.",
-                ),
-              )
-            }
-          />
-        </SubModal>
-      );
-    }
-
-    // ── Request Correction confirm ────────────────────────────────────────────
-    if (subModal === "requestCorrectionConfirm") {
-      return (
-        <SubModal title="Request Correction" onClose={() => setSubModal(null)}>
-          <Text style={sub.body}>
-            Mark the collateral for loan <Text style={sub.bold}>#{id}</Text> as
-            requiring correction?
-          </Text>
-          <ConfirmRow
-            busy={busy}
-            label="Confirm"
-            confirmColor="#dc2626"
-            onCancel={() => setSubModal(null)}
-            onConfirm={() =>
-              act(() =>
-                doAction(
-                  "POST",
-                  `/loan-applications/${id}/request-correction`,
-                  undefined,
-                  "Collateral marked for correction.",
-                ),
-              )
-            }
-          />
-        </SubModal>
-      );
-    }
-
-    // ── Set Penalty Rule ─────────────────────────────────────────────────────
     if (subModal === "setPenalty") {
       return (
         <SubModal title="Set Penalty Rule" onClose={() => setSubModal(null)}>
@@ -629,7 +627,6 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       );
     }
 
-    // ── Mark Under Review confirm ─────────────────────────────────────────────
     if (subModal === "underReviewConfirm") {
       return (
         <SubModal title="Mark Under Review" onClose={() => setSubModal(null)}>
@@ -657,12 +654,12 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       );
     }
 
-    // ── Approve confirm ───────────────────────────────────────────────────────
     if (subModal === "approveConfirm") {
       return (
         <SubModal title="Approve Application" onClose={() => setSubModal(null)}>
           <Text style={sub.body}>
-            Approve loan application <Text style={sub.bold}>#{id}</Text>?
+            Approve loan application <Text style={sub.bold}>#{id}</Text>? This
+            cannot be undone.
           </Text>
           <ConfirmRow
             busy={busy}
@@ -684,7 +681,6 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       );
     }
 
-    // ── Reject form ───────────────────────────────────────────────────────────
     if (subModal === "reject") {
       return (
         <SubModal title="Reject Application" onClose={() => setSubModal(null)}>
@@ -720,7 +716,6 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
       );
     }
 
-    // ── Cancel confirm ────────────────────────────────────────────────────────
     if (subModal === "cancelConfirm") {
       return (
         <SubModal title="Cancel Application" onClose={() => setSubModal(null)}>
@@ -751,76 +746,78 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
     return null;
   };
 
-  // ── Bottom sheet ─────────────────────────────────────────────────────────
-
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={close}
-    >
-      <Pressable style={styles.overlay} onPress={close} />
-      <Animated.View
-        style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="none"
+        onRequestClose={close}
       >
-        {/* drag handle */}
-        <View style={styles.handle} />
-        <Text style={styles.sheetTitle}>{getMemberName(loan)}</Text>
-        <Text style={styles.sheetSubtitle}>#{loan.loan_application_id}</Text>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={{ maxHeight: SCREEN_HEIGHT * 0.55 }}
+        <Pressable style={styles.overlay} onPress={close} />
+        <Animated.View
+          style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
         >
-          {actions.map((action) => (
-            <TouchableOpacity
-              key={action.label}
-              style={styles.actionRow}
-              onPress={action.onPress}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.actionDot,
-                  { backgroundColor: action.color + "18" },
-                ]}
+          <View style={styles.handle} />
+          <Text style={styles.sheetTitle}>{getMemberName(loan)}</Text>
+          <Text style={styles.sheetSubtitle}>#{loan.loan_application_id}</Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: SCREEN_HEIGHT * 0.55 }}
+          >
+            {actions.map((action) => (
+              <TouchableOpacity
+                key={action.label}
+                style={styles.actionRow}
+                onPress={action.onPress}
+                activeOpacity={0.7}
               >
                 <View
                   style={[
-                    styles.actionDotInner,
-                    { backgroundColor: action.color },
+                    styles.actionDot,
+                    { backgroundColor: action.color + "18" },
                   ]}
-                />
-              </View>
-              <Text style={[styles.actionLabel, { color: action.color }]}>
-                {action.label}
-              </Text>
-              <ChevronRight size={16} color="#cbd5e1" />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                >
+                  <View
+                    style={[
+                      styles.actionDotInner,
+                      { backgroundColor: action.color },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.actionLabel, { color: action.color }]}>
+                  {action.label}
+                </Text>
+                <ChevronRight size={16} color="#cbd5e1" />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.closeBtn} onPress={close}>
+            <Text style={styles.closeBtnText}>Close</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
-        <TouchableOpacity style={styles.closeBtn} onPress={close}>
-          <Text style={styles.closeBtnText}>Close</Text>
-        </TouchableOpacity>
-      </Animated.View>
+        {subModal && (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="box-none"
+          >
+            <View style={styles.subOverlay}>{renderSubModal()}</View>
+          </KeyboardAvoidingView>
+        )}
+      </Modal>
 
-      {/* Sub-modal overlay */}
-      {subModal && (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="box-none"
-        >
-          <View style={styles.subOverlay}>{renderSubModal()}</View>
-        </KeyboardAvoidingView>
-      )}
-    </Modal>
+      {/* PDF modal is outside the action sheet Modal to avoid Android nesting issues */}
+      <PdfModal
+        visible={pdfModalVisible}
+        url={pdfUrl}
+        loanId={id}
+        onClose={() => setPdfModalVisible(false)}
+      />
+    </>
   );
 }
-
-// ─── Reusable sub-components ─────────────────────────────────────────────────
 
 function SubModal({
   title,
@@ -884,8 +881,6 @@ function ConfirmRow({
   );
 }
 
-// ─── Main screen ─────────────────────────────────────────────────────────────
-
 export default function Loans() {
   const [search, setSearch] = useState("");
   const [min, setMin] = useState("");
@@ -901,12 +896,18 @@ export default function Loans() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${BASE_URL}/api/loan-applications?per_page=50`);
+      const token = await getToken();
+      const res = await fetch(`${BASE_URL}/api/loan-applications?per_page=50`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
       if (!res.ok) throw new Error("Failed to fetch loan applications");
       const data = await res.json();
-      const loansData = data.data || [];
-      setLoans(loansData);
-      setFilteredLoans(loansData);
+      setLoans(data.data || []);
+      setFilteredLoans(data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error fetching loans");
     } finally {
@@ -1008,7 +1009,6 @@ export default function Loans() {
               const sc = STATUS_COLORS[loan.status] ?? STATUS_COLORS.Pending;
               return (
                 <View key={loan.loan_application_id} style={styles.loanCard}>
-                  {/* header row */}
                   <View style={styles.loanHeader}>
                     <Text style={styles.memberName} numberOfLines={1}>
                       {getMemberName(loan)}
@@ -1021,11 +1021,7 @@ export default function Loans() {
                       <VerticalEllipsis size={20} color="#64748b" />
                     </TouchableOpacity>
                   </View>
-
-                  {/* ID row */}
                   <Text style={styles.loanId}>#{loan.loan_application_id}</Text>
-
-                  {/* amount + balance */}
                   <View style={styles.amountRow}>
                     <View style={styles.amountBox}>
                       <Text style={styles.amountLabel}>Requested</Text>
@@ -1046,8 +1042,6 @@ export default function Loans() {
                       </View>
                     )}
                   </View>
-
-                  {/* status badge */}
                   <View style={styles.badgeRow}>
                     <View style={[styles.badge, { backgroundColor: sc.bg }]}>
                       <Text style={[styles.badgeText, { color: sc.text }]}>
@@ -1074,7 +1068,6 @@ export default function Loans() {
         </View>
       </ScrollView>
 
-      {/* Action menu */}
       {activeMenu && (
         <ActionMenu
           loan={activeMenu}
@@ -1144,7 +1137,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   errorText: { color: "#dc2626" },
-
   loanCard: {
     backgroundColor: "#fff",
     borderRadius: 18,
@@ -1192,8 +1184,6 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: "row", flexWrap: "wrap" },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: "700" },
-
-  // ── Bottom sheet ──────────────────────────────────────────────────────────
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
@@ -1235,11 +1225,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
-  actionDotInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
+  actionDotInner: { width: 6, height: 6, borderRadius: 3 },
   actionLabel: { flex: 1, fontSize: 15, fontWeight: "600" },
   closeBtn: {
     marginTop: 16,
@@ -1249,8 +1235,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   closeBtnText: { fontSize: 15, fontWeight: "700", color: "#64748b" },
-
-  // ── Sub-modal overlay ─────────────────────────────────────────────────────
   subOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -1351,4 +1335,110 @@ const sub = StyleSheet.create({
     alignItems: "center",
   },
   confirmText: { fontSize: 14, fontWeight: "700", color: "#fff" },
+});
+
+// ─── PDF Modal Styles ─────────────────────────────────────────────────────────
+
+const pdfStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  iconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#fee2e2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pdfIconRed: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "#dc2626",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pdfIconText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  closeBtn: { padding: 4 },
+  title: { fontSize: 18, fontWeight: "800", color: "#1e293b", marginBottom: 4 },
+  subtitle: { fontSize: 13, color: "#64748b", marginBottom: 20 },
+  bold: { fontWeight: "700", color: "#1e293b" },
+  urlBox: {
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  urlLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#16a34a",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  urlText: {
+    fontSize: 13,
+    color: "#2563eb",
+    lineHeight: 20,
+    textDecorationLine: "underline",
+    textDecorationColor: "#2563eb",
+  },
+  browserBtn: {
+    backgroundColor: "#3b82f6",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  browserBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  openBtn: {
+    backgroundColor: "#059669",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  openBtnDisabled: { backgroundColor: "#94a3b8" },
+  openBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  dismissBtn: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  dismissBtnText: { fontSize: 14, fontWeight: "600", color: "#475569" },
 });
