@@ -25,12 +25,12 @@ type Notification = {
     title: string;
     description: string;
     created_at: string;
-    status: "seen" | "unseen";   // New field from database
+    status: "seen" | "unseen";
 };
 
 export default function NotificationsScreen() {
-  const { session } = useAuth();
-  const profile = session?.profile;
+    const { session } = useAuth();
+    const profile = session?.profile;
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,10 +45,11 @@ export default function NotificationsScreen() {
         currentPage * ITEMS_PER_PAGE
     );
 
-    // Load notifications
+    // Load notifications when screen is focused
     useFocusEffect(
-        useCallback(()=>{
+        useCallback(() => {
             if (!profile?.profile_id) return;
+
             const loadNotifications = async () => {
                 try {
                     setLoading(true);
@@ -62,29 +63,28 @@ export default function NotificationsScreen() {
                     setLoading(false);
                 }
             };
+
             loadNotifications();
         }, [profile?.profile_id])
     );
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-PH", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("en-PH", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+    };
 
     // Mark as seen and open modal
     const handleNotificationPress = async (notif: Notification) => {
         if (notif.status === "unseen") {
             try {
-                // Update backend
                 await markNotificationAsSeen(notif.id);
-                
-                // Update local state
-                setNotifications(prev =>
-                    prev.map(n =>
+
+                setNotifications((prev) =>
+                    prev.map((n) =>
                         n.id === notif.id ? { ...n, status: "seen" } : n
                     )
                 );
@@ -92,8 +92,7 @@ export default function NotificationsScreen() {
                 console.log("Failed to mark notification as seen");
             }
         }
-        
-        // Open modal
+
         setSelectedNotification(notif);
     };
 
@@ -103,6 +102,7 @@ export default function NotificationsScreen() {
 
     const confirmDelete = async () => {
         if (deleteTargetId === null) return;
+
         try {
             await deleteNotification(deleteTargetId);
             const updated = notifications.filter((n) => n.id !== deleteTargetId);
@@ -119,20 +119,17 @@ export default function NotificationsScreen() {
         }
     };
 
-  return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#3A8E0D" }}
-      edges={["top"]}
-    >
-      <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#51b61a", "#48a019", "#3A8E0D"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
-          <Text style={styles.heroTitle}>Notifications</Text>
-        </LinearGradient>
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#3A8E0D" }} edges={["top"]}>
+            <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+                <LinearGradient
+                    colors={["#51b61a", "#48a019", "#3A8E0D"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.hero}
+                >
+                    <Text style={styles.heroTitle}>Notifications</Text>
+                </LinearGradient>
 
                 <View style={styles.content}>
                     {loading ? (
@@ -148,7 +145,7 @@ export default function NotificationsScreen() {
                                     key={item.id}
                                     style={[
                                         styles.notifCard,
-                                        item.status === "unseen" && styles.unseenBorder
+                                        item.status === "unseen" && styles.unseenBorder,
                                     ]}
                                     onPress={() => handleNotificationPress(item)}
                                     activeOpacity={0.85}
@@ -157,16 +154,15 @@ export default function NotificationsScreen() {
                                         <Text style={styles.notifTitle}>{item.title}</Text>
                                         <Text style={styles.notifDate}>{formatDate(item.created_at)}</Text>
                                     </View>
+
                                     <View style={styles.notifFooter}>
-                                        <Text 
-                                            style={styles.notifDescription}
-                                            numberOfLines={2}
-                                        >
+                                        <Text style={styles.notifDescription} numberOfLines={2}>
                                             {item.description}
                                         </Text>
+
                                         <TouchableOpacity
                                             onPress={(e) => {
-                                                e.stopPropagation(); // Prevent opening modal when deleting
+                                                e.stopPropagation();
                                                 setDeleteTargetId(item.id);
                                             }}
                                             style={styles.deleteButton}
@@ -186,7 +182,11 @@ export default function NotificationsScreen() {
                                         onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
                                     >
-                                        <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"} />
+                                        <Ionicons
+                                            name="chevron-back"
+                                            size={16}
+                                            color={currentPage === 1 ? "#D1D5DB" : "#3A8E0D"}
+                                        />
                                     </TouchableOpacity>
 
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -195,7 +195,12 @@ export default function NotificationsScreen() {
                                             style={[styles.pageButton, currentPage === page && styles.pageButtonActive]}
                                             onPress={() => setCurrentPage(page)}
                                         >
-                                            <Text style={[styles.pageButtonText, currentPage === page && styles.pageButtonTextActive]}>
+                                            <Text
+                                                style={[
+                                                    styles.pageButtonText,
+                                                    currentPage === page && styles.pageButtonTextActive,
+                                                ]}
+                                            >
                                                 {page}
                                             </Text>
                                         </TouchableOpacity>
@@ -206,18 +211,18 @@ export default function NotificationsScreen() {
                                         onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
                                     >
-                                        <Ionicons name="chevron-forward" size={16} color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"} />
+                                        <Ionicons
+                                            name="chevron-forward"
+                                            size={16}
+                                            color={currentPage === totalPages ? "#D1D5DB" : "#3A8E0D"}
+                                        />
                                     </TouchableOpacity>
                                 </View>
                             )}
                         </>
                     )}
                 </View>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            </ScrollView>
 
             {/* Notification Detail Modal */}
             <Modal
@@ -243,8 +248,8 @@ export default function NotificationsScreen() {
                                     </Text>
                                 </ScrollView>
 
-                                <TouchableOpacity 
-                                    style={styles.closeDetailButton} 
+                                <TouchableOpacity
+                                    style={styles.closeDetailButton}
                                     onPress={closeModal}
                                 >
                                     <Text style={styles.closeDetailButtonText}>Close</Text>
@@ -262,7 +267,10 @@ export default function NotificationsScreen() {
                 animationType="fade"
                 onRequestClose={() => setDeleteTargetId(null)}
             >
-                <Pressable style={styles.modalOverlay} onPress={() => setDeleteTargetId(null)}>
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setDeleteTargetId(null)}
+                >
                     <Pressable style={styles.modalCard} onPress={() => {}}>
                         <View style={styles.modalIconWrapper}>
                             <Trash2 size={28} color="#ef4444" strokeWidth={2} />
@@ -331,7 +339,6 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 
-    // Notification Card with Green Border for Unseen
     notifCard: {
         backgroundColor: "#ffffff",
         borderRadius: 14,
@@ -346,7 +353,7 @@ const styles = StyleSheet.create({
         borderLeftColor: "transparent",
     },
     unseenBorder: {
-        borderLeftColor: GREEN,   // Green left border for unseen
+        borderLeftColor: GREEN,
     },
 
     notifHeader: {
@@ -383,7 +390,6 @@ const styles = StyleSheet.create({
         padding: 4,
     },
 
-    // Pagination (unchanged)
     pagination: {
         flexDirection: "row",
         alignItems: "center",
@@ -417,7 +423,6 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
     },
 
-    // Detail Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.45)",
@@ -475,7 +480,6 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 
-    // Delete Modal (unchanged)
     modalCard: {
         backgroundColor: "#ffffff",
         borderRadius: 20,

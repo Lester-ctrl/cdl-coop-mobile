@@ -20,7 +20,7 @@ import {
 } from "react-native";
 
 export default function ProfilePage() {
-  const { session, clearSession } = useAuth();
+  const { session } = useAuth();
 
   const [fontsLoaded] = useFonts({
     Poppins_500Medium,
@@ -41,9 +41,9 @@ export default function ProfilePage() {
     ? `${process.env.EXPO_PUBLIC_BASE_URL}/${rawAvatar}`
     : null;
 
-  const handleLogout = async () => {
-    await clearSession();
-    router.replace('/');
+  // Lock the app — session stays intact, user must re-enter PIN next time
+  const handleLogout = () => {
+    router.replace("/pin");
   };
 
   return (
@@ -58,29 +58,29 @@ export default function ProfilePage() {
       >
         {/* Top row */}
         <View style={styles.headerTopRow}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.headerBtn} 
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerBtn}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={handleLogout} 
-            style={styles.logoutBtn} 
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutBtn}
             activeOpacity={0.7}
           >
-            <Text style={styles.logoutText}>Logout</Text>
-            <Ionicons name="log-out-outline" size={18} color="#fff" />
+            <Text style={styles.logoutText}>Lock</Text>
+            <Ionicons name="lock-closed-outline" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
         {/* Avatar */}
         <View style={styles.avatarWrapper}>
           {avatarUrl ? (
-            <Image 
-              source={{ uri: avatarUrl }} 
+            <Image
+              source={{ uri: avatarUrl }}
               style={styles.avatarImage}
               resizeMode="cover"
               onError={(error) => {
@@ -159,10 +159,10 @@ export default function ProfilePage() {
         </View>
 
         {/* Edit Profile Button */}
-        <TouchableOpacity 
-          style={styles.editBtn} 
+        <TouchableOpacity
+          style={styles.editBtn}
           activeOpacity={0.85}
-          onPress={() => router.push('/member/edit-profile')}  // add this
+          onPress={() => router.push('/member/edit-profile')}
         >
           <Ionicons name="pencil-outline" size={18} color="#fff" />
           <Text style={styles.editBtnText}>Edit Profile</Text>

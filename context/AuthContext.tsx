@@ -24,6 +24,9 @@ export interface SessionData {
   user: UserData;
   profile: Profile;
   role_name: string;
+  token: string;
+  has_pin: string | null;
+  loginTime: number; // Unix timestamp (ms) — used for 1-month expiry check
 }
 
 interface AuthContextType {
@@ -32,6 +35,8 @@ interface AuthContextType {
   clearSession: () => Promise<void>;
   isLoading: boolean;
 }
+
+const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -43,7 +48,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const loadSession = async () => {
       try {
         const stored = await AsyncStorage.getItem("session");
-        if (stored) setSession(JSON.parse(stored));
+        if (stored) {
+          const parsed: SessionData = JSON.parse(stored);
+
+          // Auto-clear if session is older than 1 month
+          const isExpired =
+            parsed.loginTime &&
+            Date.now() - parsed.loginTime > ONE_MONTH_MS;
+
+          if (isExpired) {
+            await AsyncStorage.removeItem("session");
+          } else {
+            setSession(parsed);
+          }
+        }
       } catch (e) {
         console.log("Failed to load session:", e);
       } finally {
@@ -54,8 +72,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const saveSession = async (data: SessionData) => {
-    await AsyncStorage.setItem("session", JSON.stringify(data));
-    setSession(data);
+    // Stamp loginTime only on a fresh login (when loginTime isn't already set)
+    const withTimestamp: SessionData = {
+      ...data,
+      loginTime: data.loginTime ?? Date.now(),
+    };
+    await AsyncStorage.setItem("session", JSON.stringify(withTimestamp));
+    setSession(withTimestamp);
   };
 
   const clearSession = async () => {
