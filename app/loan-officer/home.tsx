@@ -22,18 +22,18 @@ const defaultStats = [
     color: "#16A34A",
   },
   {
-    label: "Partial Payments",
+    label: "Under Review",
     value: "0",
-    icon: "wallet-outline",
-    bg: "#DCFCE7",
-    color: "#16A34A",
+    icon: "time-outline",
+    bg: "#FEF9C3",
+    color: "#F59E42",
   },
   {
     label: "Pending Apps",
     value: "0",
     icon: "document-text-outline",
-    bg: "#FEF9C3",
-    color: "#F59E42",
+    bg: "#DBEAFE",
+    color: "#2563EB",
   },
 ];
 
@@ -85,6 +85,7 @@ const getToken = async (): Promise<string | null> => {
 
 export default function LoanOfficerDashboard() {
   const [stats, setStats] = useState(defaultStats);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -92,6 +93,7 @@ export default function LoanOfficerDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
+      setLoading(true);
       const token = await getToken();
       const res = await fetch(
         `${BASE_URL}/api/loan-applications?per_page=200`,
@@ -109,46 +111,64 @@ export default function LoanOfficerDashboard() {
       const data = await res.json();
       const loanAppList = data.data || [];
 
-      // Count active loans (Approved status with active loan account)
-      const activeLoansCount = loanAppList.filter(
-        (loan: any) =>
-          loan.status === "Approved" && loan.loanAccount?.status === "Active",
-      ).length;
+      // Count approved loans - handle case-insensitive status
+      const approvedLoansCount = loanAppList.filter((loan: any) => {
+        const status = loan.status?.toLowerCase();
+        return status === "approved";
+      }).length;
 
-      // Count pending applications
-      const pendingAppsCount = loanAppList.filter(
-        (loan: any) => loan.status === "Pending",
-      ).length;
+      // Count under review applications
+      const underReviewCount = loanAppList.filter((loan: any) => {
+        const status = loan.status?.toLowerCase();
+        return (
+          status === "under review" ||
+          status === "under_review" ||
+          status === "reviewing"
+        );
+      }).length;
+
+      // Count pending applications - handle case-insensitive status
+      const pendingAppsCount = loanAppList.filter((loan: any) => {
+        const status = loan.status?.toLowerCase();
+        return status === "pending";
+      }).length;
+
+      console.log(
+        `Stats - Approved: ${approvedLoansCount}, Under Review: ${underReviewCount}, Pending: ${pendingAppsCount}`,
+      );
 
       // Update stats
       setStats([
         {
           label: "Approved Loans",
-          value: activeLoansCount.toString(),
+          value: approvedLoansCount.toString(),
           icon: "card-outline",
           bg: "#DCFCE7",
           color: "#16A34A",
         },
         {
-          label: "Partial Payments",
-          value: "0",
-          icon: "wallet-outline",
-          bg: "#DCFCE7",
-          color: "#16A34A",
+          label: "Under Review",
+          value: underReviewCount.toString(),
+          icon: "time-outline",
+          bg: "#FEF9C3",
+          color: "#F59E42",
         },
         {
           label: "Pending Apps",
           value: pendingAppsCount.toString(),
           icon: "document-text-outline",
-          bg: "#FEF9C3",
-          color: "#F59E42",
+          bg: "#DBEAFE",
+          color: "#2563EB",
         },
       ]);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       // Keep default stats on error
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
@@ -168,14 +188,19 @@ export default function LoanOfficerDashboard() {
       {/* STATS */}
       <View style={styles.statsRow}>
         {stats.map((stat, idx) => (
-          <View
+          <LinearGradient
             key={idx}
-            style={[styles.statCard, { backgroundColor: stat.bg }]}
+            colors={["#10b981", "#059669", "#047857"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.statGradientBorder}
           >
-            <Ionicons name={stat.icon as any} size={22} color={stat.color} />
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
+            <View style={styles.statCard}>
+              <Ionicons name={stat.icon as any} size={22} color={stat.color} />
+              <Text style={styles.statValue}>{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+            </View>
+          </LinearGradient>
         ))}
       </View>
 
@@ -312,9 +337,9 @@ const styles = StyleSheet.create({
   },
 
   statCard: {
-    width: 105,
-    paddingVertical: 16,
-    borderRadius: 20,
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    borderRadius: 18,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -443,5 +468,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 12,
+  },
+
+  statGradientBorder: {
+    width: 105,
+    padding: 2,
+    borderRadius: 20,
+    marginBottom: 0,
   },
 });
