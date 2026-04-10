@@ -82,7 +82,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="members"
         options={{
-          title: "members",
+          title: "Members",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size ?? 24} color={color} />
           ),
@@ -91,7 +91,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="product/products-services"
         options={{
-          title: "products",
+          title: "Products",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid" size={size ?? 24} color={color} />
           ),
@@ -100,7 +100,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings/settings"
         options={{
-          title: "settings",
+          title: "Settings",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size ?? 24} color={color} />
           ),
@@ -110,6 +110,7 @@ export default function TabLayout() {
       {/* ── Hidden Screens ── */}
 
       
+      <Tabs.Screen name="loanedit" options={{ href: null }} />
       <Tabs.Screen name="accounts" options={{ href: null }} />
       <Tabs.Screen name="payments-collections" options={{ href: null }} />
       <Tabs.Screen name="news-events-promos" options={{ href: null }} />
