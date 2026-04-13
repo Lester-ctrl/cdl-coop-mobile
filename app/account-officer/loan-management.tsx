@@ -14,12 +14,12 @@ import { useRouter } from "expo-router";
 const Base_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export default function LoansScreen() {
-  const [loans, setLoans] = useState([]);
+  const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
 
-  const router = useRouter(); // ✅ FIXED
+  const router = useRouter();
 
   const fetchLoans = async () => {
     try {
@@ -31,7 +31,7 @@ export default function LoansScreen() {
       }
 
       setLoans(json);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -42,10 +42,10 @@ export default function LoansScreen() {
     fetchLoans();
   }, []);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch ((status || "").toLowerCase()) {
       case "approved":
-        return "#16a34a";
+        return "#099a1c";
       case "pending":
         return "#f59e0b";
       case "rejected":
@@ -61,7 +61,7 @@ export default function LoansScreen() {
       .includes(searchText.toLowerCase())
   );
 
-  const renderLoan = ({ item }) => (
+  const renderLoan = ({ item }: any) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() =>
@@ -94,12 +94,16 @@ export default function LoansScreen() {
       <View style={styles.cardBody}>
         <View style={styles.infoBox}>
           <Text style={styles.label}>AMOUNT</Text>
-          <Text style={styles.value}>₱{item.amount_requested}</Text>
+          <Text style={styles.value}>
+            ₱{Number(item.amount_requested || 0).toLocaleString()}
+          </Text>
         </View>
 
         <View style={styles.infoBox}>
           <Text style={styles.label}>TERM</Text>
-          <Text style={styles.value}>{item.term_months} Months</Text>
+          <Text style={styles.value}>
+            {item.term_months || "-"} Months
+          </Text>
         </View>
 
         <View style={styles.infoBox}>
@@ -122,7 +126,7 @@ export default function LoansScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#099a1c" />
         <Text>Loading...</Text>
       </View>
     );
@@ -142,6 +146,14 @@ export default function LoansScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Loan Management</Text>
       </View>
+
+      {/* ADD LOAN BUTTON */}
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => router.push("/account-officer/add_loan/add_loan")}
+      >
+        <Text style={styles.addBtnText}>+ New Loan Application</Text>
+      </TouchableOpacity>
 
       {/* SEARCH */}
       <TextInput
@@ -182,9 +194,25 @@ const styles = StyleSheet.create({
     marginTop: -28,
   },
 
+addBtn: {
+  backgroundColor: "#099a1c",
+ alignSelf: "flex-end" ,  
+  paddingVertical: 8,    
+  paddingHorizontal: 16, 
+  borderRadius: 8,
+  marginBottom: 30,
+  marginTop: 10,
+},
+
+  addBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
   search: {
     backgroundColor: "#fff",
-    margin: 15,
+    marginHorizontal: 15,
+    marginBottom: 10,
     padding: 10,
     borderRadius: 10,
   },

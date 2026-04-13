@@ -19,6 +19,13 @@ export default function LoanDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  const cashflow = loan?.cashflow || {};
+
+  const num = (v: any) => Number(v || 0);
+  const peso = (v: any) =>
+    `₱${num(v).toLocaleString("en-PH", {
+      minimumFractionDigits: 2,
+    })}`;
 
   useEffect(() => {
     async function fetchLoan() {
@@ -202,6 +209,36 @@ export default function LoanDetailScreen() {
           </View>
         </View>
 
+        {/* EMPLOYMENT AND IDENTIFICATION */}
+<View style={styles.card}>
+  <Text style={styles.sectionTitle}>Employment and Identification</Text>
+
+  <View style={styles.row}>
+    <Info label="Occupation" value={member.occupation} />
+    <Info label="Employer" value={member.employer} />
+  </View>
+
+  <View style={styles.row}>
+    <Info label="Employment Info" value={member.employment_info} />
+    <Info label="Monthly Income" value={member.monthly_income} />
+  </View>
+
+  <View style={styles.row}>
+    <Info
+      label="Monthly Income Range"
+      value={member.monthly_income_range}
+    />
+    <Info label="ID Type" value={member.id_type} />
+  </View>
+
+  <View style={styles.row}>
+    <Info label="ID Number" value={member.id_number} />
+  </View>
+</View>
+
+
+
+
         <View style={{ height: 120 }} />
       </ScrollView>
 
@@ -219,6 +256,8 @@ export default function LoanDetailScreen() {
     </View>
   );
 }
+
+
 
 /* COMPONENTS */
 const Info = ({ label, value }: any) => (

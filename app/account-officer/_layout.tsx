@@ -112,6 +112,9 @@ export default function TabLayout() {
       
   
 
+      <Tabs.Screen name="add_loan/cash_flow_form" options={{ href: null }} />
+      <Tabs.Screen name="add_loan/add_loan" options={{ href: null }} />
+      <Tabs.Screen name="loans_edit/cash_flow" options={{ href: null }} />
       <Tabs.Screen name="loans_edit/loanedit" options={{ href: null }} />
       <Tabs.Screen name="loanedit" options={{ href: null }} />
       <Tabs.Screen name="accounts" options={{ href: null }} />
