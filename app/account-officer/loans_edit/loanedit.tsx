@@ -10,7 +10,6 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getLoanEdit } from "@/api/accountofficer/loanedit";
 
-
 export default function LoanDetailScreen() {
   const { loanId } = useLocalSearchParams();
   const router = useRouter();
@@ -18,7 +17,7 @@ export default function LoanDetailScreen() {
   const [loan, setLoan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const cashflow = loan?.cashflow || {};
 
   const num = (v: any) => Number(v || 0);
@@ -70,7 +69,7 @@ export default function LoanDetailScreen() {
     );
   }
 
-  if (!loan) {
+  if (!loanId || !loan) {
     return (
       <View style={styles.center}>
         <Text>No data found</Text>
@@ -193,11 +192,7 @@ export default function LoanDetailScreen() {
             <Box label="Membership Type" value={member.membership_type} />
             <Box label="Branch" value={member.branch} />
             <Box label="Member Status" value={member.status} />
-
-            <Box
-              label="Years in Coop"
-              value={member.years_in_coop ?? "-"}
-            />
+            <Box label="Years in Coop" value={member.years_in_coop ?? "-"} />
             <Box
               label="No. of Dependents"
               value={member.dependents_count ?? "-"}
@@ -209,55 +204,106 @@ export default function LoanDetailScreen() {
           </View>
         </View>
 
-        {/* EMPLOYMENT AND IDENTIFICATION */}
-<View style={styles.card}>
-  <Text style={styles.sectionTitle}>Employment and Identification</Text>
+        {/* EMPLOYMENT */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            Employment and Identification
+          </Text>
 
-  <View style={styles.row}>
-    <Info label="Occupation" value={member.occupation} />
-    <Info label="Employer" value={member.employer} />
-  </View>
+          <View style={styles.row}>
+            <Info label="Occupation" value={member.occupation} />
+            <Info label="Employer" value={member.employer} />
+          </View>
 
-  <View style={styles.row}>
-    <Info label="Employment Info" value={member.employment_info} />
-    <Info label="Monthly Income" value={member.monthly_income} />
-  </View>
+          <View style={styles.row}>
+            <Info label="Employment Info" value={member.employment_info} />
+            <Info label="Monthly Income" value={member.monthly_income} />
+          </View>
 
-  <View style={styles.row}>
-    <Info
-      label="Monthly Income Range"
-      value={member.monthly_income_range}
-    />
-    <Info label="ID Type" value={member.id_type} />
-  </View>
+          <View style={styles.row}>
+            <Info
+              label="Monthly Income Range"
+              value={member.monthly_income_range}
+            />
+            <Info label="ID Type" value={member.id_type} />
+          </View>
 
-  <View style={styles.row}>
-    <Info label="ID Number" value={member.id_number} />
-  </View>
-</View>
+          <View style={styles.row}>
+            <Info label="ID Number" value={member.id_number} />
+          </View>
+        </View>
 
+        {/* CASH FLOW */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Cash Flow Information</Text>
 
+          <View style={styles.row}>
+            <Info label="Salary" value={peso(cashflow.salary)} />
+            <Info
+              label="Business Income"
+              value={peso(cashflow.business_income)}
+            />
+          </View>
 
+          <View style={styles.row}>
+            <Info label="Remittances" value={peso(cashflow.remittances)} />
+            <Info label="Other Income" value={peso(cashflow.other_income)} />
+          </View>
+
+          <View style={styles.row}>
+            <Info
+              label="Living Expenses"
+              value={peso(cashflow.living_expenses)}
+            />
+            <Info
+              label="Business Expenses"
+              value={peso(cashflow.business_expenses)}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <Info
+              label="Existing Loan Payments"
+              value={peso(cashflow.existing_loan_payments)}
+            />
+            <Info
+              label="Other Expenses"
+              value={peso(cashflow.other_expenses)}
+            />
+          </View>
+
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.label}>Cashflow Documents</Text>
+
+            {cashflow.cashflow_documents?.length ? (
+              cashflow.cashflow_documents.map((doc: string, index: number) => (
+                <Text key={index} style={styles.value}>
+                  📄 {doc}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.value}>-</Text>
+            )}
+          </View>
+        </View>
 
         <View style={{ height: 120 }} />
       </ScrollView>
 
-    {/* FOOTER */}
-<TouchableOpacity
-  style={styles.footerBtn}
-  onPress={() =>
-    router.push("/account-officer/loans_edit/cash_flow")
-  }
->
-  <Text style={styles.footerBtnText}>
-    Next Transaction Review →
-  </Text>
-</TouchableOpacity>
+      {/* FOOTER */}
+      <TouchableOpacity
+        style={styles.footerBtn}
+        onPress={() =>
+          router.push("/account-officer/loans_edit/")
+        }
+      >
+        <Text style={styles.footerBtnText}>
+          Next Transaction Review →
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-
 
 /* COMPONENTS */
 const Info = ({ label, value }: any) => (
@@ -277,7 +323,6 @@ const Box = ({ label, value }: any) => (
 /* STYLES */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F4F6F8" },
-
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   header: {
