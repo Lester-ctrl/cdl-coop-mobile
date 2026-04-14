@@ -1,41 +1,914 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Dimensions,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
-const Tab = createBottomTabNavigator();
-
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+interface LoanApplication {
+  loan_application_id: string;
+  status: string;
+  amount_requested?: number;
+  term_months?: number;
+  approved_at?: string | null;
+  penalty_rule_id?: number | null;
+  member?: {
+    profile?: {
+      first_name?: string;
+      last_name?: string;
+    };
+  };
+  loanAccount?: {
+    loan_account_id?: string;
+    balance?: number;
+    principal_amount?: number;
+    status?: string;
+    is_overdue?: boolean;
+  } | null;
+}
+
+interface PenaltyRule {
+  id: number;
+  name: string;
+}
+
+function VerticalEllipsis({
+  size = 20,
+  color = "#64748b",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: color,
+          marginVertical: 2,
+        }}
+      />
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: color,
+          marginVertical: 2,
+        }}
+      />
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: color,
+          marginVertical: 2,
+        }}
+      />
+    </View>
+  );
+}
+
+function ChevronRight({
+  size = 16,
+  color = "#cbd5e1",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <View
+        style={{
+          width: 8,
+          height: 2,
+          backgroundColor: color,
+          transform: [{ rotate: "45deg" }],
+          position: "absolute",
+          right: 2,
+        }}
+      />
+      <View
+        style={{
+          width: 8,
+          height: 2,
+          backgroundColor: color,
+          transform: [{ rotate: "-45deg" }],
+          position: "absolute",
+          right: 2,
+          top: "auto",
+        }}
+      />
+    </View>
+  );
+}
+
+function CloseIcon({
+  size = 20,
+  color = "#64748b",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <View
+        style={{
+          width: 12,
+          height: 2,
+          backgroundColor: color,
+          transform: [{ rotate: "45deg" }],
+          position: "absolute",
+        }}
+      />
+      <View
+        style={{
+          width: 12,
+          height: 2,
+          backgroundColor: color,
+          transform: [{ rotate: "-45deg" }],
+          position: "absolute",
+        }}
+      />
+    </View>
+  );
+}
+
+// ─── PDF Modal ────────────────────────────────────────────────────────────────
+
+function PdfModal({
+  visible,
+  url,
+  loanId,
+  onClose,
+}: {
+  visible: boolean;
+  url: string | null;
+  loanId: string;
+  onClose: () => void;
+}) {
+  const [opening, setOpening] = useState(false);
+
+  const handleOpen = async () => {
+    if (!url) return;
+    setOpening(true);
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Unable to open this URL on your device.");
+      }
+    } catch {
+      Alert.alert("Error", "Failed to open the PDF link.");
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={pdfStyles.overlay}>
+        <View style={pdfStyles.card}>
+          {/* Header row */}
+          <View style={pdfStyles.headerRow}>
+            <View style={pdfStyles.iconBox}>
+              <View style={pdfStyles.pdfIconRed}>
+                <Text style={pdfStyles.pdfIconText}>PDF</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={pdfStyles.closeBtn}
+            >
+              <CloseIcon size={20} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={pdfStyles.title}>Loan Form Ready</Text>
+          <Text style={pdfStyles.subtitle}>
+            Loan Application <Text style={pdfStyles.bold}>#{loanId}</Text>
+          </Text>
+
+          {/* URL display box - CLICKABLE LINK */}
+          <View style={pdfStyles.urlBox}>
+            <Text style={pdfStyles.urlLabel}>PDF Link</Text>
+            {url ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(url)}
+                activeOpacity={0.7}
+              >
+                <Text style={pdfStyles.urlText} selectable>
+                  {url}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={pdfStyles.urlText}>No PDF URL</Text>
+            )}
+          </View>
+
+          {/* Open in Browser button */}
+          {url && (
+            <TouchableOpacity
+              style={pdfStyles.browserBtn}
+              onPress={() => Linking.openURL(url)}
+              activeOpacity={0.8}
+            >
+              <Text style={pdfStyles.browserBtnText}>🌐 Open in Browser</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Open PDF button */}
+          <TouchableOpacity
+            style={[
+              pdfStyles.openBtn,
+              (!url || opening) && pdfStyles.openBtnDisabled,
+            ]}
+            onPress={handleOpen}
+            disabled={!url || opening}
+            activeOpacity={0.8}
+          >
+            {opening ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={pdfStyles.openBtnText}>⬇ Open / Download PDF</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Dismiss */}
+          <TouchableOpacity
+            style={pdfStyles.dismissBtn}
+            onPress={onClose}
+            activeOpacity={0.7}
+          >
+            <Text style={pdfStyles.dismissBtnText}>Dismiss</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const getMemberName = (loan: LoanApplication): string => {
+  const { first_name, last_name } = loan.member?.profile ?? {};
+  return first_name && last_name
+    ? `${first_name} ${last_name}`
+    : "Unknown Member";
+};
+
+const getBalance = (loan: LoanApplication): number =>
+  loan.loanAccount?.balance ?? loan.amount_requested ?? 0;
+
+const fmt = (n: number) =>
+  n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  Pending: { bg: "#fef9c3", text: "#713f12" },
+  "Under Review": { bg: "#dbeafe", text: "#1e3a8a" },
+  Approved: { bg: "#dcfce7", text: "#14532d" },
+  Rejected: { bg: "#fee2e2", text: "#7f1d1d" },
+  Cancelled: { bg: "#f1f5f9", text: "#475569" },
+};
+
+const getToken = async (): Promise<string | null> => {
+  try {
+    const stored = await AsyncStorage.getItem("session");
+    if (!stored) return null;
+    return JSON.parse(stored)?.token ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const api = async (
+  method: string,
+  path: string,
+  body?: Record<string, unknown>,
+): Promise<{ ok: boolean; data?: unknown; message?: string }> => {
+  try {
+    const token = await getToken();
+    const res = await fetch(`${BASE_URL}/api${path}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json();
+    if (!res.ok)
+      return { ok: false, message: data?.message ?? "Request failed" };
+    return { ok: true, data };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "Network error",
+    };
+  }
+};
+
+// ─── Action Menu ─────────────────────────────────────────────────────────────
+
+interface ActionMenuProps {
+  loan: LoanApplication;
+  visible: boolean;
+  onClose: () => void;
+  onRefresh: () => void;
+}
+
+function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
+  const slideAnim = useRef(new Animated.Value(400)).current;
+  const [subModal, setSubModal] = useState<
+    | null
+    | "reloan"
+    | "reject"
+    | "setPenalty"
+    | "approveConfirm"
+    | "cancelConfirm"
+    | "underReviewConfirm"
+  >(null);
+
+  const [pdfModalVisible, setPdfModalVisible] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  const [reloanAmount, setReloanAmount] = useState("");
+  const [reloanTerm, setReloanTerm] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
+  const [penaltyRules, setPenaltyRules] = useState<PenaltyRule[]>([]);
+  const [selectedPenalty, setSelectedPenalty] = useState<number | null>(
+    loan.penalty_rule_id ?? null,
+  );
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 12,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 400,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  const close = () => {
+    setSubModal(null);
+    onClose();
+  };
+
+  const act = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await fn();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doAction = async (
+    method: string,
+    path: string,
+    body?: Record<string, unknown>,
+    successMsg = "Done",
+  ) => {
+    const res = await api(method, path, body);
+    if (res.ok) {
+      Alert.alert("Success", successMsg);
+      close();
+      onRefresh();
+    } else {
+      Alert.alert("Error", res.message ?? "Something went wrong");
+    }
+  };
+
+  const id = loan.loan_application_id;
+  const status = loan.status;
+  const hasAccount = !!loan.loanAccount;
+  const accountActive = loan.loanAccount?.status === "Active";
+
+  const showReloan = hasAccount && accountActive;
+  const showSetPenalty = ["Pending", "Under Review", "Approved"].includes(
+    status,
+  );
+  const showUnderReview = status === "Pending";
+  const showApprove = ["Pending", "Under Review"].includes(status);
+  const showReject = ["Pending", "Under Review"].includes(status);
+  const showCancel = ["Pending", "Under Review"].includes(status);
+
+  const openSetPenalty = async () => {
+    const res = await api("GET", "/penalty-rules?status=active");
+    if (res.ok && Array.isArray((res.data as any)?.data)) {
+      setPenaltyRules((res.data as any).data);
+    }
+    setSubModal("setPenalty");
+  };
+
+  const handleDownloadForm = async () => {
+    const res = await api("GET", `/loan-applications/${id}/download-form`);
+    if (res.ok) {
+      setPdfUrl((res.data as any)?.pdf_url ?? null);
+      setPdfModalVisible(true);
+    } else {
+      Alert.alert("Error", res.message ?? "Failed to get PDF URL");
+    }
+  };
+
+  const actions = [
+    {
+      label: "Reloan",
+      color: "#d97706",
+      show: showReloan,
+      onPress: () => setSubModal("reloan"),
+    },
+    {
+      label: "Set Penalty Rule",
+      color: "#d97706",
+      show: showSetPenalty,
+      onPress: openSetPenalty,
+    },
+    {
+      label: "Mark Under Review",
+      color: "#2563eb",
+      show: showUnderReview,
+      onPress: () => setSubModal("underReviewConfirm"),
+    },
+    {
+      label: "Download Loan Form",
+      color: "#059669",
+      show: true,
+      onPress: handleDownloadForm,
+    },
+    {
+      label: "Approve",
+      color: "#059669",
+      show: showApprove,
+      onPress: () => setSubModal("approveConfirm"),
+    },
+    {
+      label: "Reject",
+      color: "#dc2626",
+      show: showReject,
+      onPress: () => setSubModal("reject"),
+    },
+    {
+      label: "Cancel",
+      color: "#64748b",
+      show: showCancel,
+      onPress: () => setSubModal("cancelConfirm"),
+    },
+  ].filter((a) => a.show);
+
+  const renderSubModal = () => {
+    if (!subModal) return null;
+
+    if (subModal === "reloan") {
+      const acct = loan.loanAccount;
+      const paid = (acct?.principal_amount ?? 0) - (acct?.balance ?? 0);
+      const required = (acct?.principal_amount ?? 0) * 0.5;
+      return (
+        <SubModal title="Reloan Application" onClose={() => setSubModal(null)}>
+          <View style={sub.infoBox}>
+            <Text style={sub.infoLine}>
+              Paid: <Text style={sub.infoVal}>₱{fmt(paid)}</Text>
+            </Text>
+            <Text style={sub.infoLine}>
+              Required (50%): <Text style={sub.infoVal}>₱{fmt(required)}</Text>
+            </Text>
+            <Text style={sub.infoLine}>
+              Remaining balance:{" "}
+              <Text style={sub.infoVal}>₱{fmt(acct?.balance ?? 0)}</Text>
+            </Text>
+          </View>
+          <Text style={sub.label}>Loan Amount (₱)</Text>
+          <TextInput
+            style={sub.input}
+            keyboardType="numeric"
+            placeholder="Enter amount"
+            value={reloanAmount}
+            onChangeText={setReloanAmount}
+          />
+          <Text style={sub.label}>Term (Months)</Text>
+          <TextInput
+            style={sub.input}
+            keyboardType="numeric"
+            placeholder="Enter term"
+            value={reloanTerm}
+            onChangeText={setReloanTerm}
+          />
+          <ConfirmRow
+            busy={busy}
+            label="Submit Reloan"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() => {
+              if (!reloanAmount || !reloanTerm) {
+                Alert.alert("Validation", "Please fill in all fields.");
+                return;
+              }
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/reloan`,
+                  {
+                    amount_requested: parseFloat(reloanAmount),
+                    term_months: parseInt(reloanTerm),
+                  },
+                  "Reloan released successfully.",
+                ),
+              );
+            }}
+          />
+        </SubModal>
+      );
+    }
+
+    if (subModal === "setPenalty") {
+      return (
+        <SubModal title="Set Penalty Rule" onClose={() => setSubModal(null)}>
+          {penaltyRules.length === 0 ? (
+            <Text style={sub.body}>No active penalty rules found.</Text>
+          ) : (
+            penaltyRules.map((rule) => (
+              <TouchableOpacity
+                key={rule.id}
+                style={[
+                  sub.ruleRow,
+                  selectedPenalty === rule.id && sub.ruleRowSelected,
+                ]}
+                onPress={() => setSelectedPenalty(rule.id)}
+              >
+                <View
+                  style={[
+                    sub.radio,
+                    selectedPenalty === rule.id && sub.radioSelected,
+                  ]}
+                />
+                <Text style={sub.ruleLabel}>{rule.name}</Text>
+              </TouchableOpacity>
+            ))
+          )}
+          <ConfirmRow
+            busy={busy}
+            label="Save"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() => {
+              if (!selectedPenalty) {
+                Alert.alert("Validation", "Please select a penalty rule.");
+                return;
+              }
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/set-penalty-rule`,
+                  { penalty_rule_id: selectedPenalty },
+                  "Penalty rule updated.",
+                ),
+              );
+            }}
+          />
+        </SubModal>
+      );
+    }
+
+    if (subModal === "underReviewConfirm") {
+      return (
+        <SubModal title="Mark Under Review" onClose={() => setSubModal(null)}>
+          <Text style={sub.body}>
+            Move loan application <Text style={sub.bold}>#{id}</Text> to Under
+            Review?
+          </Text>
+          <ConfirmRow
+            busy={busy}
+            label="Confirm"
+            confirmColor="#2563eb"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() =>
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/under-review`,
+                  undefined,
+                  "Moved to Under Review.",
+                ),
+              )
+            }
+          />
+        </SubModal>
+      );
+    }
+
+    if (subModal === "approveConfirm") {
+      return (
+        <SubModal title="Approve Application" onClose={() => setSubModal(null)}>
+          <Text style={sub.body}>
+            Approve loan application <Text style={sub.bold}>#{id}</Text>? This
+            cannot be undone.
+          </Text>
+          <ConfirmRow
+            busy={busy}
+            label="Approve"
+            confirmColor="#059669"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() =>
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/approve`,
+                  undefined,
+                  "Application approved.",
+                ),
+              )
+            }
+          />
+        </SubModal>
+      );
+    }
+
+    if (subModal === "reject") {
+      return (
+        <SubModal title="Reject Application" onClose={() => setSubModal(null)}>
+          <Text style={sub.label}>Reason (required)</Text>
+          <TextInput
+            style={[sub.input, { height: 90, textAlignVertical: "top" }]}
+            multiline
+            placeholder="Enter rejection reason..."
+            value={rejectReason}
+            onChangeText={setRejectReason}
+          />
+          <ConfirmRow
+            busy={busy}
+            label="Reject"
+            confirmColor="#dc2626"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() => {
+              if (!rejectReason.trim()) {
+                Alert.alert("Validation", "Please enter a reason.");
+                return;
+              }
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/reject`,
+                  { reason: rejectReason },
+                  "Application rejected.",
+                ),
+              );
+            }}
+          />
+        </SubModal>
+      );
+    }
+
+    if (subModal === "cancelConfirm") {
+      return (
+        <SubModal title="Cancel Application" onClose={() => setSubModal(null)}>
+          <Text style={sub.body}>
+            Cancel loan application <Text style={sub.bold}>#{id}</Text>? This
+            cannot be undone.
+          </Text>
+          <ConfirmRow
+            busy={busy}
+            label="Cancel Application"
+            confirmColor="#64748b"
+            onCancel={() => setSubModal(null)}
+            onConfirm={() =>
+              act(() =>
+                doAction(
+                  "POST",
+                  `/loan-applications/${id}/cancel`,
+                  undefined,
+                  "Application cancelled.",
+                ),
+              )
+            }
+          />
+        </SubModal>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="none"
+        onRequestClose={close}
+      >
+        <Pressable style={styles.overlay} onPress={close} />
+        <Animated.View
+          style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
+        >
+          <View style={styles.handle} />
+          <Text style={styles.sheetTitle}>{getMemberName(loan)}</Text>
+          <Text style={styles.sheetSubtitle}>#{loan.loan_application_id}</Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: SCREEN_HEIGHT * 0.55 }}
+          >
+            {actions.map((action) => (
+              <TouchableOpacity
+                key={action.label}
+                style={styles.actionRow}
+                onPress={action.onPress}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.actionDot,
+                    { backgroundColor: action.color + "18" },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.actionDotInner,
+                      { backgroundColor: action.color },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.actionLabel, { color: action.color }]}>
+                  {action.label}
+                </Text>
+                <ChevronRight size={16} color="#cbd5e1" />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.closeBtn} onPress={close}>
+            <Text style={styles.closeBtnText}>Close</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {subModal && (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={[StyleSheet.absoluteFill, { pointerEvents: "box-none" }]}
+          >
+            <View style={styles.subOverlay}>{renderSubModal()}</View>
+          </KeyboardAvoidingView>
+        )}
+      </Modal>
+
+      {/* PDF modal is outside the action sheet Modal to avoid Android nesting issues */}
+      <PdfModal
+        visible={pdfModalVisible}
+        url={pdfUrl}
+        loanId={id}
+        onClose={() => setPdfModalVisible(false)}
+      />
+    </>
+  );
+}
+
+function SubModal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={sub.container}>
+      <View style={sub.header}>
+        <Text style={sub.title}>{title}</Text>
+        <TouchableOpacity
+          onPress={onClose}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <CloseIcon size={20} color="#64748b" />
+        </TouchableOpacity>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function ConfirmRow({
+  busy,
+  label = "Confirm",
+  confirmColor = "#059669",
+  onCancel,
+  onConfirm,
+}: {
+  busy: boolean;
+  label?: string;
+  confirmColor?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <View style={sub.btnRow}>
+      <TouchableOpacity
+        style={sub.cancelBtn}
+        onPress={onCancel}
+        disabled={busy}
+      >
+        <Text style={sub.cancelText}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[sub.confirmBtn, { backgroundColor: confirmColor }]}
+        onPress={onConfirm}
+        disabled={busy}
+      >
+        {busy ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={sub.confirmText}>{label}</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function Loans() {
   const [search, setSearch] = useState("");
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
-  const [loans, setLoans] = useState([]);
-  const [filteredLoans, setFilteredLoans] = useState([]);
+  const [loans, setLoans] = useState<LoanApplication[]>([]);
+  const [filteredLoans, setFilteredLoans] = useState<LoanApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<LoanApplication | null>(null);
 
   const fetchLoans = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${BASE_URL}/loan-applications`);
+      const token = await getToken();
+      const res = await fetch(`${BASE_URL}/api/loan-applications?per_page=50`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
       if (!res.ok) throw new Error("Failed to fetch loan applications");
       const data = await res.json();
       setLoans(data.data || []);
       setFilteredLoans(data.data || []);
     } catch (err) {
-      setError(err.message || "Error fetching loans");
+      setError(err instanceof Error ? err.message : "Error fetching loans");
     } finally {
       setLoading(false);
     }
@@ -52,155 +925,164 @@ export default function Loans() {
   };
 
   useEffect(() => {
-    // Filter by name and range
-    let result = loans;
-    if (search) {
-      result = result.filter((loan) => {
-        const firstName = loan.member?.profile?.first_name || "";
-        const lastName = loan.member?.profile?.last_name || "";
-        const fullName = `${firstName} ${lastName}`.toLowerCase();
-        return fullName.includes(search.toLowerCase());
+    let result = [...loans];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((l) => {
+        const name =
+          `${l.member?.profile?.first_name ?? ""} ${l.member?.profile?.last_name ?? ""}`.toLowerCase();
+        return name.includes(q);
       });
     }
-    const minVal = min ? parseInt(min, 10) : 0;
-    const maxVal = max ? parseInt(max, 10) : Infinity;
-    result = result.filter((loan) => {
-      const bal = loan.loanAccount?.balance || 0;
+    const minVal = min ? parseFloat(min) : 0;
+    const maxVal = max ? parseFloat(max) : Infinity;
+    result = result.filter((l) => {
+      const bal = getBalance(l);
       return bal >= minVal && bal <= maxVal;
     });
     setFilteredLoans(result);
   }, [search, min, max, loans]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
-    >
-      {/* HEADER */}
-      <LinearGradient
-        colors={["#1e3a8a", "#2563eb", "#3b82f6"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
+    <>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
-        <Text style={styles.headerTitle}>Loan Applications</Text>
-        <Text style={styles.headerSubtitle}>
-          Search and manage member loan applications
-        </Text>
-      </LinearGradient>
+        <LinearGradient
+          colors={["#065f46", "#10b981", "#6ee7b7"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <Text style={styles.headerTitle}>Loan Applications</Text>
+          <Text style={styles.headerSubtitle}>
+            Search and manage member loan applications
+          </Text>
+        </LinearGradient>
 
-      {/* FILTER CARD */}
-      <View style={styles.filterCard}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search member name..."
-          value={search}
-          onChangeText={setSearch}
-        />
-
-        <View style={styles.rangeRow}>
+        <View style={styles.filterCard}>
           <TextInput
-            style={styles.rangeInput}
-            placeholder="Min ₱"
-            keyboardType="numeric"
-            value={min}
-            onChangeText={setMin}
+            style={styles.searchInput}
+            placeholder="Search member name..."
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor="#94a3b8"
           />
-          <TextInput
-            style={[styles.rangeInput, { marginRight: 0 }]}
-            placeholder="Max ₱"
-            keyboardType="numeric"
-            value={max}
-            onChangeText={setMax}
-          />
+          <View style={styles.rangeRow}>
+            <TextInput
+              style={styles.rangeInput}
+              placeholder="Min ₱"
+              keyboardType="numeric"
+              value={min}
+              onChangeText={setMin}
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={[styles.rangeInput, { marginRight: 0 }]}
+              placeholder="Max ₱"
+              keyboardType="numeric"
+              value={max}
+              onChangeText={setMax}
+              placeholderTextColor="#94a3b8"
+            />
+          </View>
         </View>
-      </View>
 
-      {/* LOAN APPLICATION LIST */}
-      <View style={styles.loanList}>
-        {loading ? (
-          <Text style={styles.noResult}>Loading...</Text>
-        ) : error ? (
-          <Text style={[styles.noResult, { color: "#dc2626" }]}>{error}</Text>
-        ) : filteredLoans.length === 0 ? (
-          <Text style={styles.noResult}>No loan applications found</Text>
-        ) : (
-          filteredLoans.map((loan) => (
-            <View key={loan.loan_application_id} style={styles.loanCard}>
-              <View style={styles.loanHeader}>
-                <Text style={styles.memberName}>
-                  {loan.member?.profile?.first_name &&
-                  loan.member?.profile?.last_name
-                    ? `${loan.member.profile.first_name} ${loan.member.profile.last_name}`
-                    : "Unknown Member"}
-                </Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    loan.loanAccount?.is_overdue
-                      ? styles.badgeOverdue
-                      : styles.badgeActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      loan.loanAccount?.is_overdue
-                        ? { color: "#dc2626" }
-                        : { color: "#2563eb" },
-                    ]}
-                  >
-                    {loan.loanAccount?.is_overdue ? "Overdue" : "Active"}
-                  </Text>
+        <View style={styles.loanList}>
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#059669"
+              style={{ marginTop: 40 }}
+            />
+          ) : error ? (
+            <Text style={[styles.noResult, styles.errorText]}>{error}</Text>
+          ) : filteredLoans.length === 0 ? (
+            <Text style={styles.noResult}>No loan applications found</Text>
+          ) : (
+            filteredLoans.map((loan) => {
+              const sc = STATUS_COLORS[loan.status] ?? STATUS_COLORS.Pending;
+              return (
+                <View key={loan.loan_application_id} style={styles.loanCard}>
+                  <View style={styles.loanHeader}>
+                    <Text style={styles.memberName} numberOfLines={1}>
+                      {getMemberName(loan)}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setActiveMenu(loan)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={styles.menuBtn}
+                    >
+                      <VerticalEllipsis size={20} color="#64748b" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.loanId}>#{loan.loan_application_id}</Text>
+                  <View style={styles.amountRow}>
+                    <View style={styles.amountBox}>
+                      <Text style={styles.amountLabel}>Requested</Text>
+                      <Text style={styles.amountValue}>
+                        ₱{fmt(loan.amount_requested ?? 0)}
+                      </Text>
+                    </View>
+                    {loan.loanAccount && (
+                      <View
+                        style={[styles.amountBox, { alignItems: "flex-end" }]}
+                      >
+                        <Text style={styles.amountLabel}>Balance</Text>
+                        <Text
+                          style={[styles.amountValue, { color: "#065f46" }]}
+                        >
+                          ₱{fmt(loan.loanAccount.balance ?? 0)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.badgeRow}>
+                    <View style={[styles.badge, { backgroundColor: sc.bg }]}>
+                      <Text style={[styles.badgeText, { color: sc.text }]}>
+                        {loan.status}
+                      </Text>
+                    </View>
+                    {loan.loanAccount?.is_overdue && (
+                      <View
+                        style={[
+                          styles.badge,
+                          { backgroundColor: "#fee2e2", marginLeft: 6 },
+                        ]}
+                      >
+                        <Text style={[styles.badgeText, { color: "#7f1d1d" }]}>
+                          Overdue
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
 
-              <Text style={styles.balance}>
-                Balance:{" "}
-                <Text style={styles.balanceAmount}>
-                  ₱
-                  {(
-                    loan.loanAccount?.balance ||
-                    loan.amount_requested ||
-                    0
-                  ).toLocaleString()}
-                </Text>
-              </Text>
-
-              <Text style={[styles.badgeText, { marginTop: 8 }]}>
-                Status: {loan.status || "Pending"}
-              </Text>
-
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.primaryBtn}>
-                  <Text style={styles.primaryBtnText}>View Payments</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.secondaryBtn}>
-                  <Text style={styles.secondaryBtnText}>Restructure</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.ghostBtn}>
-                  <Text style={styles.ghostBtnText}>Penalty Waiver</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+      {activeMenu && (
+        <ActionMenu
+          loan={activeMenu}
+          visible={!!activeMenu}
+          onClose={() => setActiveMenu(null)}
+          onRefresh={handleRefresh}
+        />
+      )}
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#f4f7ff",
-    flex: 1,
-  },
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
+const styles = StyleSheet.create({
+  container: { backgroundColor: "#f4f7ff", flex: 1 },
   header: {
     paddingTop: 50,
     paddingBottom: 40,
@@ -208,19 +1090,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
-
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#fff",
-  },
-
-  headerSubtitle: {
-    color: "#dbeafe",
-    marginTop: 6,
-    fontSize: 14,
-  },
-
+  headerTitle: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  headerSubtitle: { color: "#dbeafe", marginTop: 6, fontSize: 14 },
   filterCard: {
     backgroundColor: "#fff",
     marginHorizontal: 18,
@@ -233,22 +1104,20 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-
   searchInput: {
     backgroundColor: "#f1f5f9",
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginBottom: 10,
+    fontSize: 14,
   },
-
   rangeRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     marginTop: 4,
   },
-
   rangeInput: {
     flex: 1,
     backgroundColor: "#f1f5f9",
@@ -256,36 +1125,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     marginRight: 8,
+    fontSize: 14,
   },
-
-  filterBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: "#2563eb",
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-
-  filterText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-
-  loanList: {
-    paddingHorizontal: 18,
-    marginTop: 18,
-    paddingBottom: 30,
-  },
-
+  loanList: { paddingHorizontal: 18, marginTop: 18, paddingBottom: 30 },
   noResult: {
     textAlign: "center",
     marginTop: 40,
     color: "#2563eb",
     fontWeight: "600",
+    fontSize: 14,
   },
-
+  errorText: { color: "#dc2626" },
   loanCard: {
     backgroundColor: "#fff",
     borderRadius: 18,
@@ -297,92 +1147,297 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-
   loanHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
   memberName: {
     fontSize: 17,
     fontWeight: "700",
     color: "#1e293b",
+    flex: 1,
+    marginRight: 8,
   },
-
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+  menuBtn: { padding: 4 },
+  loanId: { fontSize: 11, color: "#94a3b8", marginTop: 2, marginBottom: 8 },
+  amountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
-
-  badgeActive: {
-    backgroundColor: "#dbeafe",
+  amountBox: {},
+  amountLabel: {
+    fontSize: 11,
+    color: "#94a3b8",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
-
-  badgeOverdue: {
-    backgroundColor: "#fee2e2",
-  },
-
-  badgeText: {
-    fontWeight: "700",
-    fontSize: 12,
-  },
-
-  balance: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#475569",
-  },
-
-  balanceAmount: {
+  amountValue: {
+    fontSize: 15,
     fontWeight: "800",
-    color: "#1e3a8a",
+    color: "#1e293b",
+    marginTop: 2,
   },
-
+  badgeRow: { flexDirection: "row", flexWrap: "wrap" },
+  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText: { fontSize: 11, fontWeight: "700" },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  sheet: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 32,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  sheetTitle: { fontSize: 17, fontWeight: "700", color: "#1e293b" },
+  sheetSubtitle: { fontSize: 12, color: "#94a3b8", marginBottom: 16 },
   actionRow: {
     flexDirection: "row",
-    marginTop: 14,
-    gap: 8,
-    flexWrap: "wrap",
+    alignItems: "center",
+    paddingVertical: 13,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#f1f5f9",
   },
-
-  primaryBtn: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+  actionDot: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
   },
-
-  primaryBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-
-  secondaryBtn: {
-    backgroundColor: "#e0e7ff",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-
-  secondaryBtnText: {
-    color: "#3730a3",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-
-  ghostBtn: {
+  actionDotInner: { width: 6, height: 6, borderRadius: 3 },
+  actionLabel: { flex: 1, fontSize: 15, fontWeight: "600" },
+  closeBtn: {
+    marginTop: 16,
     backgroundColor: "#f1f5f9",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
   },
+  closeBtnText: { fontSize: 15, fontWeight: "700", color: "#64748b" },
+  subOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+});
 
-  ghostBtnText: {
-    color: "#1e3a8a",
-    fontWeight: "700",
-    fontSize: 12,
+const sub = StyleSheet.create({
+  container: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 20,
+    width: "100%",
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  title: { fontSize: 16, fontWeight: "700", color: "#1e293b" },
+  body: { fontSize: 14, color: "#475569", lineHeight: 20 },
+  bold: { fontWeight: "700", color: "#1e293b" },
+  highlight: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#059669",
+    backgroundColor: "#dcfce7",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748b",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  input: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: "#1e293b",
+  },
+  infoBox: {
+    backgroundColor: "#f8fafc",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    gap: 4,
+  },
+  infoLine: { fontSize: 13, color: "#64748b" },
+  infoVal: { fontWeight: "700", color: "#1e293b" },
+  ruleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 6,
+    backgroundColor: "#f8fafc",
+    gap: 10,
+  },
+  ruleRowSelected: {
+    backgroundColor: "#dcfce7",
+    borderWidth: 1,
+    borderColor: "#86efac",
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
+  },
+  radioSelected: { borderColor: "#059669", backgroundColor: "#059669" },
+  ruleLabel: { fontSize: 14, color: "#1e293b", flex: 1 },
+  btnRow: { flexDirection: "row", gap: 10, marginTop: 20 },
+  cancelBtn: {
+    flex: 1,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  cancelText: { fontSize: 14, fontWeight: "700", color: "#64748b" },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  confirmText: { fontSize: 14, fontWeight: "700", color: "#fff" },
+});
+
+// ─── PDF Modal Styles ─────────────────────────────────────────────────────────
+
+const pdfStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  iconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#fee2e2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pdfIconRed: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "#dc2626",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pdfIconText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  closeBtn: { padding: 4 },
+  title: { fontSize: 18, fontWeight: "800", color: "#1e293b", marginBottom: 4 },
+  subtitle: { fontSize: 13, color: "#64748b", marginBottom: 20 },
+  bold: { fontWeight: "700", color: "#1e293b" },
+  urlBox: {
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  urlLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#16a34a",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  urlText: {
+    fontSize: 13,
+    color: "#2563eb",
+    lineHeight: 20,
+    textDecorationLine: "underline",
+    textDecorationColor: "#2563eb",
+  },
+  browserBtn: {
+    backgroundColor: "#3b82f6",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  browserBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  openBtn: {
+    backgroundColor: "#059669",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  openBtnDisabled: { backgroundColor: "#94a3b8" },
+  openBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  dismissBtn: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  dismissBtnText: { fontSize: 14, fontWeight: "600", color: "#475569" },
 });

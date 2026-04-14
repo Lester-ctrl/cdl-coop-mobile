@@ -35,7 +35,7 @@ const SAMPLE_NOTIFICATIONS: Notification[] = [
     timestamp: "5 hours ago",
     read: false,
     icon: "download",
-    color: "#3b82f6",
+    color: "#10b981",
   },
   // {
   //   id: "3",
@@ -138,7 +138,7 @@ export default function Notifications() {
           />
           <Text style={styles.emptyText}>No notifications</Text>
           <Text style={styles.emptySubtext}>
-            You're all caught up! Check back later.
+            Youre all caught up! Check back later.
           </Text>
         </View>
       )}

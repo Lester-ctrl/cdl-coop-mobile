@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router"; // <-- use hook
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useRouter } from "expo-router";
 import {
   ScrollView,
   StyleSheet,
@@ -8,26 +7,21 @@ import {
   View,
   ActivityIndicator,
   TouchableOpacity,
-  Modal,
-  Pressable,
+  TextInput,
 } from "react-native";
-import { getActiveMembers, getMemberDetails } from "@/api/accountofficer/member";
+import { getActiveMembers } from "@/api/accountofficer/member";
 
 export default function LoanOfficerLoanManagement() {
-  const router = useRouter(); // <-- initialize router
+  const router = useRouter();
 
-  // State
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [memberLoading, setMemberLoading] = useState(false);
-  const [memberError, setMemberError] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
-  // Function to get status color
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
         return "green";
@@ -40,13 +34,13 @@ export default function LoanOfficerLoanManagement() {
     }
   };
 
-  // Fetch members on mount
   useEffect(() => {
     async function fetchMembers() {
       try {
         const data = await getActiveMembers();
-        setMembers(data.active_members);
-      } catch (err) {
+        setMembers(data.active_members || []);
+        setFilteredMembers(data.active_members || []);
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
@@ -55,27 +49,28 @@ export default function LoanOfficerLoanManagement() {
     fetchMembers();
   }, []);
 
-  // Fetch member details when clicked
-  const handleMemberPress = async (memberId) => {
-    setModalVisible(true);
-    setMemberLoading(true);
-    setMemberError(null);
-
-    try {
-      const data = await getMemberDetails(memberId);
-      setSelectedMember(data);
-    } catch (err) {
-      setMemberError(err.message);
-    } finally {
-      setMemberLoading(false);
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setFilteredMembers(members);
+    } else {
+      const filtered = members.filter((m) =>
+        m.full_name?.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredMembers(filtered);
     }
+  }, [searchText, members]);
+
+  const handleOpenMember = (memberId: number) => {
+    router.push({
+      pathname: "/account-officer/view_member",
+      params: { id: memberId },
+    });
   };
 
-  // Loading & Error States
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1c3faa" />
+        <ActivityIndicator size="large" color="#099a1c" />
         <Text>Loading members...</Text>
       </View>
     );
@@ -89,135 +84,85 @@ export default function LoanOfficerLoanManagement() {
     );
   }
 
-  // Main Render
   return (
     <ScrollView contentContainerStyle={styles.container}>
-    
-
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Accounts Management</Text>
         <Text style={styles.subtitle}>
           View, update, and manage member accounts.
         </Text>
-      
       </View>
-        {/* BACK BUTTON */}
-  
-   <TouchableOpacity
-  style={styles.backBtn}
-  onPress={() => router.push("/account-officer/accounts")}
->
-  <FontAwesome6 name="arrow-left" size={20} color="#fff" />
-</TouchableOpacity>
-      {/* Members Table */}
+
+      {/* SEARCH */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by full name..."
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
+      {/* LIST */}
       <View style={styles.card}>
-        
-        <Text style={[styles.title, { color: "#0d942af7", textAlign: "center" }]}>
+        <Text style={[styles.title, { color: "#099a1c", fontSize: 18 }]}>
           Active Members
         </Text>
-        
 
+        {/* HEADER ROW */}
         <View style={styles.tableRowHeader}>
-          <Text style={[styles.cell, styles.headerCell]}>ID</Text>
           <Text style={[styles.cell, styles.headerCell]}>Full Name</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Branch Name</Text>
+          <Text style={[styles.cell, styles.headerCell]}>Branch</Text>
           <Text style={[styles.cell, styles.headerCell]}>Status</Text>
         </View>
 
-        {members.map((member) => (
-          <View style={styles.tableRow} key={member.id}>
-            <Text style={styles.cell}>{member.id}</Text>
+        {/* DATA */}
+        {filteredMembers.map((member) => (
+          <TouchableOpacity
+            key={member.id}
+            style={styles.tableRow}
+            onPress={() => handleOpenMember(member.id)}
+          >
+            <Text style={[styles.cell, { color: "#0638cd", fontWeight: "600" }]}>
+              {member.full_name || "N/A"}
+            </Text>
 
-            <TouchableOpacity
-              style={styles.cell}
-              onPress={() => handleMemberPress(member.id)}
-            >
-              <Text style={{ color: "#0638cd", fontWeight: "600" }}>
-                {member.full_name || "N/A"}
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.cell}>
+              {member.branch_name || "N/A"}
+            </Text>
 
-            <Text style={styles.cell}>{member.branch_name || "N/A"}</Text>
             <Text
               style={[
                 styles.cell,
-                { color: getStatusColor(member.status), fontWeight: "600" },
+                {
+                  color: getStatusColor(member.status),
+                  fontWeight: "600",
+                },
               ]}
             >
               {member.status}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
-
-      {/* Modal for Member Details */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>Close</Text>
-            </Pressable>
-
-            {memberLoading && <Text>Loading details...</Text>}
-            {memberError && <Text style={{ color: "red" }}>{memberError}</Text>}
-
-            {selectedMember && !memberLoading && (
-              <View>
-                <Text style={styles.modalTitle}>{selectedMember.full_name}</Text>
-                <Text>ID: {selectedMember.id}</Text>
-                <Text>Member No: {selectedMember.member_no || "N/A"}</Text>
-                <Text>Branch: {selectedMember.branch_name}</Text>
-                <Text>Email: {selectedMember.email || "N/A"}</Text>
-                <Text>Contact: {selectedMember.contact_no || "N/A"}</Text>
-                <Text>Membership Type: {selectedMember.membership_type || "N/A"}</Text>
-                <Text
-                  style={{
-                    color: getStatusColor(selectedMember.status),
-                    fontWeight: "600",
-                  }}
-                >
-                  Status: {selectedMember.status}
-                </Text>
-                <Text>
-                  Share Capital Balance:{" "}
-                  {new Intl.NumberFormat("en-PH", {
-                    style: "currency",
-                    currency: "PHP",
-                  }).format(selectedMember.share_capital_balance)}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
 
-// Styles
+/* STYLES */
 const styles = StyleSheet.create({
-  container: { 
-    padding: 0,
-     backgroundColor: "#f3f6fb" 
-    },
-  backBtn: {
-    position: "absolute",
-    top: 120,
-    left: 8,
-    backgroundColor: "#141a2b73",
-    padding: 10,
-    borderRadius: 12,
-    zIndex: 1000,
+  container: {
+    paddingBottom: 40,
+    backgroundColor: "#f3f6fb",
   },
+
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   header: {
     paddingHorizontal: 20,
     paddingTop: 60,
@@ -225,57 +170,71 @@ const styles = StyleSheet.create({
     backgroundColor: "#099a1c",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginBottom: 80,
     alignItems: "center",
+    marginBottom: 20,
   },
-  card: {
 
-     width: "90%",
-     backgroundColor: "#fff", 
-      alignSelf: "center",
-     borderRadius: 20,
-      padding: 20,
-      shadowColor: "#1c3faa",
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
-      elevation: 8,
-        marginBottom: 40,
-    
-     },
   title: {
-    top: -15,
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: "700",
-    color: "#e9eaeb",
-    marginBottom: 6,
+    color: "#fff",
     textAlign: "center",
   },
+
   subtitle: {
-    fontSize: 14,
-    top: -15,
-    color: "#dfe1e4",
-    marginBottom: 18,
+    fontSize: 13,
+    color: "#e9f5ea",
+    marginTop: 5,
     textAlign: "center",
   },
+
+  searchContainer: {
+    marginHorizontal: 20,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 15,
+  },
+
+  searchInput: {
+    fontSize: 16,
+    padding: 10,
+  },
+
+  card: {
+    width: "92%",
+    alignSelf: "center",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 15,
+    elevation: 5,
+  },
+
   tableRowHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#0f0303",
+    borderBottomColor: "#ccc",
     paddingBottom: 6,
-    marginBottom: 6,
+    marginTop: 10,
   },
+
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 15,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#090101",
+    borderBottomColor: "#eee",
   },
-  cell: { flex: 1, textAlign: "center" },
-  headerCell: { fontWeight: "700", color: "#08420d" },
-  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
-  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000000ce" },
-  modalContent: { width: "90%", backgroundColor: "#fff", borderRadius: 20, padding: 20 },
-  closeButton: { backgroundColor: "#1c3faa", padding: 10, borderRadius: 12, alignSelf: "flex-end", marginBottom: 15 },
-  modalTitle: { fontSize: 22, fontWeight: "700", marginBottom: 10 },
+
+  cell: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 13,
+  },
+
+  headerCell: {
+    fontWeight: "700",
+    color: "#08420d",
+  },
 });

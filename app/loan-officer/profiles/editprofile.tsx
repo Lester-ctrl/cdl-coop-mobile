@@ -79,7 +79,10 @@ export default function EditProfile() {
 
   return (
     <ScrollView style={styles.container}>
-      <LinearGradient colors={["#2563eb", "#3b82f6"]} style={styles.header}>
+      <LinearGradient
+        colors={["#065f46", "#10b981", "#6ee7b7"]}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>Edit Profile</Text>
       </LinearGradient>
 
@@ -120,7 +123,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   saveButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#10b981",
     padding: 15,
     margin: 20,
     borderRadius: 10,
