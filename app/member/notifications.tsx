@@ -20,17 +20,17 @@
 // const GREEN = "#22C55E";
 // const ITEMS_PER_PAGE = 5;
 
-// type Notification = {
-//     id: number;
-//     title: string;
-//     description: string;
-//     created_at: string;
-//     status: "seen" | "unseen";   // New field from database
-// };
+type Notification = {
+    id: number;
+    title: string;
+    description: string;
+    created_at: string;
+    status: "seen" | "unseen";
+};
 
-// export default function NotificationsScreen() {
-//   const { session } = useAuth();
-//   const profile = session?.profile;
+export default function NotificationsScreen() {
+    const { session } = useAuth();
+    const profile = session?.profile;
 
 //     const [notifications, setNotifications] = useState<Notification[]>([]);
 //     const [loading, setLoading] = useState(true);
