@@ -32,7 +32,7 @@ export default function LoanOfficerSettings() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#065f46", "#10b981", "#6ee7b7"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -50,7 +50,7 @@ export default function LoanOfficerSettings() {
           onPress={() => router.push("/loan-officer/profiles/profile")}
         >
           <View style={styles.iconCircle}>
-            <Ionicons name="person-outline" size={22} color="#10b981" />
+            <Ionicons name="person-outline" size={22} color="#48a019" />
           </View>
           <Text style={styles.itemText}>Profile</Text>
           <Ionicons
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   subtitle: {
-    color: "#E0E7FF",
+    color: "#D4EDD8",
     fontSize: 14,
     marginTop: 6,
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#d1fae5",
+    backgroundColor: "#DCFCE7",
     alignItems: "center",
     justifyContent: "center",
   },
