@@ -1,4 +1,4 @@
-import { fetchNotifications } from "@/api/notification"; // ✏️ same path as your notifications screen
+ // ✏️ same path as your notifications screen
 import { useAuth } from "@/context/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -80,9 +80,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="accounts"
+        name="members"
         options={{
-          title: "Accounts",
+          title: "Members",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size ?? 24} color={color} />
           ),
@@ -91,7 +91,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="product/products-services"
         options={{
-          title: "products",
+          title: "Products",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid" size={size ?? 24} color={color} />
           ),
@@ -100,7 +100,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings/settings"
         options={{
-          title: "settings",
+          title: "Settings",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size ?? 24} color={color} />
           ),
@@ -108,7 +108,17 @@ export default function TabLayout() {
       />
 
       {/* ── Hidden Screens ── */}
-      <Tabs.Screen name="members" options={{ href: null }} />
+
+      
+  
+
+      <Tabs.Screen name="view_member" options={{ href: null }} />
+      <Tabs.Screen name="add_loan/cash_flow_form" options={{ href: null }} />
+      <Tabs.Screen name="add_loan/add_loan" options={{ href: null }} />
+      <Tabs.Screen name="loans_edit/cash_flow" options={{ href: null }} />
+      <Tabs.Screen name="loans_edit/loanedit" options={{ href: null }} />
+      <Tabs.Screen name="loanedit" options={{ href: null }} />
+      <Tabs.Screen name="accounts" options={{ href: null }} />
       <Tabs.Screen name="payments-collections" options={{ href: null }} />
       <Tabs.Screen name="news-events-promos" options={{ href: null }} />
       <Tabs.Screen name="reports-statement" options={{ href: null }} />

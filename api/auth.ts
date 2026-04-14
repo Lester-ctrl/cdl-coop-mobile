@@ -1,7 +1,7 @@
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export async function login(email: string, password: string) {
-  const response = await fetch(`${BASE_URL}/api/mobile-login`, {
+  const response = await fetch(`${BASE_URL}/mobile-login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

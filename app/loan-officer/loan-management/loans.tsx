@@ -2,22 +2,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Dimensions,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Dimensions,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
@@ -800,8 +800,7 @@ function ActionMenu({ loan, visible, onClose, onRefresh }: ActionMenuProps) {
         {subModal && (
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="box-none"
+            style={[StyleSheet.absoluteFill, { pointerEvents: "box-none" }]}
           >
             <View style={styles.subOverlay}>{renderSubModal()}</View>
           </KeyboardAvoidingView>

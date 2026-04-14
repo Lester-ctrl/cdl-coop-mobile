@@ -1,150 +1,287 @@
-// app/account-officer/loan-management.tsx
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  TouchableOpacity,
 } from "react-native";
+import { useRouter } from "expo-router";
 
-const stats = [
-  {
-    label: "Pending Applications",
-    value: "7",
-    icon: "document-text-outline",
-    color: "#f59e42",
-    bg: "#fef9c3",
-  },
-  {
-    label: "Active Loans",
-    value: "12",
-    icon: "cash-outline",
-    color: "#1c3faa",
-    bg: "#dbeafe",
-  },
-  {
-    label: "Partial Payments",
-    value: "5",
-    icon: "wallet-outline",
-    color: "#16a34a",
-    bg: "#dcfce7",
-  },
-];
+const Base_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
-const actions = [
-  { label: "Approve Applications", icon: "checkmark-done-outline" },
-  { label: "Reject Applications", icon: "close-circle-outline" },
-  { label: "Modify Loan Terms", icon: "create-outline" },
-  { label: "View Payment History", icon: "time-outline" },
-  { label: "Record Partial Payment", icon: "wallet-outline" },
-];
+export default function LoansScreen() {
+  const [loans, setLoans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
 
-export default function LoanManagement() {
-  return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+  const router = useRouter();
+
+  const fetchLoans = async () => {
+    try {
+      const response = await fetch(`${Base_URL}/loan/all`);
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to fetch loans");
+      }
+
+      setLoans(json);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLoans();
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch ((status || "").toLowerCase()) {
+      case "approved":
+        return "#099a1c";
+      case "pending":
+        return "#f59e0b";
+      case "rejected":
+        return "#ef4444";
+      default:
+        return "#6b7280";
+    }
+  };
+
+  const filteredLoans = loans.filter((loan) =>
+    (loan.member_name || "")
+      .toLowerCase()
+      .includes(searchText.toLowerCase())
+  );
+
+  const renderLoan = ({ item }: any) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() =>
+        router.push({
+          pathname: "/account-officer/loans_edit/loanedit",
+          params: { loanId: item.loan_application_id },
+        })
+      }
+    >
       {/* HEADER */}
-      <View style={styles.headerContent}>
-        <Text style={styles.greeting}>Loan Management</Text>
-        <Text style={styles.subtitle}>
-          Manage loan applications, approvals, and partial payments.
-        </Text>
-      </View>
+      <View style={styles.cardHeader}>
+        <View>
+          <Text style={styles.name}>{item.member_name}</Text>
+          <Text style={styles.subtitle}>{item.loan_type}</Text>
+        </View>
 
-      {/* STATS */}
-      <View style={styles.statsRow}>
-        {stats.map((stat, idx) => (
-          <View
-            key={idx}
-            style={[styles.statCard, { backgroundColor: stat.bg }]}
-          >
-            <Ionicons name={stat.icon as any} size={28} color={stat.color} />
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* QUICK ACTIONS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.grid}>
-          {actions.map((action, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.gridItem}
-              activeOpacity={0.8}
-            >
-              <View style={styles.iconBox}>
-                <Ionicons name={action.icon as any} size={24} color="#1c3faa" />
-              </View>
-              <Text style={styles.gridText}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.loan_status) },
+          ]}
+        >
+          <Text style={styles.statusText}>
+            {item.loan_status?.toUpperCase()}
+          </Text>
         </View>
       </View>
-    </ScrollView>
+
+      {/* BODY */}
+      <View style={styles.cardBody}>
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>AMOUNT</Text>
+          <Text style={styles.value}>
+            ₱{Number(item.amount_requested || 0).toLocaleString()}
+          </Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>TERM</Text>
+          <Text style={styles.value}>
+            {item.term_months || "-"} Months
+          </Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>RELEASE DATE</Text>
+          <Text style={styles.value}>
+            {item.release_date || "Pending"}
+          </Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.label}>ID</Text>
+          <Text style={styles.value}>
+            #{item.loan_application_id}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#099a1c" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Loan Management</Text>
+      </View>
+
+      {/* ADD LOAN BUTTON */}
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => router.push("/account-officer/add_loan/add_loan")}
+      >
+        <Text style={styles.addBtnText}>+ New Loan Application</Text>
+      </TouchableOpacity>
+
+      {/* SEARCH */}
+      <TextInput
+        style={styles.search}
+        placeholder="Search member..."
+        value={searchText}
+        onChangeText={setSearchText}
+      />
+
+      {/* LIST */}
+      <FlatList
+        data={filteredLoans}
+        keyExtractor={(item) =>
+          item.loan_application_id.toString()
+        }
+        renderItem={renderLoan}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
-  headerContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
-  greeting: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1c3faa",
-    marginBottom: 4,
-  },
-  subtitle: { fontSize: 14, color: "#64748b" },
+  container: { flex: 1, backgroundColor: "#f3f6fb" },
 
-  statsRow: {
+  header: {
+    backgroundColor: "#099a1c",
+    padding: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: -28,
+  },
+
+addBtn: {
+  backgroundColor: "#099a1c",
+ alignSelf: "flex-end" ,  
+  paddingVertical: 8,    
+  paddingHorizontal: 16, 
+  borderRadius: 8,
+  marginBottom: 30,
+  marginTop: 10,
+},
+
+  addBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  search: {
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 10,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginBottom: 12,
+    borderRadius: 16,
+    padding: 15,
+    elevation: 3,
+  },
+
+  cardHeader: {
     flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  statCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: "center" },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#1e293b",
-    marginTop: 4,
+
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111",
   },
-  statLabel: {
+
+  subtitle: {
     fontSize: 12,
-    color: "#475569",
-    fontWeight: "600",
+    color: "#666",
     marginTop: 2,
   },
 
-  section: { paddingHorizontal: 20, marginBottom: 28 },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#1e293b",
-    marginBottom: 16,
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
   },
 
-  grid: {
+  statusText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+
+  cardBody: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
-  gridItem: { width: "30%", alignItems: "center", marginBottom: 20 },
-  iconBox: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+
+  infoBox: {
+    width: "48%",
+    marginBottom: 10,
   },
-  gridText: {
-    textAlign: "center",
-    fontSize: 12,
-    color: "#475569",
+
+  label: {
+    fontSize: 10,
+    color: "#888",
     fontWeight: "600",
+  },
+
+  value: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#222",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
