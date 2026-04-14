@@ -1,14 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 const dashboardCards = [
   {
@@ -19,46 +23,197 @@ const dashboardCards = [
     route: "/loan-officer/loan-management/loans",
     description: "Review & process applications",
   },
-  {
-    label: "Partial Payments",
-    icon: "cash-outline",
-    bg: "#F0FDF4",
-    color: "#48a019",
-    route: "/loan-officer/loan-management/loan-dash",
-    description: "Track installment payments",
-  },
-  {
-    label: "Restructure",
-    icon: "refresh-circle-outline",
-    bg: "#F0FDF4",
-    color: "#51b61a",
-    route: "/loan-officer/loan-management/restructure-application",
-    description: "Modify loan terms",
-  },
 ];
 
-const stats = [
-  {
-    label: "Active Loans",
-    value: "24",
-    icon: "briefcase-outline",
-    color: "#2D5016",
-  },
-  {
-    label: "Pending Reviews",
-    value: "8",
-    icon: "time-outline",
-    color: "#48a019",
-  },
-  {
-    label: "Total Disbursed",
-    value: "₱1.2M",
-    icon: "trending-up-outline",
-    color: "#51b61a",
-  },
-];
+interface LoanApplication {
+  loan_application_id: string;
+  status: string;
+  amount_requested?: number;
+  created_at?: string;
+  member?: {
+    profile?: {
+      first_name?: string;
+      last_name?: string;
+    };
+  };
+  loanAccount?: {
+    status?: string;
+    principal_amount?: number;
+  } | null;
+}
+
+const getToken = async (): Promise<string | null> => {
+  try {
+    const stored = await AsyncStorage.getItem("session");
+    if (!stored) return null;
+    return JSON.parse(stored)?.token ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const formatCompactPeso = (amount: number): string => {
+  try {
+    const formatted = new Intl.NumberFormat("en-PH", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(amount);
+    return `₱${formatted}`;
+  } catch {
+    return `₱${amount.toFixed(0)}`;
+  }
+};
+
+const formatRelativeTime = (value?: string): string => {
+  if (!value) return "Recently";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently";
+
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+
+  if (seconds < 60) return "Just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
+
+const getMemberName = (loan: LoanApplication): string => {
+  const { first_name, last_name } = loan.member?.profile ?? {};
+  if (first_name && last_name) return `${first_name} ${last_name}`;
+  return "Unknown Member";
+};
+
+const getActivityConfig = (status: string): { icon: string; color: string } => {
+  const normalizedStatus = status.toLowerCase();
+
+  if (normalizedStatus.includes("approved")) {
+    return { icon: "checkmark-circle", color: "#2D5016" };
+  }
+  if (
+    normalizedStatus.includes("pending") ||
+    normalizedStatus.includes("review")
+  ) {
+    return { icon: "time", color: "#48a019" };
+  }
+  if (
+    normalizedStatus.includes("reject") ||
+    normalizedStatus.includes("cancel")
+  ) {
+    return { icon: "close-circle", color: "#dc2626" };
+  }
+
+  return { icon: "document-text", color: "#51b61a" };
+};
 
 export default function LoanManagementDashboard() {
+  const [loanApplications, setLoanApplications] = useState<LoanApplication[]>(
+    [],
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLoanApplications = async () => {
+      try {
+        setIsLoading(true);
+
+        if (!BASE_URL) {
+          setLoanApplications([]);
+          return;
+        }
+
+        const token = await getToken();
+        const res = await fetch(
+          `${BASE_URL}/api/loan-applications?per_page=50`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch loan applications");
+
+        const data = await res.json();
+        setLoanApplications(Array.isArray(data.data) ? data.data : []);
+      } catch (error) {
+        console.error("Error fetching dashboard loans:", error);
+        setLoanApplications([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void fetchLoanApplications();
+  }, []);
+
+  const stats = useMemo(() => {
+    const activeLoansCount = loanApplications.filter((loan) => {
+      const status = loan.loanAccount?.status?.toLowerCase();
+      return status === "active";
+    }).length;
+
+    const pendingReviewsCount = loanApplications.filter((loan) => {
+      const status = loan.status?.toLowerCase();
+      return status === "pending" || status === "under review";
+    }).length;
+
+    const totalDisbursed = loanApplications.reduce((sum, loan) => {
+      const status = loan.status?.toLowerCase();
+      if (status !== "approved") return sum;
+      return (
+        sum + (loan.loanAccount?.principal_amount ?? loan.amount_requested ?? 0)
+      );
+    }, 0);
+
+    return [
+      {
+        label: "Active Loans",
+        value: activeLoansCount.toString(),
+        icon: "briefcase-outline",
+        color: "#2D5016",
+      },
+      {
+        label: "Pending Reviews",
+        value: pendingReviewsCount.toString(),
+        icon: "time-outline",
+        color: "#48a019",
+      },
+      {
+        label: "Total Disbursed",
+        value: formatCompactPeso(totalDisbursed),
+        icon: "trending-up-outline",
+        color: "#51b61a",
+      },
+    ];
+  }, [loanApplications]);
+
+  const recentActivity = useMemo(() => {
+    const sortedLoans = [...loanApplications].sort((a, b) => {
+      const aTime = new Date(a.created_at ?? 0).getTime();
+      const bTime = new Date(b.created_at ?? 0).getTime();
+      return bTime - aTime;
+    });
+
+    return sortedLoans.slice(0, 3).map((loan) => {
+      const { icon, color } = getActivityConfig(loan.status);
+      return {
+        title: `${getMemberName(loan)} • ${loan.status}`,
+        time: formatRelativeTime(loan.created_at),
+        icon,
+        color,
+      };
+    });
+  }, [loanApplications]);
+
   return (
     <ScrollView
       style={styles.container}
@@ -83,7 +238,7 @@ export default function LoanManagementDashboard() {
           </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
-          Manage loans, track payments, and handle restructures
+          Manage loan applications and monitor recent activity
         </Text>
       </LinearGradient>
 
@@ -146,46 +301,35 @@ export default function LoanManagementDashboard() {
           </TouchableOpacity>
         </View>
         <View style={styles.activityList}>
-          {[
-            {
-              title: "New loan application #LN-2341",
-              time: "2 min ago",
-              icon: "document-text",
-              color: "#2D5016",
-            },
-            {
-              title: "Partial payment received",
-              time: "1 hour ago",
-              icon: "cash",
-              color: "#48a019",
-            },
-            {
-              title: "Restructure request pending",
-              time: "3 hours ago",
-              icon: "refresh",
-              color: "#51b61a",
-            },
-          ].map((activity, idx) => (
-            <View key={idx} style={styles.activityItem}>
-              <View
-                style={[
-                  styles.activityIcon,
-                  { backgroundColor: `${activity.color}10` },
-                ]}
-              >
-                <Ionicons
-                  name={activity.icon as any}
-                  size={20}
-                  color={activity.color}
-                />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
-                <Text style={styles.activityTime}>{activity.time}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          {isLoading ? (
+            <View style={styles.activityEmptyState}>
+              <ActivityIndicator size="small" color="#48a019" />
             </View>
-          ))}
+          ) : recentActivity.length === 0 ? (
+            <Text style={styles.activityEmptyText}>No recent activity yet</Text>
+          ) : (
+            recentActivity.map((activity, idx) => (
+              <View key={idx} style={styles.activityItem}>
+                <View
+                  style={[
+                    styles.activityIcon,
+                    { backgroundColor: `${activity.color}10` },
+                  ]}
+                >
+                  <Ionicons
+                    name={activity.icon as any}
+                    size={20}
+                    color={activity.color}
+                  />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              </View>
+            ))
+          )}
         </View>
       </View>
     </ScrollView>
@@ -356,6 +500,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.02,
     shadowRadius: 8,
     elevation: 1,
+  },
+  activityEmptyState: {
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityEmptyText: {
+    textAlign: "center",
+    color: "#64748B",
+    fontSize: 13,
+    paddingVertical: 20,
   },
   activityItem: {
     flexDirection: "row",

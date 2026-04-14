@@ -20,7 +20,7 @@ export default function Applications() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
       <LinearGradient
-        colors={["#1e3a8a", "#2563eb", "#3b82f6"]}
+        colors={["#2D5016", "#48a019", "#51b61a"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -78,7 +78,7 @@ export default function Applications() {
                   router.push("./loan-officer/applications/recommend")
                 }
               >
-                <FontAwesome6 name="star" size={16} color="#2563eb" />
+                <FontAwesome6 name="star" size={16} color="#2D5016" />
                 <Text style={styles.recommendBtnText}>Recommend</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -100,7 +100,7 @@ export default function Applications() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f4f7ff",
+    backgroundColor: "#f4faf3",
     flex: 1,
   },
   header: {
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     marginBottom: 16,
-    shadowColor: "#1e3a8a",
+    shadowColor: "#2D5016",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#bbf7d0",
   },
   badgeReview: {
-    backgroundColor: "#e0e7ff",
+    backgroundColor: "#DCFCE7",
   },
   badgeText: {
     fontWeight: "700",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   amountValue: {
     fontWeight: "800",
-    color: "#1e3a8a",
+    color: "#2D5016",
   },
   actionRow: {
     flexDirection: "row",
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   primaryBtn: {
-    backgroundColor: "#3A8E0D", // green
+    backgroundColor: "#48a019",
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   secondaryBtn: {
-    backgroundColor: "#d1fae5",
+    backgroundColor: "#DCFCE7",
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,
@@ -200,12 +200,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   secondaryBtnText: {
-    color: "#065f46",
+    color: "#2D5016",
     fontWeight: "700",
     fontSize: 12,
   },
   recommendBtn: {
-    backgroundColor: "#e0e7ff",
+    backgroundColor: "#ECFCCB",
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   recommendBtnText: {
-    color: "#2563eb",
+    color: "#2D5016",
     fontWeight: "700",
     fontSize: 12,
   },
@@ -245,12 +245,12 @@ const styles = StyleSheet.create({
   noResult: {
     textAlign: "center",
     marginTop: 40,
-    color: "#3A8E0D", // green
+    color: "#48a019",
     fontWeight: "600",
   },
   balanceAmount: {
     fontWeight: "800",
-    color: "#3A8E0D", // green
+    color: "#48a019",
   },
   ghostBtnText: {
     color: "#2D5016", // green

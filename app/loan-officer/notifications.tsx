@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -59,7 +59,7 @@ function mapNotification(item: LoanOfficerNotificationResponse): Notification {
     timestamp: formatTimestamp(item.created_at),
     read: item.is_read,
     icon: item.is_read ? "notifications-outline" : "notifications",
-    color: item.is_read ? "#94a3b8" : "#2563eb",
+    color: item.is_read ? "#94a3b8" : "#48a019",
   };
 }
 
@@ -175,7 +175,7 @@ export default function Notifications() {
       {/* Notifications List */}
       {isLoading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color="#48a019" />
         </View>
       ) : (
         <FlatList
@@ -211,7 +211,7 @@ export default function Notifications() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#eef2f7",
+    backgroundColor: "#f4faf3",
   },
   header: {
     paddingTop: 50,
@@ -225,22 +225,22 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#2563eb",
+    color: "#2D5016",
   },
   unreadBadge: {
     fontSize: 12,
-    color: "#ef4444",
+    color: "#51b61a",
     marginTop: 4,
     fontWeight: "600",
   },
   headerBadge: {
-    backgroundColor: "#e0e7ff",
+    backgroundColor: "#dcfce7",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
   },
   badgeText: {
-    color: "#2563eb",
+    color: "#2D5016",
     fontWeight: "700",
     fontSize: 14,
   },
@@ -268,9 +268,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   notificationCardUnread: {
-    backgroundColor: "#f0f7ff",
+    backgroundColor: "#f0fdf4",
     borderLeftWidth: 4,
-    borderLeftColor: "#2563eb",
+    borderLeftColor: "#48a019",
   },
   iconContainer: {
     width: 48,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#51b61a",
     position: "absolute",
     top: 12,
     right: 12,
