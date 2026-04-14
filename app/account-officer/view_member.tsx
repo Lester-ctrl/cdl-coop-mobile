@@ -2,14 +2,13 @@ import { viewMember } from "@/api/accountofficer/view_member";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function ViewMemberScreen() {
   const router = useRouter();
@@ -56,10 +55,10 @@ export default function ViewMemberScreen() {
     return (
       <>
         <Text style={styles.sectionTitle}>Personal Information</Text>
-       <Info
-            label="Fullname"
-            value={`${profile.first_name || ""} ${profile.middle_name || ""} ${profile.last_name || ""}`}
-            />
+        <Info
+          label="Fullname"
+          value={`${profile.first_name || ""} ${profile.middle_name || ""} ${profile.last_name || ""}`}
+        />
         <Info label="Email" value={profile.email} />
         <Info label="Mobile" value={profile.mobile_number} />
         <Info label="Occupation" value={member.occupation} />
@@ -82,13 +81,9 @@ export default function ViewMemberScreen() {
         <Info
           label="Share Capital"
           value={`₱ ${Number(
-            member.share_capital_balance || 0
+            member.share_capital_balance || 0,
           ).toLocaleString()}`}
         />
-
-      
-
-       
       </>
     );
   };
@@ -112,24 +107,22 @@ export default function ViewMemberScreen() {
               <Info
                 label="Birthdate"
                 value={
-                    spouse?.birthdate
+                  spouse?.birthdate
                     ? new Date(spouse.birthdate).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                        })
+                      })
                     : "-"
                 }
-                />
+              />
               <Info label="Occupation" value={spouse.occupation} />
               <Info label="Employer" value={spouse.employer_name} />
               <Info label="source_of_income" value={spouse.source_of_income} />
               <Info label="TIN" value={spouse.tin} />
             </>
           ) : (
-            <Text style={styles.empty}>
-              No spouse record (check member ID)
-            </Text>
+            <Text style={styles.empty}>No spouse record (check member ID)</Text>
           )}
         </View>
 
@@ -142,9 +135,7 @@ export default function ViewMemberScreen() {
           {coMakers.length > 0 ? (
             coMakers.map((item: any, index: number) => (
               <View key={index} style={styles.subCard}>
-                <Text style={styles.name}>
-                 {item.full_name}
-                </Text>
+                <Text style={styles.name}>{item.full_name}</Text>
                 <Info label="Relation" value={item.relationship} />
                 <Info label="Contact" value={item.contact_number} />
                 <Info label="Address" value={item.address} />
@@ -155,15 +146,13 @@ export default function ViewMemberScreen() {
                 <Info
                   label="Income"
                   value={`₱ ${Number(
-                    item.monthly_income || 0
+                    item.monthly_income || 0,
                   ).toLocaleString()}`}
                 />
               </View>
             ))
           ) : (
-            <Text style={styles.empty}>
-              No co-makers (check member ID)
-            </Text>
+            <Text style={styles.empty}>No co-makers (check member ID)</Text>
           )}
         </View>
       </>
@@ -184,11 +173,11 @@ export default function ViewMemberScreen() {
       <Info label="ID Type" value={member.id_type} />
       <Info label="ID Number" value={member.id_number} />
 
-       <View style={styles.divider} />
+      <View style={styles.divider} />
 
-       <Text style={styles.sectionTitle}>Emergency Contact</Text>
-        <Info label="Name" value={member.emergency_full_name} />
-        <Info label="Phone" value={member.emergency_phone} />
+      <Text style={styles.sectionTitle}>Emergency Contact</Text>
+      <Info label="Name" value={member.emergency_full_name} />
+      <Info label="Phone" value={member.emergency_phone} />
     </>
   );
 
@@ -199,12 +188,11 @@ export default function ViewMemberScreen() {
       <Info
         label="Balance"
         value={`₱ ${Number(
-          member.share_capital_balance || 0
+          member.share_capital_balance || 0,
         ).toLocaleString()}`}
       />
 
-       <Info label="Phone" value={member.} />
-
+      <Info label="Phone" value={member.emergency_phone} />
     </>
   );
 
@@ -253,7 +241,6 @@ export default function ViewMemberScreen() {
   return (
     <View style={styles.container}>
       <ScrollView>
-
         {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -267,13 +254,15 @@ export default function ViewMemberScreen() {
           <Text style={styles.name}>
             {profile.first_name} {profile.last_name}
           </Text>
-          <Text style={styles.subText}>
-            Member No: {member.member_no}
-          </Text>
+          <Text style={styles.subText}>Member No: {member.member_no}</Text>
         </View>
 
         {/* NAV */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navbar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.navbar}
+        >
           {[
             { key: "personal", label: "Personal" },
             { key: "spouse", label: "Spouse & Co-Maker" },
@@ -283,10 +272,7 @@ export default function ViewMemberScreen() {
             <TouchableOpacity
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              style={[
-                styles.navBtn,
-                activeTab === tab.key && styles.activeNav,
-              ]}
+              style={[styles.navBtn, activeTab === tab.key && styles.activeNav]}
             >
               <Text
                 style={[
@@ -302,7 +288,6 @@ export default function ViewMemberScreen() {
 
         {/* CONTENT */}
         <View style={styles.card}>{renderContent()}</View>
-
       </ScrollView>
     </View>
   );
