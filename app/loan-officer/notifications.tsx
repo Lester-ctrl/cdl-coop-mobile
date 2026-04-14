@@ -1,12 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  fetchLoanOfficerNotifications,
+  LoanofficerNotification,
+  type LoanOfficerNotificationResponse,
+} from "../../api/Loanofficer/Notif";
 
 interface Notification {
   id: string;
@@ -18,52 +24,98 @@ interface Notification {
   color: string;
 }
 
-const SAMPLE_NOTIFICATIONS: Notification[] = [
-  {
-    id: "1",
-    title: "Loan Application Approved",
-    message: "Your loan application has been approved. Amount: 10,000",
-    timestamp: "2 hours ago",
-    read: false,
-    icon: "checkmark-circle",
-    color: "#22c55e",
-  },
-  {
-    id: "2",
-    title: "Payment Received",
-    message: "Payment of 50,000 has been received from John Doe",
-    timestamp: "5 hours ago",
-    read: false,
-    icon: "download",
-    color: "#10b981",
-  },
-  // {
-  //   id: "3",
-  //   title: "Loan Disbursed",
-  //   message: "Loan of 30,000 has been disbursed to your account",
-  //   timestamp: "1 day ago",
-  //   read: true,
-  //   icon: "cash",
-  //   color: "#f59e0b",
-  // },
-  {
-    id: "4",
-    title: "Account Update",
-    message: "Your profile has been updated successfully",
-    timestamp: "2 days ago",
-    read: true,
-    icon: "person",
-    color: "#8b5cf6",
-  },
-];
+function formatTimestamp(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Just now";
+  }
+
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+
+  if (seconds < 60) {
+    return "Just now";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function mapNotification(item: LoanOfficerNotificationResponse): Notification {
+  return {
+    id: String(item.id),
+    title: item.title,
+    message: item.description ?? "",
+    timestamp: formatTimestamp(item.created_at),
+    read: item.is_read,
+    icon: item.is_read ? "notifications-outline" : "notifications",
+    color: item.is_read ? "#94a3b8" : "#2563eb",
+  };
+}
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif)),
-    );
+  const loadNotifications = async () => {
+    const data = await fetchLoanOfficerNotifications();
+    setNotifications(data.map(mapNotification));
+  };
+
+  useEffect(() => {
+    async function initializeNotifications() {
+      try {
+        await loadNotifications();
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void initializeNotifications();
+  }, []);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadNotifications();
+    } catch (error) {
+      console.error("Error refreshing notifications:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    try {
+      await LoanofficerNotification(id, { is_read: true });
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === id
+            ? {
+                ...notif,
+                read: true,
+                icon: "notifications-outline",
+                color: "#94a3b8",
+              }
+            : notif,
+        ),
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
   const deleteNotification = (id: string) => {
@@ -121,26 +173,36 @@ export default function Notifications() {
       </View>
 
       {/* Notifications List */}
-      {notifications.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      ) : (
         <FlatList
+          style={styles.list}
           data={notifications}
           renderItem={renderNotification}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          scrollEnabled={false}
+          contentContainerStyle={[
+            styles.listContent,
+            notifications.length === 0 && styles.listContentEmpty,
+          ]}
+          onRefresh={onRefresh}
+          refreshing={isRefreshing}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={64}
+                color="#cbd5e1"
+              />
+              <Text style={styles.emptyText}>No notifications</Text>
+              <Text style={styles.emptySubtext}>
+                You're all caught up! Check back later.
+              </Text>
+            </View>
+          }
         />
-      ) : (
-        <View style={styles.emptyState}>
-          <Ionicons
-            name="notifications-off-outline"
-            size={64}
-            color="#cbd5e1"
-          />
-          <Text style={styles.emptyText}>No notifications</Text>
-          <Text style={styles.emptySubtext}>
-            Youre all caught up! Check back later.
-          </Text>
-        </View>
       )}
     </View>
   );
@@ -185,6 +247,17 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  list: {
+    flex: 1,
+  },
+  listContentEmpty: {
+    flexGrow: 1,
+  },
+  loaderContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   notificationCard: {
     backgroundColor: "#fff",
