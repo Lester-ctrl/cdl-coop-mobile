@@ -1,3 +1,5 @@
+// app/account-officer/pending_applications.tsx
+
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -26,71 +28,77 @@ const StatCard: React.FC<StatCardProps> = ({
   accentColor,
 }) => {
   return (
-    <View style={styles.statCard}>
+    <View style={styles.card}>
       <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
 
       <View style={[styles.iconWrap, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
 
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.label}>{label}</Text>
     </View>
   );
 };
 
-export default function PaymentsCollections() {
+export default function PendingApplications() {
   const stats = [
+  
     {
-      label: "Total Payments",
-      value: "₱120,000",
-      icon: "card-outline",
+      label: "For Review Today",
+      value: 8,
+      icon: "eye-outline",
       color: "#16a34a",
       bg: "#dcfce7",
       accentColor: "#16a34a",
     },
     {
-      label: "Partial Payments",
-      value: "5",
-      icon: "wallet-outline",
+      label: "Approved This Week",
+      value: 12,
+      icon: "checkmark-done-outline",
       color: "#16a34a",
       bg: "#dcfce7",
       accentColor: "#16a34a",
     },
-       {
-      label: "Pending Payments",
-      value: "8",
-      icon: "time-outline",
+      {
+      label: "Pending Applications",
+      value: 25,
+      icon: "document-text-outline",
       color: "#f59e0b",
       bg: "#fef3c7",
       accentColor: "#f59e0b",
     },
+    {
+      label: "Rejected Applications",
+      value: 3,
+      icon: "close-circle-outline",
+      color: "#ef4444",
+      bg: "#fee2e2",
+      accentColor: "#ef4444",
+    },
   ];
 
   const actions = [
-    { label: "Record Payment", icon: "cash-outline" },
-    { label: "Payment History", icon: "time-outline" },
-    { label: "Generate Receipt", icon: "document-text-outline" },
-    { label: "Send Reminder", icon: "notifications-outline" },
+    { label: "Review Applications", icon: "search-outline" },
+    { label: "Approve Loan", icon: "checkmark-circle-outline" },
+    { label: "Reject Application", icon: "close-circle-outline" },
+    { label: "Generate Report", icon: "document-text-outline" },
   ];
 
   return (
-    <ScrollView
-      style={styles.screen}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Payments & Collections</Text>
+        <Text style={styles.headerTitle}>Pending Applications</Text>
         <Text style={styles.headerSub}>
-          Manage payments, collections, and receipts
+          Manage and review loan applications efficiently
         </Text>
       </View>
 
       {/* STATS */}
       <View style={styles.statsRow}>
-        {stats.map((stat, idx) => (
-          <StatCard key={idx} {...stat} />
+        {stats.map((item, idx) => (
+          <StatCard key={idx} {...item} />
         ))}
       </View>
 
@@ -99,19 +107,43 @@ export default function PaymentsCollections() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
         <View style={styles.grid}>
-          {actions.map((action, idx) => (
+          {actions.map((item, idx) => (
             <TouchableOpacity
               key={idx}
               style={styles.gridItem}
               activeOpacity={0.8}
             >
               <View style={styles.actionIcon}>
-                <Ionicons name={action.icon as any} size={22} color="#16a34a" />
+                <Ionicons
+                  name={item.icon as any}
+                  size={22}
+                  color="#dcfce7"
+                />
               </View>
 
-              <Text style={styles.gridText}>{action.label}</Text>
+              <Text style={styles.gridText}>{item.label}</Text>
             </TouchableOpacity>
           ))}
+        </View>
+      </View>
+
+      {/* SUMMARY */}
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Application Overview</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Total Pending Value</Text>
+          <Text style={styles.rowValue}>₱1,250,000</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Average Processing Time</Text>
+          <Text style={styles.rowValue}>2–3 Days</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Approval Rate</Text>
+          <Text style={styles.rowValue}>78%</Text>
         </View>
       </View>
     </ScrollView>
@@ -148,18 +180,18 @@ const styles = StyleSheet.create({
   /* STATS */
   statsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     gap: 10,
     marginBottom: 24,
   },
 
-  statCard: {
-    flex: 1,
+  card: {
+    width: "48%",
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 14,
-    alignItems: "flex-start",
     position: "relative",
 
     shadowColor: "#000",
@@ -188,22 +220,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  statValue: {
+  value: {
     fontSize: 18,
     fontWeight: "800",
     color: "#1a1a1a",
   },
 
-  statLabel: {
+  label: {
     fontSize: 12,
     color: "#666",
     marginTop: 2,
   },
 
-  /* SECTION */
+  /* QUICK ACTIONS */
   section: {
     paddingHorizontal: 16,
-    marginBottom: 30,
+    marginBottom: 28,
   },
 
   sectionTitle: {
@@ -214,7 +246,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  /* GRID ACTIONS */
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -240,7 +271,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#dcfce7",
+    backgroundColor: "#16a34a",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -251,5 +282,46 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
+  },
+
+  /* SUMMARY */
+  summaryCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 30,
+
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 10,
+    color: "#1a1a1a",
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eee",
+  },
+
+  rowLabel: {
+    fontSize: 13,
+    color: "#555",
+  },
+
+  rowValue: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
 });

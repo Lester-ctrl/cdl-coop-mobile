@@ -18,19 +18,18 @@ export default function LoanOfficerLoanManagement() {
   const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [searchText, setSearchText] = useState("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "green";
+        return "#16a34a";
       case "Pending":
-        return "orange";
+        return "#f59e0b";
       case "Inactive":
-        return "red";
+        return "#dc2626";
       default:
-        return "black";
+        return "#6b7280";
     }
   };
 
@@ -65,6 +64,12 @@ export default function LoanOfficerLoanManagement() {
       pathname: "/account-officer/view_member",
       params: { id: memberId },
     });
+  };
+
+  // ✅ FIXED: 1 LETTER ONLY
+  const getInitial = (name: string) => {
+    if (!name) return "?";
+    return name.trim().charAt(0).toUpperCase();
   };
 
   if (loading) {
@@ -104,48 +109,44 @@ export default function LoanOfficerLoanManagement() {
         />
       </View>
 
-      {/* LIST */}
-      <View style={styles.card}>
-        <Text style={[styles.title, { color: "#099a1c", fontSize: 18 }]}>
-          Active Members
-        </Text>
+      {/* MEMBER CARDS */}
+      {filteredMembers.map((member) => (
+        <TouchableOpacity
+          key={member.id}
+          style={styles.memberCard}
+          onPress={() => handleOpenMember(member.id)}
+          activeOpacity={0.8}
+        >
+          {/* AVATAR */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {getInitial(member.full_name)}
+            </Text>
+          </View>
 
-        {/* HEADER ROW */}
-        <View style={styles.tableRowHeader}>
-          <Text style={[styles.cell, styles.headerCell]}>Full Name</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Branch</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Status</Text>
-        </View>
-
-        {/* DATA */}
-        {filteredMembers.map((member) => (
-          <TouchableOpacity
-            key={member.id}
-            style={styles.tableRow}
-            onPress={() => handleOpenMember(member.id)}
-          >
-            <Text style={[styles.cell, { color: "#0638cd", fontWeight: "600" }]}>
+          {/* INFO */}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>
               {member.full_name || "N/A"}
             </Text>
 
-            <Text style={styles.cell}>
-              {member.branch_name || "N/A"}
+            <Text style={styles.branch}>
+              {member.branch_name || "No Branch"}
             </Text>
 
-            <Text
+            <View
               style={[
-                styles.cell,
-                {
-                  color: getStatusColor(member.status),
-                  fontWeight: "600",
-                },
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(member.status) },
               ]}
             >
-              {member.status}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text style={styles.statusText}>
+                {member.status}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 }
@@ -178,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: "#fff",
-    textAlign: "center",
   },
 
   subtitle: {
@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginHorizontal: 20,
     backgroundColor: "#fff",
-    paddingHorizontal: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#e2e8f0",
@@ -200,41 +199,59 @@ const styles = StyleSheet.create({
 
   searchInput: {
     fontSize: 16,
-    padding: 10,
+    padding: 12,
   },
 
-  card: {
-    width: "92%",
-    alignSelf: "center",
+  memberCard: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 20,
+    marginHorizontal: 20,
+    marginBottom: 12,
     padding: 15,
-    elevation: 5,
+    borderRadius: 16,
+    elevation: 4,
   },
 
-  tableRowHeader: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    paddingBottom: 6,
-    marginTop: 10,
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#099a1c",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
 
-  tableRow: {
-    flexDirection: "row",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-
-  cell: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 13,
-  },
-
-  headerCell: {
+  avatarText: {
+    color: "#fff",
     fontWeight: "700",
-    color: "#08420d",
+    fontSize: 18,
+  },
+
+  name: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111",
+  },
+
+  branch: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+
+  statusBadge: {
+    marginTop: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+
+  statusText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "600",
   },
 });

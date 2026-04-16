@@ -41,33 +41,32 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
-        tabBarStyle: {
-          backgroundColor: "#ffffffe3",
-          borderTopWidth: 1,
-          borderTopColor: "#f1f5f9",
-          borderRadius: 15,
-          height: Platform.OS === "ios" ? 90 : 70,
-          paddingBottom: Platform.OS === "ios" ? 28 : 12,
-          paddingTop: 10,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 12,
-          elevation: 10,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
-      }}
+         screenOptions={{
+             headerShown: false,
+             tabBarActiveTintColor: activeColor,
+             tabBarInactiveTintColor: inactiveColor,
+             tabBarStyle: {
+               backgroundColor: "#ffffff",
+               borderTopWidth: 1,
+               borderTopColor: "#f1f5f9",
+               height: Platform.OS === "ios" ? 90 : 70,
+               paddingBottom: Platform.OS === "ios" ? 28 : 12,
+               paddingTop: 10,
+               shadowColor: "#000",
+               shadowOffset: { width: 0, height: -2 },
+               shadowOpacity: 0.06,
+               shadowRadius: 12,
+               elevation: 10,
+             },
+             tabBarLabelStyle: {
+               fontSize: 11,
+               fontWeight: "600",
+               marginTop: 4,
+             },
+             tabBarIconStyle: {
+               marginTop: 4,
+             },
+           }}
     >
       {/* ── Visible Tabs ── */}
       <Tabs.Screen
@@ -89,15 +88,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="product/products-services"
-        options={{
-          title: "Products",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid" size={size ?? 24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="settings/settings"
         options={{
           title: "Settings",
@@ -112,6 +102,13 @@ export default function TabLayout() {
       
   
 
+      <Tabs.Screen name="overview/pending_application" options={{ href: null }} />
+      <Tabs.Screen name="overview/loans_disbursed" options={{ href: null }} />
+      <Tabs.Screen name="overview/delinquent_members" options={{ href: null }} />
+      <Tabs.Screen name="overview/collection" options={{ href: null }} />
+      <Tabs.Screen name="overview/active_members" options={{ href: null }} />
+      <Tabs.Screen name="overview/active_loan_accounts" options={{ href: null }} />
+      <Tabs.Screen name="product/products-services" options={{ href: null }} />
       <Tabs.Screen name="view_member" options={{ href: null }} />
       <Tabs.Screen name="add_loan/cash_flow_form" options={{ href: null }} />
       <Tabs.Screen name="add_loan/add_loan" options={{ href: null }} />

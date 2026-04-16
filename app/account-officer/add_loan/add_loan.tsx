@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { viewMember } from "@/api/accountofficer/view_member";
 
 export default function AddLoan() {
   const [form, setForm] = useState({
@@ -18,10 +19,47 @@ export default function AddLoan() {
     term: "",
     interestRate: "",
   });
-const router = useRouter();
+  const router = useRouter();
+  const [member, setMember] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+  const {id} = useLocalSearchParams();
+  const [activeTab, setActiveTab] = useState("personal");
+
+
   const handleChange = (key: string, value: string) => {
     setForm({ ...form, [key]: value });
   };
+
+
+useEffect(() => {
+    if (id) {
+      fetchMember();
+    }
+  }, [id]);
+  async function fetchMember() {
+    try {
+      console.log("FETCHING MEMBER ID:", id);
+
+      const res = await viewMember(id);
+      console.log("API RESULT:", res);
+
+      setMember(res?.data || res);
+    } catch (err: any) {
+      setError(err.message);
+    }finally {
+        setLoading(false);
+  }
+}
+  const Info = ({label, value}: any) => (
+    <View style={styles.infoBox}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value || "—"}</Text>
+    </View>
+  );
+  const profile = member?.profile || {};
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,6 +80,7 @@ const router = useRouter();
                 style={styles.input}
                 placeholder="Select member"
                 value={form.member}
+              
                 onChangeText={(text) => handleChange("member", text)}
               />
             </View>
@@ -114,12 +153,13 @@ const router = useRouter();
           <View style={styles.row}>
             <View style={styles.infoBox}>
               <Text style={styles.label}>Full Name</Text>
-              <Text style={styles.value}>—</Text>
+              <Text style={styles.value}>{`${profile.first_name || ""} ${profile.middle_name || ""} 
+              '${profile.last_name || ""}`}</Text>
             </View>
 
             <View style={styles.infoBox}>
               <Text style={styles.label}>Age</Text>
-              <Text style={styles.value}>—</Text>
+              <Text style={styles.value}></Text>
             </View>
           </View>
         </View>
