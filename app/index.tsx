@@ -1,30 +1,28 @@
 import { login } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import {
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 const BLUE = "#2952CC";
-const BLUE_MID = "#2563C7";
-const BLUE_LIGHT_BG = "#EEF2FF";
 
 export default function Login() {
   const { saveSession } = useAuth();
@@ -41,7 +39,6 @@ export default function Login() {
     Poppins_700Bold,
   });
 
-  // login failed timeout
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -65,23 +62,17 @@ export default function Login() {
       }
 
       const result = await login(email, password);
-      await saveSession(result.data);
+      await saveSession({
+        ...result.data,
+        token: result.data.token,
+        has_pin: result.data.has_pin,
+      });
 
-      const role = result.data.role_name;
-
-      switch (role) {
-        case "Member":
-          router.replace("/member/home");
-          break;
-        case "Loan Officer":
-          router.replace("/loan-officer/home");
-          break;
-        case "Account Officer":
-          router.replace("/account-officer/home");
-          break;
-        default:
-          setError("Unknown role. Please contact support.");
-          break;
+      const hasPin = result?.data?.has_pin;
+      if (hasPin == "" || hasPin == null) {
+        router.push("/setuppin");
+      } else {
+        router.push("/pin");
       }
     } catch (error: any) {
       setError("You input a wrong credentials.");
@@ -190,24 +181,11 @@ export default function Login() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Register link - stays fixed at bottom, outside KeyboardAvoidingView */}
-      {/* <SafeAreaView edges={["bottom", "left", "right"]}>
-        <View style={styles.registerRow}>
-          <Text style={styles.registerText}>Not a member yet? </Text>
-          <Pressable
-            hitSlop={6}
-            onPress={() => router.push("/guest/apply-now")}
-          >
-            <Text style={styles.registerLink}>Apply now</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView> */}
-
       {loading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
             <View style={styles.loaderSpinner}>
-              <ActivityIndicator size={48} color="#2563eb" />
+              <ActivityIndicator size={48} color="#3A8E0D" />
             </View>
             <Text style={styles.loadingTitle}>Signing In</Text>
             <Text style={styles.loadingSubtext}>Please wait a moment...</Text>

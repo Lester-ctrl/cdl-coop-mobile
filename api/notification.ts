@@ -25,7 +25,6 @@ export async function fetchUnreadNotifications(profile_id: any){
     });
 
     const data = await response.json();
-    console.log(data);
     return data;
 }
 

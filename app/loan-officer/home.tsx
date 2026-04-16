@@ -204,22 +204,7 @@ export default function LoanOfficerDashboard() {
         ))}
       </View>
 
-      {/* QUICK ACTIONS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-
-        <View style={styles.grid}>
-          {actions.map((action, idx) => (
-            <TouchableOpacity key={idx} style={styles.gridItem}>
-              <View style={styles.iconBox}>
-                <Ionicons name={action.icon as any} size={22} color="#3A8E0D" />
-              </View>
-
-              <Text style={styles.gridText}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      {/* ...existing code... */}
 
       {/* MAIN SECTIONS */}
       <View style={styles.section}>
